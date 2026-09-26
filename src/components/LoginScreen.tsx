@@ -9,7 +9,7 @@ interface LoginModalProps {
 }
 
 export function LoginScreen({ onSuccess }: LoginModalProps) {
-  const [email, setEmail] = useState("qaissarsaleh3@gmail.com");
+  const [email, setEmail] = useState("qaissarsalah3@gmail.com");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
