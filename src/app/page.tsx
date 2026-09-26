@@ -21,7 +21,6 @@ import {
   LayoutGrid,
   ArrowUpDown,
   UserPlus,
-  RefreshCw,
   Filter,
 } from "lucide-react";
 
@@ -311,14 +310,6 @@ export default function DashboardPage() {
     } catch (e) {
       console.warn("Could not sync appointment deletion to Supabase:", e);
     }
-  };
-
-  const handleResetDemo = () => {
-    setPatients(INITIAL_PATIENTS);
-    setAppointments(INITIAL_APPOINTMENTS);
-    localStorage.setItem(PATIENTS_STORAGE_KEY, JSON.stringify(INITIAL_PATIENTS));
-    localStorage.setItem(APPOINTMENTS_STORAGE_KEY, JSON.stringify(INITIAL_APPOINTMENTS));
-    showToast("Reset to sample patients & appointments");
   };
 
   // Filter and sort patients
@@ -614,19 +605,6 @@ export default function DashboardPage() {
                   {patients.length}
                 </span>{" "}
                 patient cases (sorted newest first)
-              </div>
-
-              <div className="flex items-center gap-4">
-                <button
-                  onClick={handleResetDemo}
-                  className="inline-flex items-center gap-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors cursor-pointer"
-                  title="Reset demo cases & appointments"
-                >
-                  <RefreshCw className="w-3.5 h-3.5" />
-                  <span>Reset Sample Data</span>
-                </button>
-                <span>•</span>
-                <span>Self-contained client dashboard</span>
               </div>
             </footer>
           </>
