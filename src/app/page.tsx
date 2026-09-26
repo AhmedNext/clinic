@@ -25,13 +25,23 @@ import {
   Filter,
 } from "lucide-react";
 
+import {
+  fetchPatientsFromDB,
+  upsertPatientToDB,
+  deletePatientFromDB,
+  fetchAppointmentsFromDB,
+  upsertAppointmentToDB,
+  deleteAppointmentFromDB,
+} from "@/utils/supabase/db";
+
 const PATIENTS_STORAGE_KEY = "qaissar_patient_cases";
 const APPOINTMENTS_STORAGE_KEY = "qaissar_dental_appointments";
 
 export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState<"patients" | "appointments">("patients");
-  const [patients, setPatients] = useState<Patient[]>(INITIAL_PATIENTS);
-  const [appointments, setAppointments] = useState<Appointment[]>(INITIAL_APPOINTMENTS);
+  const [patients, setPatients] = useState<Patient[]>([]);
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Modals state
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -47,68 +57,51 @@ export default function DashboardPage() {
   const [sortOrder, setSortOrder] = useState<"desc" | "asc">("desc"); // 'desc' = newest first
   const [notification, setNotification] = useState<string | null>(null);
 
-  // Load from localStorage on mount (hydration safe)
+  // Load from Supabase on mount, fallback to localStorage
   useEffect(() => {
-    const DATA_VERSION = "v2"; // bump this to wipe old cached data
-    const VERSION_KEY = "qaissar_data_version";
+    async function loadData() {
+      setIsLoading(true);
 
-    // If stored version doesn't match current, wipe old data
-    const storedVersion = localStorage.getItem(VERSION_KEY);
-    if (storedVersion !== DATA_VERSION) {
-      localStorage.removeItem(PATIENTS_STORAGE_KEY);
-      localStorage.removeItem(APPOINTMENTS_STORAGE_KEY);
-      localStorage.setItem(VERSION_KEY, DATA_VERSION);
-      setPatients([]);
-      setAppointments([]);
-      return;
-    }
-
-    // 1. Load Patients
-    try {
-      const stored = localStorage.getItem(PATIENTS_STORAGE_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed)) {
-          setPatients(parsed);
+      // 1. Initial cached read from localStorage for instant display
+      try {
+        const stored = localStorage.getItem(PATIENTS_STORAGE_KEY);
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (Array.isArray(parsed)) setPatients(parsed);
         }
+        const storedApts = localStorage.getItem(APPOINTMENTS_STORAGE_KEY);
+        if (storedApts) {
+          const parsedApts = JSON.parse(storedApts);
+          if (Array.isArray(parsedApts)) setAppointments(parsedApts);
+        }
+      } catch (e) {
+        console.error("Local cache read error", e);
       }
-    } catch (e) {
-      console.error("Failed to load patients from localStorage", e);
+
+      // 2. Fetch fresh data from Supabase
+      try {
+        const [dbPatients, dbApts] = await Promise.all([
+          fetchPatientsFromDB(),
+          fetchAppointmentsFromDB(),
+        ]);
+
+        if (dbPatients) {
+          setPatients(dbPatients);
+          localStorage.setItem(PATIENTS_STORAGE_KEY, JSON.stringify(dbPatients));
+        }
+        if (dbApts) {
+          setAppointments(dbApts);
+          localStorage.setItem(APPOINTMENTS_STORAGE_KEY, JSON.stringify(dbApts));
+        }
+      } catch (err) {
+        console.warn("Supabase fetch failed (table may not exist yet or offline), using cached data:", err);
+      } finally {
+        setIsLoading(false);
+      }
     }
 
-    // 2. Load Appointments
-    try {
-      const storedApts = localStorage.getItem(APPOINTMENTS_STORAGE_KEY);
-      if (storedApts) {
-        const parsedApts = JSON.parse(storedApts);
-        if (Array.isArray(parsedApts)) {
-          setAppointments(parsedApts);
-        }
-      }
-    } catch (e) {
-      console.error("Failed to load appointments from localStorage", e);
-    }
+    loadData();
   }, []);
-
-  // Save patients
-  const savePatients = (newPatients: Patient[]) => {
-    setPatients(newPatients);
-    try {
-      localStorage.setItem(PATIENTS_STORAGE_KEY, JSON.stringify(newPatients));
-    } catch (e) {
-      console.error("Failed to save patients to localStorage", e);
-    }
-  };
-
-  // Save appointments
-  const saveAppointments = (newApts: Appointment[]) => {
-    setAppointments(newApts);
-    try {
-      localStorage.setItem(APPOINTMENTS_STORAGE_KEY, JSON.stringify(newApts));
-    } catch (e) {
-      console.error("Failed to save appointments to localStorage", e);
-    }
-  };
 
   const showToast = (message: string) => {
     setNotification(message);
@@ -118,36 +111,57 @@ export default function DashboardPage() {
   };
 
   // Patient CRUD
-  const handleAddPatient = (data: Omit<Patient, "id">) => {
+  const handleAddPatient = async (data: Omit<Patient, "id">) => {
     const newPatient: Patient = {
       ...data,
       id: `pat-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
       createdAt: Date.now(),
     };
     const updated = [newPatient, ...patients];
-    savePatients(updated);
+    setPatients(updated);
+    localStorage.setItem(PATIENTS_STORAGE_KEY, JSON.stringify(updated));
     showToast(`Added case for "${newPatient.name}"`);
-  };
 
-  const handleUpdatePatient = (updatedPatient: Patient) => {
-    const updated = patients.map((p) =>
-      p.id === updatedPatient.id ? updatedPatient : p
-    );
-    savePatients(updated);
-    showToast(`Updated case for "${updatedPatient.name}"`);
-    setEditingPatient(null);
-  };
-
-  const handleDeletePatient = (id: string) => {
-    const target = patients.find((p) => p.id === id);
-    const updated = patients.filter((p) => p.id !== id);
-    savePatients(updated);
-    if (target) {
-      showToast(`Removed case for "${target.name}"`);
+    try {
+      await upsertPatientToDB(newPatient);
+    } catch (e) {
+      console.warn("Could not sync new patient to Supabase:", e);
     }
   };
 
-  const handleAddHistoryEntry = (
+  const handleUpdatePatient = async (updatedPatient: Patient) => {
+    const updated = patients.map((p) =>
+      p.id === updatedPatient.id ? updatedPatient : p
+    );
+    setPatients(updated);
+    localStorage.setItem(PATIENTS_STORAGE_KEY, JSON.stringify(updated));
+    showToast(`Updated case for "${updatedPatient.name}"`);
+    setEditingPatient(null);
+
+    try {
+      await upsertPatientToDB(updatedPatient);
+    } catch (e) {
+      console.warn("Could not sync updated patient to Supabase:", e);
+    }
+  };
+
+  const handleDeletePatient = async (id: string) => {
+    const target = patients.find((p) => p.id === id);
+    const updated = patients.filter((p) => p.id !== id);
+    setPatients(updated);
+    localStorage.setItem(PATIENTS_STORAGE_KEY, JSON.stringify(updated));
+    if (target) {
+      showToast(`Removed case for "${target.name}"`);
+    }
+
+    try {
+      await deletePatientFromDB(id);
+    } catch (e) {
+      console.warn("Could not sync patient deletion to Supabase:", e);
+    }
+  };
+
+  const handleAddHistoryEntry = async (
     patientId: string,
     entry: Omit<PatientHistoryEntry, "id" | "createdAt">
   ) => {
@@ -157,6 +171,7 @@ export default function DashboardPage() {
       createdAt: Date.now(),
     };
 
+    let targetUpdatedPatient: Patient | null = null;
     const updated = patients.map((p) => {
       if (p.id !== patientId) return p;
       const history = [newEntry, ...(p.history || [])];
@@ -173,68 +188,136 @@ export default function DashboardPage() {
         debtAmount,
         history,
       };
+      targetUpdatedPatient = updatedPatient;
       setHistoryPatient(updatedPatient);
       return updatedPatient;
     });
 
-    savePatients(updated);
+    setPatients(updated);
+    localStorage.setItem(PATIENTS_STORAGE_KEY, JSON.stringify(updated));
     showToast("Logged new consultation in patient history");
+
+    if (targetUpdatedPatient) {
+      try {
+        await upsertPatientToDB(targetUpdatedPatient);
+      } catch (e) {
+        console.warn("Could not sync history entry to Supabase:", e);
+      }
+    }
   };
 
-  const handleDeleteHistoryEntry = (patientId: string, entryId: string) => {
+  const handleDeleteHistoryEntry = async (patientId: string, entryId: string) => {
+    let targetUpdatedPatient: Patient | null = null;
     const updated = patients.map((p) => {
       if (p.id !== patientId) return p;
       const history = (p.history || []).filter((h) => h.id !== entryId);
       const updatedPatient: Patient = { ...p, history };
+      targetUpdatedPatient = updatedPatient;
       setHistoryPatient(updatedPatient);
       return updatedPatient;
     });
 
-    savePatients(updated);
+    setPatients(updated);
+    localStorage.setItem(PATIENTS_STORAGE_KEY, JSON.stringify(updated));
     showToast("Removed history record");
+
+    if (targetUpdatedPatient) {
+      try {
+        await upsertPatientToDB(targetUpdatedPatient);
+      } catch (e) {
+        console.warn("Could not sync deleted history entry to Supabase:", e);
+      }
+    }
   };
 
-  const handleSaveTeeth = (patientId: string, teeth: ToothRecord[]) => {
-    const updated = patients.map((p) => (p.id === patientId ? { ...p, teeth } : p));
-    savePatients(updated);
+  const handleSaveTeeth = async (patientId: string, teeth: ToothRecord[]) => {
+    let targetUpdatedPatient: Patient | null = null;
+    const updated = patients.map((p) => {
+      if (p.id === patientId) {
+        targetUpdatedPatient = { ...p, teeth };
+        return targetUpdatedPatient;
+      }
+      return p;
+    });
+
+    setPatients(updated);
+    localStorage.setItem(PATIENTS_STORAGE_KEY, JSON.stringify(updated));
     setDentalPatient((prev) => (prev && prev.id === patientId ? { ...prev, teeth } : prev));
+
+    if (targetUpdatedPatient) {
+      try {
+        await upsertPatientToDB(targetUpdatedPatient);
+      } catch (e) {
+        console.warn("Could not sync dental odontogram to Supabase:", e);
+      }
+    }
   };
 
   // Appointment CRUD
-  const handleAddAppointment = (data: Omit<Appointment, "id" | "createdAt">) => {
+  const handleAddAppointment = async (data: Omit<Appointment, "id" | "createdAt">) => {
     const newApt: Appointment = {
       ...data,
       id: `apt-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
       createdAt: Date.now(),
     };
     const updated = [newApt, ...appointments];
-    saveAppointments(updated);
+    setAppointments(updated);
+    localStorage.setItem(APPOINTMENTS_STORAGE_KEY, JSON.stringify(updated));
     showToast(`Booked appointment for "${newApt.patientName}"`);
+
+    try {
+      await upsertAppointmentToDB(newApt);
+    } catch (e) {
+      console.warn("Could not sync new appointment to Supabase:", e);
+    }
   };
 
-  const handleToggleAppointmentStatus = (
+  const handleToggleAppointmentStatus = async (
     id: string,
     newStatus: AppointmentStatus
   ) => {
-    const updated = appointments.map((a) =>
-      a.id === id ? { ...a, status: newStatus } : a
-    );
-    saveAppointments(updated);
+    let targetApt: Appointment | null = null;
+    const updated = appointments.map((a) => {
+      if (a.id === id) {
+        targetApt = { ...a, status: newStatus };
+        return targetApt;
+      }
+      return a;
+    });
+    setAppointments(updated);
+    localStorage.setItem(APPOINTMENTS_STORAGE_KEY, JSON.stringify(updated));
     showToast("Appointment status updated");
+
+    if (targetApt) {
+      try {
+        await upsertAppointmentToDB(targetApt);
+      } catch (e) {
+        console.warn("Could not sync appointment update to Supabase:", e);
+      }
+    }
   };
 
-  const handleDeleteAppointment = (id: string) => {
+  const handleDeleteAppointment = async (id: string) => {
     const target = appointments.find((a) => a.id === id);
     const updated = appointments.filter((a) => a.id !== id);
-    saveAppointments(updated);
+    setAppointments(updated);
+    localStorage.setItem(APPOINTMENTS_STORAGE_KEY, JSON.stringify(updated));
     if (target) {
       showToast(`Removed appointment for "${target.patientName}"`);
+    }
+
+    try {
+      await deleteAppointmentFromDB(id);
+    } catch (e) {
+      console.warn("Could not sync appointment deletion to Supabase:", e);
     }
   };
 
   const handleResetDemo = () => {
-    savePatients(INITIAL_PATIENTS);
-    saveAppointments(INITIAL_APPOINTMENTS);
+    setPatients(INITIAL_PATIENTS);
+    setAppointments(INITIAL_APPOINTMENTS);
+    localStorage.setItem(PATIENTS_STORAGE_KEY, JSON.stringify(INITIAL_PATIENTS));
+    localStorage.setItem(APPOINTMENTS_STORAGE_KEY, JSON.stringify(INITIAL_APPOINTMENTS));
     showToast("Reset to sample patients & appointments");
   };
 
