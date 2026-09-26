@@ -32,11 +32,16 @@ import {
   upsertAppointmentToDB,
   deleteAppointmentFromDB,
 } from "@/utils/supabase/db";
+import { createClient } from "@/utils/supabase/client";
+import { LoginScreen } from "@/components/LoginScreen";
 
 const PATIENTS_STORAGE_KEY = "qaissar_patient_cases";
 const APPOINTMENTS_STORAGE_KEY = "qaissar_dental_appointments";
 
 export default function DashboardPage() {
+  const [sessionChecked, setSessionChecked] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
   const [activeTab, setActiveTab] = useState<"patients" | "appointments">("patients");
   const [patients, setPatients] = useState<Patient[]>([]);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
@@ -56,8 +61,29 @@ export default function DashboardPage() {
   const [sortOrder, setSortOrder] = useState<"desc" | "asc">("desc"); // 'desc' = newest first
   const [notification, setNotification] = useState<string | null>(null);
 
-  // Load from Supabase on mount, fallback to localStorage
+  const supabase = useMemo(() => createClient(), []);
+
+  // Check persistent session on mount
   useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setIsAuthenticated(Boolean(session));
+      setSessionChecked(true);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsAuthenticated(Boolean(session));
+      setSessionChecked(true);
+    });
+
+    return () => subscription.unsubscribe();
+  }, [supabase]);
+
+  // Load from Supabase when authenticated
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
     async function loadData() {
       setIsLoading(true);
 
@@ -93,14 +119,19 @@ export default function DashboardPage() {
           localStorage.setItem(APPOINTMENTS_STORAGE_KEY, JSON.stringify(dbApts));
         }
       } catch (err) {
-        console.warn("Supabase fetch failed (table may not exist yet or offline), using cached data:", err);
+        console.warn("Supabase fetch error, using cached data:", err);
       } finally {
         setIsLoading(false);
       }
     }
 
     loadData();
-  }, []);
+  }, [isAuthenticated]);
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    setIsAuthenticated(false);
+  };
 
   const showToast = (message: string) => {
     setNotification(message);
@@ -346,6 +377,23 @@ export default function DashboardPage() {
       });
   }, [patients, searchQuery, genderFilter, paymentFilter, sortOrder]);
 
+  // Show loading splash while checking local stored session
+  if (!sessionChecked) {
+    return (
+      <div className="min-h-screen w-full flex flex-col items-center justify-center bg-slate-950 text-white">
+        <div className="w-12 h-12 rounded-2xl bg-indigo-600 flex items-center justify-center text-2xl shadow-xl shadow-indigo-600/30 animate-pulse mb-3">
+          🦷
+        </div>
+        <p className="text-xs text-slate-400 font-medium">Verifying clinic session...</p>
+      </div>
+    );
+  }
+
+  // If not logged in, show Dr. Qayssar Login Screen
+  if (!isAuthenticated) {
+    return <LoginScreen onSuccess={() => setIsAuthenticated(true)} />;
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col transition-colors duration-200">
       {/* Top Sleek Navigation Header */}
@@ -355,6 +403,7 @@ export default function DashboardPage() {
         onOpenAddModal={() => setIsModalOpen(true)}
         patientCount={patients.length}
         appointmentCount={appointments.length}
+        onSignOut={handleSignOut}
       />
 
       {/* Main Container */}

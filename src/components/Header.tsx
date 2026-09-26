@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Plus, Users, Calendar, ShieldCheck } from "lucide-react";
+import { Plus, Users, Calendar, ShieldCheck, LogOut } from "lucide-react";
 import { ThemeToggle } from "./ThemeToggle";
 
 interface HeaderProps {
@@ -10,6 +10,7 @@ interface HeaderProps {
   onOpenAddModal: () => void;
   patientCount: number;
   appointmentCount: number;
+  onSignOut?: () => void;
 }
 
 export function Header({
@@ -18,6 +19,7 @@ export function Header({
   onOpenAddModal,
   patientCount,
   appointmentCount,
+  onSignOut,
 }: HeaderProps) {
   return (
     <header className="sticky top-0 z-40 w-full border-b border-slate-200/80 dark:border-slate-800/80 bg-white/90 dark:bg-slate-950/90 backdrop-blur-md transition-colors">
@@ -90,7 +92,7 @@ export function Header({
             </button>
           </nav>
 
-          {/* Right Controls: Theme Toggle + Add Patient Button */}
+          {/* Right Controls: Theme Toggle + Add Patient Button + Sign out */}
           <div className="flex items-center gap-2">
             <ThemeToggle />
 
@@ -102,6 +104,16 @@ export function Header({
                 <Plus className="w-4 h-4 stroke-[2.5]" />
                 <span className="hidden sm:inline">Add Patient</span>
                 <span className="sm:hidden font-bold">Add</span>
+              </button>
+            )}
+
+            {onSignOut && (
+              <button
+                onClick={onSignOut}
+                title="Log out from clinic system"
+                className="p-2 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-400 hover:text-rose-500 hover:border-rose-200 dark:hover:border-rose-900/50 hover:bg-rose-50/50 dark:hover:bg-rose-950/20 transition-all cursor-pointer"
+              >
+                <LogOut className="w-4 h-4" />
               </button>
             )}
           </div>
