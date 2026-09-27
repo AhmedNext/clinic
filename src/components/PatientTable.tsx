@@ -123,12 +123,24 @@ export function PatientTable({
                     )}
                   </td>
 
-                  {/* Date */}
+                  {/* Date & Visits */}
                   <td className="py-3.5 px-3 text-slate-600 dark:text-slate-300">
                     <div className="inline-flex items-center gap-1.5 text-xs whitespace-nowrap">
                       <Calendar className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 flex-shrink-0" />
                       <span>{formatDate(patient.date)}</span>
                     </div>
+                    {patient.history && patient.history.length > 0 && (
+                      <div className="mt-1">
+                        <button
+                          type="button"
+                          onClick={() => onViewHistory(patient)}
+                          className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 hover:bg-indigo-100 transition-colors cursor-pointer"
+                        >
+                          <History className="w-2.5 h-2.5" />
+                          <span>{patient.history.length} {patient.history.length === 1 ? "visit" : "visits"}</span>
+                        </button>
+                      </div>
+                    )}
                   </td>
 
                   {/* 3D Dental Chart */}

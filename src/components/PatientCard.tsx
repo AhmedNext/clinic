@@ -25,6 +25,11 @@ export function PatientCard({
   const debt = calculateDebt(patient.totalAmount, patient.paidAmount, patient.debtAmount);
   const paid = patient.paidAmount ?? 0;
 
+  const sortedHistory = [...(patient.history || [])].sort((a, b) =>
+    (b.date || "").localeCompare(a.date || "")
+  );
+  const visitsCount = sortedHistory.length;
+
   return (
     <div className="group flex flex-col rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm hover:shadow-lg hover:border-indigo-200 dark:hover:border-indigo-800/60 transition-all duration-200 overflow-hidden">
 
@@ -62,6 +67,19 @@ export function PatientCard({
                     {patient.age}y
                   </span>
                 )}
+
+                <span
+                  onClick={() => onViewHistory(patient)}
+                  title="Click to view visit history"
+                  className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold cursor-pointer transition-colors ${
+                    visitsCount > 0
+                      ? "bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 hover:bg-indigo-100"
+                      : "bg-slate-100 dark:bg-slate-800 text-slate-500 border border-slate-200 dark:border-slate-700"
+                  }`}
+                >
+                  <History className="w-3 h-3 text-indigo-500" />
+                  <span>{visitsCount} {visitsCount === 1 ? "visit" : "visits"}</span>
+                </span>
 
                 <span className="text-[10px] text-slate-400 dark:text-slate-600 font-mono">
                   #{patient.id.slice(0, 6)}
@@ -169,7 +187,7 @@ export function PatientCard({
         </button>
 
         {/* Row 5: Latest Treatment / History Snippet */}
-        {patient.history && patient.history.length > 0 && (
+        {sortedHistory.length > 0 && (
           <button
             type="button"
             onClick={() => onViewHistory(patient)}
@@ -178,19 +196,19 @@ export function PatientCard({
             <div className="flex items-center justify-between text-[11px] mb-1">
               <span className="font-bold text-indigo-700 dark:text-indigo-300 flex items-center gap-1.5 truncate">
                 <History className="w-3.5 h-3.5 text-indigo-500 flex-shrink-0" />
-                <span className="truncate">Latest: {patient.history[0].title}</span>
+                <span className="truncate">Latest: {sortedHistory[0].title}</span>
               </span>
-              <span className="text-[10px] text-slate-400 group-hover/hist:text-indigo-500 font-semibold flex-shrink-0 ml-1">
-                {patient.history.length} {patient.history.length === 1 ? "visit" : "visits"} →
+              <span className="text-[10px] text-indigo-600 dark:text-indigo-400 font-bold flex-shrink-0 ml-1">
+                {visitsCount} {visitsCount === 1 ? "visit" : "visits"} →
               </span>
             </div>
-            {patient.history[0].notes ? (
+            {sortedHistory[0].notes ? (
               <p className="text-[11px] text-slate-600 dark:text-slate-400 line-clamp-1">
-                {patient.history[0].notes}
+                {sortedHistory[0].notes}
               </p>
             ) : (
               <p className="text-[10px] text-slate-400 font-mono">
-                {formatStaticDate(patient.history[0].date)}
+                {formatStaticDate(sortedHistory[0].date)}
               </p>
             )}
           </button>

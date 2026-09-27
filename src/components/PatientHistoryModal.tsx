@@ -172,7 +172,7 @@ export function PatientHistoryModal({
       aria-modal="true"
       aria-labelledby="history-modal-title"
     >
-      <div className="w-full max-w-xl bg-white dark:bg-slate-900 rounded-t-3xl sm:rounded-2xl shadow-2xl flex flex-col h-[93dvh] sm:h-auto sm:max-h-[88vh] border-0 sm:border border-slate-200 dark:border-slate-800 animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-200">
+      <div className="w-full max-w-xl bg-white dark:bg-slate-900 rounded-t-3xl sm:rounded-2xl shadow-2xl flex flex-col h-[90vh] max-h-[90vh] border-0 sm:border border-slate-200 dark:border-slate-800 animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-200">
 
         {/* ── HEADER ── */}
         <div className="flex items-center justify-between gap-3 px-4 pt-4 pb-3 border-b border-slate-100 dark:border-slate-800">
@@ -200,6 +200,10 @@ export function PatientHistoryModal({
                     {patient.age}y
                   </span>
                 )}
+                <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
+                  <Activity className="w-2.5 h-2.5 text-indigo-500" />
+                  <span>{historyEntries.length} {historyEntries.length === 1 ? "Total Visit" : "Total Visits"}</span>
+                </span>
                 <span className="inline-flex items-center gap-1 text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold bg-emerald-50 dark:bg-emerald-950/50 px-1.5 py-0.5 rounded-md border border-emerald-200 dark:border-emerald-900/60">
                   <span>☁️</span>
                   <span>Supabase Live</span>
