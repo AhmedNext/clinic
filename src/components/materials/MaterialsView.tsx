@@ -427,7 +427,7 @@ export function MaterialsView({
                     type="text"
                     inputMode="numeric"
                     required
-                    placeholder="e.g. 95,000"
+                    placeholder={t.moneyPlaceholder}
                     value={formCostPrice}
                     onChange={handleCostPriceChange}
                     className="w-full pl-10 pr-14 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all font-mono font-bold"

@@ -199,6 +199,32 @@ export interface Translations {
   resetToToday: string;
   clearDate: string;
   setDateBtn: string;
+
+  // Localized placeholders, examples, and chips
+  quickSelect: string;
+  appointmentReasonPlaceholder: string;
+  appointmentNotesPlaceholder: string;
+  commonConsultation: string;
+  commonCleaning: string;
+  commonFilling: string;
+  commonRootCanal: string;
+  customMaterialPlaceholder: string;
+  moneyPlaceholder: string;
+  rentPlaceholder: string;
+
+  // Monthly Rent Modal
+  monthlyClinicRent: string;
+  adjustRentSubtitle: string;
+  selectMonthAndAmount: string;
+  currentRent: string;
+  clinicMonth: string;
+  rentPaidIQD: string;
+  quickPreset: string;
+  saveRent: string;
+  removeRent: string;
+  recordedMonthsHistory: string;
+  allTimeRentTotal: string;
+  noRentRecorded: string;
 }
 
 export const translations: Record<Language, Translations> = {
@@ -401,6 +427,32 @@ export const translations: Record<Language, Translations> = {
     resetToToday: "Reset to Today",
     clearDate: "Clear Date",
     setDateBtn: "Set Date",
+
+    // Localized placeholders, examples, and chips
+    quickSelect: "Quick select:",
+    appointmentReasonPlaceholder: "e.g. Tooth #46 Root canal or Routine checkup",
+    appointmentNotesPlaceholder: "e.g. Patient mentioned sensitivity, prepare local anaesthesia...",
+    commonConsultation: "General Consultation",
+    commonCleaning: "Routine Dental Cleaning",
+    commonFilling: "Composite Filling",
+    commonRootCanal: "Root Canal Therapy",
+    customMaterialPlaceholder: "e.g. Composite, Zirconia...",
+    moneyPlaceholder: "e.g. 95,000",
+    rentPlaceholder: "e.g. 500,000",
+
+    // Monthly Rent Modal
+    monthlyClinicRent: "Monthly Clinic Rent",
+    adjustRentSubtitle: "Adjust variable rent paid for each clinic month",
+    selectMonthAndAmount: "Select Month & Amount",
+    currentRent: "Current",
+    clinicMonth: "Clinic Month",
+    rentPaidIQD: "Rent Paid (IQD)",
+    quickPreset: "Quick:",
+    saveRent: "Save Rent",
+    removeRent: "Remove Rent",
+    recordedMonthsHistory: "Recorded Rent History",
+    allTimeRentTotal: "All-Time Rent Total",
+    noRentRecorded: "No monthly rent recorded yet",
   },
 
   ar: {
@@ -602,6 +654,32 @@ export const translations: Record<Language, Translations> = {
     resetToToday: "العودة إلى اليوم",
     clearDate: "مسح التاريخ",
     setDateBtn: "تأكيد التاريخ",
+
+    // Localized placeholders, examples, and chips
+    quickSelect: "اختيار سريع:",
+    appointmentReasonPlaceholder: "مثال: علاج عصب للسن #46 أو فحص دوري",
+    appointmentNotesPlaceholder: "مثال: المريض يعاني من حساسية، تحضير تخدير موضعي...",
+    commonConsultation: "استشارة عامة",
+    commonCleaning: "تنظيف وتلميع دوري",
+    commonFilling: "حشوة كومبوزيت",
+    commonRootCanal: "سحب وعلاج عصب",
+    customMaterialPlaceholder: "مثال: كومبوزيت، زيركون...",
+    moneyPlaceholder: "مثال: 95,000",
+    rentPlaceholder: "مثال: 500,000",
+
+    // Monthly Rent Modal
+    monthlyClinicRent: "إيجار العيادة الشهري",
+    adjustRentSubtitle: "تعديل بدل الإيجار الشهري المدفوع للعيادة",
+    selectMonthAndAmount: "تحديد الشهر والمبلغ",
+    currentRent: "الحالي",
+    clinicMonth: "شهر العيادة",
+    rentPaidIQD: "الإيجار المدفوع (د.ع)",
+    quickPreset: "سريع:",
+    saveRent: "حفظ الإيجار",
+    removeRent: "حذف الإيجار",
+    recordedMonthsHistory: "سجل الإيجارات المسجلة",
+    allTimeRentTotal: "إجمالي الإيجارات الكلي",
+    noRentRecorded: "لم يتم تسجيل أي إيجار شهري بعد",
   },
 
   ku: {
@@ -803,6 +881,32 @@ export const translations: Record<Language, Translations> = {
     resetToToday: "گەڕانەوە بۆ ئەمڕۆ",
     clearDate: "سڕینەوەی بەروار",
     setDateBtn: "تەئکیدکردنەوەی بەروار",
+
+    // Localized placeholders, examples, and chips
+    quickSelect: "هەڵبژاردنی خێرا:",
+    appointmentReasonPlaceholder: "نموونە: ددانی #46 دەماربڕین یان پشکنینی گشتی",
+    appointmentNotesPlaceholder: "نموونە: نەخۆش باسی هەستیاری کرد، بەنجی مەوزوعی ئامادە بکە...",
+    commonConsultation: "ڕاوێژی گشتی",
+    commonCleaning: "پاککردنەوە و پۆلیشی خولی",
+    commonFilling: "پڕکردنەوەی کۆمپۆزیت",
+    commonRootCanal: "عەسەب و دەماربڕین",
+    customMaterialPlaceholder: "نموونە: کۆمپۆزیت، زێرکۆن...",
+    moneyPlaceholder: "نموونە: 95,000",
+    rentPlaceholder: "نموونە: 500,000",
+
+    // Monthly Rent Modal
+    monthlyClinicRent: "کرێی مانگانەی نۆرینگە",
+    adjustRentSubtitle: "دەستکاریکردنی بڕی کرێی دراو بۆ هەر مانگێکی نۆرینگە",
+    selectMonthAndAmount: "دیاریکردنی مانگ و بڕی پارە",
+    currentRent: "ئێستا",
+    clinicMonth: "مانگی نۆرینگە",
+    rentPaidIQD: "کرێی دراو (د.ع)",
+    quickPreset: "خێرا:",
+    saveRent: "پاشەکەوتکردنی کرێ",
+    removeRent: "سڕینەوەی کرێ",
+    recordedMonthsHistory: "مێژووی کرێیە تۆمارکراوەکان",
+    allTimeRentTotal: "کۆی گشتی هەموو کرێیەکان",
+    noRentRecorded: "تا ئێستا هیچ کرێیەکی مانگانە تۆمار نەکراوە",
   },
 };
 

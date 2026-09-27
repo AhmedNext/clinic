@@ -150,8 +150,7 @@ export function DayAppointmentsModal({
                 {formattedDate}
               </h2>
               <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400">
-                {appointments.length}{" "}
-                {appointments.length === 1 ? "appointment" : "appointments"} scheduled
+                {appointments.length} {t.scheduled}
               </p>
             </div>
           </div>
@@ -164,7 +163,7 @@ export function DayAppointmentsModal({
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white shadow-xs transition-all cursor-pointer"
               >
                 <Plus className="w-3.5 h-3.5" />
-                <span>New Patient</span>
+                <span>{t.addPatient}</span>
               </button>
             )}
             <button
@@ -185,7 +184,7 @@ export function DayAppointmentsModal({
               <div className="flex items-center justify-between mb-3.5">
                 <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
                   <Plus className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-                  <span>Book Appointment for {formattedDate}</span>
+                  <span>{t.addAppointment} ({formattedDate})</span>
                 </h3>
                 {appointments.length > 0 && (
                   <button
@@ -193,7 +192,7 @@ export function DayAppointmentsModal({
                     onClick={() => setShowAddForm(false)}
                     className="text-xs text-slate-500 hover:text-slate-700 dark:text-slate-400 transition-colors cursor-pointer"
                   >
-                    Cancel
+                    {t.cancel}
                   </button>
                 )}
               </div>
@@ -208,13 +207,13 @@ export function DayAppointmentsModal({
                 {/* Patient Name */}
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                    Patient Name <span className="text-rose-500">*</span>
+                    {t.name} <span className="text-rose-500">*</span>
                   </label>
                   <div className="relative">
                     <User className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
                     <input
                       type="text"
-                      placeholder="e.g. Alexander Wright"
+                      placeholder={t.namePlaceholder}
                       value={patientName}
                       onChange={(e) => {
                         setPatientName(e.target.value);
@@ -227,7 +226,7 @@ export function DayAppointmentsModal({
                   {/* Autocomplete suggestions from existing patients */}
                   {existingPatients.length > 0 && !patientName && (
                     <div className="mt-2 flex items-center flex-wrap gap-1.5 text-[11px]">
-                      <span className="text-slate-400 font-medium">Quick select:</span>
+                      <span className="text-slate-400 font-medium">{t.quickSelect}</span>
                       {existingPatients.slice(0, 4).map((p) => (
                         <button
                           key={p.id}
@@ -252,7 +251,7 @@ export function DayAppointmentsModal({
                       <Phone className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
                       <input
                         type="tel"
-                        placeholder="e.g. 0770 123 4567"
+                        placeholder={t.phonePlaceholder}
                         value={phone}
                         onChange={(e) => {
                           setPhone(e.target.value);
@@ -271,7 +270,7 @@ export function DayAppointmentsModal({
                       <Clock className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
                       <input
                         type="text"
-                        placeholder="e.g. 10:30 AM"
+                        placeholder={t.timePlaceholder}
                         value={time}
                         onChange={(e) => setTime(e.target.value)}
                         className="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
@@ -305,14 +304,19 @@ export function DayAppointmentsModal({
                   </label>
                   <input
                     type="text"
-                    placeholder="e.g. Tooth #46 Root canal or Routine checkup"
+                    placeholder={t.appointmentReasonPlaceholder}
                     value={treatment}
                     onChange={(e) => setTreatment(e.target.value)}
                     className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
                   />
                   {/* Common procedures chips */}
                   <div className="mt-1.5 flex flex-wrap gap-1 text-[10px]">
-                    {COMMON_PROCEDURES.slice(0, 4).map((p) => (
+                    {[
+                      t.commonConsultation,
+                      t.commonCleaning,
+                      t.commonFilling,
+                      t.commonRootCanal,
+                    ].map((p) => (
                       <button
                         key={p}
                         type="button"
@@ -332,7 +336,7 @@ export function DayAppointmentsModal({
                   </label>
                   <textarea
                     rows={2}
-                    placeholder="e.g. Patient mentioned sensitivity, prepare local anaesthesia..."
+                    placeholder={t.appointmentNotesPlaceholder}
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
                     className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
@@ -508,7 +512,7 @@ export function DayAppointmentsModal({
             onClick={onClose}
             className="px-5 py-2 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer"
           >
-            Done
+            {t.done}
           </button>
         </div>
       </div>

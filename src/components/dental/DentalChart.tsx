@@ -1252,7 +1252,7 @@ export function DentalChart({
               ) : (
                 <input
                   type="text"
-                  placeholder="e.g. Composite, Zirconia..."
+                  placeholder={t.customMaterialPlaceholder}
                   value={treatmentMaterial}
                   onChange={(e) => handleActiveToothMaterialChange(e.target.value)}
                   className="w-full px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-semibold text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
