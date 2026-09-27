@@ -14,7 +14,7 @@ interface PatientTableProps {
   onOpenDentalChart: (patient: Patient) => void;
 }
 
-export function PatientTable({
+export const PatientTable = React.memo(function PatientTable({
   patients,
   onDeletePatient,
   onEditPatient,
@@ -238,4 +238,4 @@ export function PatientTable({
       </div>
     </div>
   );
-}
+});

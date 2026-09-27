@@ -81,21 +81,79 @@ export function mapAppointmentToRow(apt: Appointment): any {
   };
 }
 
+// Cache keys for instant 0ms loads
+const LOCAL_STORAGE_PATIENTS_KEY = "dr_qayssar_patients_cache";
+const LOCAL_STORAGE_APPOINTMENTS_KEY = "dr_qayssar_appointments_cache";
+const LOCAL_STORAGE_MATERIALS_KEY = "dr_qayssar_materials_cache";
+
+export function getCachedPatients(): Patient[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const cached = localStorage.getItem(LOCAL_STORAGE_PATIENTS_KEY);
+    return cached ? JSON.parse(cached) : [];
+  } catch {
+    return [];
+  }
+}
+
+export function getCachedAppointments(): Appointment[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const cached = localStorage.getItem(LOCAL_STORAGE_APPOINTMENTS_KEY);
+    return cached ? JSON.parse(cached) : [];
+  } catch {
+    return [];
+  }
+}
+
+export function getCachedMaterials(): ClinicMaterial[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const cached = localStorage.getItem(LOCAL_STORAGE_MATERIALS_KEY);
+    if (!cached) return [];
+    const parsed = JSON.parse(cached);
+    return Array.isArray(parsed)
+      ? parsed.filter((m) => !["mat-1", "mat-2", "mat-3", "mat-4", "mat-5", "mat-6"].includes(m.id))
+      : [];
+  } catch {
+    return [];
+  }
+}
+
 // ================= PATIENT API =================
 export async function fetchPatientsFromDB(): Promise<Patient[]> {
-  const { data, error } = await getSupabase()
-    .from("patients")
-    .select("*")
-    .order("created_at", { ascending: false });
+  try {
+    const { data, error } = await getSupabase()
+      .from("patients")
+      .select("*")
+      .order("created_at", { ascending: false });
 
-  if (error) {
-    console.error("Error fetching patients from Supabase:", error);
-    throw error;
+    if (!error && data) {
+      const parsed = data.map(mapRowToPatient);
+      if (typeof window !== "undefined") {
+        localStorage.setItem(LOCAL_STORAGE_PATIENTS_KEY, JSON.stringify(parsed));
+      }
+      return parsed;
+    }
+  } catch (err) {
+    console.warn("Error fetching patients from Supabase, using cache:", err);
   }
-  return (data || []).map(mapRowToPatient);
+  return getCachedPatients();
 }
 
 export async function upsertPatientToDB(patient: Patient): Promise<void> {
+  // Update local cache immediately for 0ms UI response
+  if (typeof window !== "undefined") {
+    const cached = getCachedPatients();
+    const idx = cached.findIndex((p) => p.id === patient.id);
+    if (idx >= 0) {
+      cached[idx] = patient;
+    } else {
+      cached.unshift(patient);
+    }
+    localStorage.setItem(LOCAL_STORAGE_PATIENTS_KEY, JSON.stringify(cached));
+  }
+
   const row = mapPatientToRow(patient);
   const { error } = await getSupabase().from("patients").upsert(row);
   if (error) {
@@ -105,6 +163,14 @@ export async function upsertPatientToDB(patient: Patient): Promise<void> {
 }
 
 export async function deletePatientFromDB(id: string): Promise<void> {
+  if (typeof window !== "undefined") {
+    const cached = getCachedPatients();
+    localStorage.setItem(
+      LOCAL_STORAGE_PATIENTS_KEY,
+      JSON.stringify(cached.filter((p) => p.id !== id))
+    );
+  }
+
   const { error } = await getSupabase().from("patients").delete().eq("id", id);
   if (error) {
     console.error("Error deleting patient from Supabase:", error);
@@ -114,19 +180,37 @@ export async function deletePatientFromDB(id: string): Promise<void> {
 
 // ================= APPOINTMENT API =================
 export async function fetchAppointmentsFromDB(): Promise<Appointment[]> {
-  const { data, error } = await getSupabase()
-    .from("appointments")
-    .select("*")
-    .order("date", { ascending: true });
+  try {
+    const { data, error } = await getSupabase()
+      .from("appointments")
+      .select("*")
+      .order("date", { ascending: true });
 
-  if (error) {
-    console.error("Error fetching appointments from Supabase:", error);
-    throw error;
+    if (!error && data) {
+      const parsed = data.map(mapRowToAppointment);
+      if (typeof window !== "undefined") {
+        localStorage.setItem(LOCAL_STORAGE_APPOINTMENTS_KEY, JSON.stringify(parsed));
+      }
+      return parsed;
+    }
+  } catch (err) {
+    console.warn("Error fetching appointments from Supabase, using cache:", err);
   }
-  return (data || []).map(mapRowToAppointment);
+  return getCachedAppointments();
 }
 
 export async function upsertAppointmentToDB(apt: Appointment): Promise<void> {
+  if (typeof window !== "undefined") {
+    const cached = getCachedAppointments();
+    const idx = cached.findIndex((a) => a.id === apt.id);
+    if (idx >= 0) {
+      cached[idx] = apt;
+    } else {
+      cached.push(apt);
+    }
+    localStorage.setItem(LOCAL_STORAGE_APPOINTMENTS_KEY, JSON.stringify(cached));
+  }
+
   const row = mapAppointmentToRow(apt);
   const { error } = await getSupabase().from("appointments").upsert(row);
   if (error) {
@@ -136,6 +220,14 @@ export async function upsertAppointmentToDB(apt: Appointment): Promise<void> {
 }
 
 export async function deleteAppointmentFromDB(id: string): Promise<void> {
+  if (typeof window !== "undefined") {
+    const cached = getCachedAppointments();
+    localStorage.setItem(
+      LOCAL_STORAGE_APPOINTMENTS_KEY,
+      JSON.stringify(cached.filter((a) => a.id !== id))
+    );
+  }
+
   const { error } = await getSupabase().from("appointments").delete().eq("id", id);
   if (error) {
     console.error("Error deleting appointment from Supabase:", error);
@@ -181,8 +273,6 @@ export function mapMaterialToRow(mat: ClinicMaterial): any {
     updated_at: new Date().toISOString(),
   };
 }
-
-const LOCAL_STORAGE_MATERIALS_KEY = "dr_qayssar_materials_cache";
 
 export async function fetchMaterialsFromDB(): Promise<ClinicMaterial[]> {
   try {

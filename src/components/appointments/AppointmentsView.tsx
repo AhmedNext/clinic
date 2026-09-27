@@ -185,7 +185,7 @@ export function AppointmentsView({
   return (
     <div className="w-full flex flex-col space-y-6">
       {/* Month Navigation & Stats Header */}
-      <div className="p-5 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 shadow-xs backdrop-blur-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="p-5 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
         {/* Month Selector */}
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-indigo-600 to-violet-600 flex items-center justify-center text-white shadow-md shadow-indigo-600/25">

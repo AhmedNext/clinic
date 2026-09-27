@@ -512,9 +512,9 @@ export function DentalChart({
     (activeTool === "erase" ? "treated" : activeTool);
 
   return (
-    <div className="w-full flex flex-col bg-slate-50/70 dark:bg-slate-900/70 border border-slate-200/80 dark:border-slate-800 rounded-xl sm:rounded-3xl p-1.5 sm:p-5 shadow-inner select-none backdrop-blur-xs">
+    <div className="w-full flex flex-col bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800 rounded-xl sm:rounded-3xl p-1.5 sm:p-5 shadow-inner select-none">
       {/* ================= 1. SLEEK MINIMAL HEADER TOOLBAR ================= */}
-      <div className="sticky top-0 z-30 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md px-3 py-2 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs mb-3 flex items-center justify-between gap-2 flex-wrap">
+      <div className="sticky top-0 z-30 bg-white dark:bg-slate-900 px-3 py-2 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs mb-3 flex items-center justify-between gap-2 flex-wrap">
         {/* Left: Mode / Active Tool Switcher & Quadrant Selector */}
         <div className="flex items-center gap-1.5 flex-wrap">
           {/* Chart vs Erase Segmented Control */}
@@ -646,7 +646,7 @@ export function DentalChart({
 
       {/* ================= 2. SLEEK BATCH ACTION PILL (WHEN MULTIPLE TEETH SELECTED) ================= */}
       {isMultipleSelected && (
-        <div className="mb-3 px-3 py-2 rounded-2xl bg-indigo-950/90 text-white shadow-lg border border-indigo-800/80 backdrop-blur-md flex items-center justify-between gap-2 flex-wrap animate-in slide-in-from-top-2">
+        <div className="mb-3 px-3 py-2 rounded-2xl bg-indigo-950 text-white shadow-lg border border-indigo-800/80 flex items-center justify-between gap-2 flex-wrap animate-in slide-in-from-top-2">
           <div className="flex items-center gap-2">
             <span className="w-6 h-6 rounded-full bg-indigo-500 text-white font-black text-xs flex items-center justify-center shadow-xs">
               {selectedCount}

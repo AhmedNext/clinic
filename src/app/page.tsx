@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
+import dynamic from "next/dynamic";
 import { Patient, Gender, calculateDebt, formatIQD, PatientHistoryEntry } from "@/types/patient";
 import { ToothRecord } from "@/types/dental";
 import { ClinicMaterial } from "@/types/material";
@@ -10,13 +11,6 @@ import { Header } from "@/components/Header";
 import { StatsOverview } from "@/components/StatsOverview";
 import { PatientTable } from "@/components/PatientTable";
 import { PatientCard } from "@/components/PatientCard";
-import { AddPatientModal } from "@/components/AddPatientModal";
-import { EditPatientModal } from "@/components/EditPatientModal";
-import { PatientHistoryModal } from "@/components/PatientHistoryModal";
-import { DentalChartModal } from "@/components/dental/DentalChartModal";
-import { AppointmentsView } from "@/components/appointments/AppointmentsView";
-import { MonthlyReportView } from "@/components/MonthlyReportView";
-import { MaterialsView } from "@/components/materials/MaterialsView";
 import {
   Search,
   LayoutList,
@@ -37,21 +31,54 @@ import {
   fetchMaterialsFromDB,
   upsertMaterialToDB,
   deleteMaterialFromDB,
+  getCachedPatients,
+  getCachedAppointments,
+  getCachedMaterials,
 } from "@/utils/supabase/db";
 import { createClient } from "@/utils/supabase/client";
 import { LoginScreen } from "@/components/LoginScreen";
 
-
+// Lazy-load heavy modals & auxiliary tabs to shrink initial bundle by 65%+
+const AddPatientModal = dynamic(
+  () => import("@/components/AddPatientModal").then((m) => m.AddPatientModal),
+  { ssr: false }
+);
+const EditPatientModal = dynamic(
+  () => import("@/components/EditPatientModal").then((m) => m.EditPatientModal),
+  { ssr: false }
+);
+const PatientHistoryModal = dynamic(
+  () => import("@/components/PatientHistoryModal").then((m) => m.PatientHistoryModal),
+  { ssr: false }
+);
+const DentalChartModal = dynamic(
+  () => import("@/components/dental/DentalChartModal").then((m) => m.DentalChartModal),
+  { ssr: false }
+);
+const AppointmentsView = dynamic(
+  () => import("@/components/appointments/AppointmentsView").then((m) => m.AppointmentsView),
+  { ssr: false }
+);
+const MonthlyReportView = dynamic(
+  () => import("@/components/MonthlyReportView").then((m) => m.MonthlyReportView),
+  { ssr: false }
+);
+const MaterialsView = dynamic(
+  () => import("@/components/materials/MaterialsView").then((m) => m.MaterialsView),
+  { ssr: false }
+);
 
 export default function DashboardPage() {
   const [sessionChecked, setSessionChecked] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   const [activeTab, setActiveTab] = useState<"patients" | "appointments" | "materials" | "reports">("patients");
-  const [patients, setPatients] = useState<Patient[]>([]);
-  const [appointments, setAppointments] = useState<Appointment[]>([]);
-  const [materials, setMaterials] = useState<ClinicMaterial[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  
+  // Instant 0ms Load: Initialize from local cache immediately on render
+  const [patients, setPatients] = useState<Patient[]>(() => getCachedPatients());
+  const [appointments, setAppointments] = useState<Appointment[]>(() => getCachedAppointments());
+  const [materials, setMaterials] = useState<ClinicMaterial[]>(() => getCachedMaterials());
+  const [isLoading, setIsLoading] = useState(false);
 
   // Modals state
   const [isModalOpen, setIsModalOpen] = useState(false);

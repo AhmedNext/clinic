@@ -24,7 +24,7 @@ export function Header({
   onSignOut,
 }: HeaderProps) {
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-slate-200/80 dark:border-slate-800/80 bg-white/90 dark:bg-slate-950/90 backdrop-blur-md transition-colors">
+    <header className="sticky top-0 z-40 w-full border-b border-slate-200/80 dark:border-slate-800/80 bg-white dark:bg-slate-950 transition-colors">
       <div className="w-full px-4 sm:px-6 xl:px-10">
         {/* Top Bar: Brand + Quick Actions */}
         <div className="h-14 sm:h-16 flex items-center justify-between gap-3">

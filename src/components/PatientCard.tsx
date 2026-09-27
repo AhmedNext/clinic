@@ -14,7 +14,7 @@ interface PatientCardProps {
   onOpenDentalChart: (patient: Patient) => void;
 }
 
-export function PatientCard({
+export const PatientCard = React.memo(function PatientCard({
   patient,
   onDeletePatient,
   onEditPatient,
@@ -243,4 +243,4 @@ export function PatientCard({
       </div>
     </div>
   );
-}
+});
