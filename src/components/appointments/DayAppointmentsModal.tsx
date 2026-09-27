@@ -28,6 +28,7 @@ interface DayAppointmentsModalProps {
   onAddAppointment: (data: Omit<Appointment, "id" | "createdAt">) => void;
   onToggleStatus: (id: string, newStatus: AppointmentStatus) => void;
   onDeleteAppointment: (id: string) => void;
+  onOpenAddPatient?: (dateString: string) => void;
 }
 
 const COMMON_PROCEDURES = [
@@ -61,6 +62,7 @@ export function DayAppointmentsModal({
   onAddAppointment,
   onToggleStatus,
   onDeleteAppointment,
+  onOpenAddPatient,
 }: DayAppointmentsModalProps) {
   const { language, t } = useLanguage();
   const [patientName, setPatientName] = useState("");
@@ -156,6 +158,20 @@ export function DayAppointmentsModal({
           </div>
 
           <div className="flex items-center gap-2">
+            {onOpenAddPatient && (
+              <button
+                type="button"
+                onClick={() => {
+                  onClose();
+                  onOpenAddPatient(dateString);
+                }}
+                className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold bg-white dark:bg-slate-800 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 shadow-2xs transition-all cursor-pointer"
+                title={t.bookPatientCase}
+              >
+                <User className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+                <span className="hidden sm:inline">{t.bookPatientCase}</span>
+              </button>
+            )}
             {!showAddForm && (
               <button
                 type="button"

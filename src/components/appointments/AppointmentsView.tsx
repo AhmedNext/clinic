@@ -26,6 +26,7 @@ interface AppointmentsViewProps {
   onAddAppointment: (data: Omit<Appointment, "id" | "createdAt">) => void;
   onToggleStatus: (id: string, newStatus: AppointmentStatus) => void;
   onDeleteAppointment: (id: string) => void;
+  onOpenAddPatient?: (dateString: string) => void;
 }
 
 export function AppointmentsView({
@@ -34,6 +35,7 @@ export function AppointmentsView({
   onAddAppointment,
   onToggleStatus,
   onDeleteAppointment,
+  onOpenAddPatient,
 }: AppointmentsViewProps) {
   const { language, t } = useLanguage();
   // Calendar month state (defaults to current date, or September 2026 if matching sample data)
@@ -382,6 +384,7 @@ export function AppointmentsView({
           onAddAppointment={onAddAppointment}
           onToggleStatus={onToggleStatus}
           onDeleteAppointment={onDeleteAppointment}
+          onOpenAddPatient={onOpenAddPatient}
         />
       )}
     </div>

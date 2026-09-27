@@ -13,13 +13,18 @@ import { useLanguage } from "@/context/LanguageContext";
 interface AddPatientModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onAddPatient: (patient: Omit<Patient, "id">) => void;
+  onAddPatient: (
+    patient: Omit<Patient, "id">,
+    options?: { autoBookAppointment?: boolean }
+  ) => void;
+  initialDate?: string;
 }
 
 export function AddPatientModal({
   isOpen,
   onClose,
   onAddPatient,
+  initialDate,
 }: AddPatientModalProps) {
   const { t } = useLanguage();
   const getTodayString = () => {
@@ -34,8 +39,9 @@ export function AddPatientModal({
   const [gender, setGender] = useState<Gender>("male");
   const [age, setAge] = useState<string>("");
   const [phone, setPhone] = useState<string>("");
-  const [date, setDate] = useState(getTodayString());
+  const [date, setDate] = useState(initialDate || getTodayString());
   const [time, setTime] = useState("");
+  const [autoBookAppointment, setAutoBookAppointment] = useState(true);
   const [isClockPickerOpen, setIsClockPickerOpen] = useState(false);
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
   const [paidAmount, setPaidAmount] = useState<string>("0");
@@ -79,8 +85,9 @@ export function AddPatientModal({
       setGender("male");
       setAge("");
       setPhone("");
-      setDate(getTodayString());
+      setDate(initialDate || getTodayString());
       setTime("");
+      setAutoBookAppointment(true);
       setPaidAmount("0");
       setDebtAmount("0");
       setNotes("");
@@ -89,7 +96,7 @@ export function AddPatientModal({
       setShowTeethChart(false);
       setError(null);
     }
-  }, [isOpen]);
+  }, [isOpen, initialDate]);
 
   // Handle escape key
   useEffect(() => {
@@ -122,20 +129,23 @@ export function AddPatientModal({
     const parsedPaid = parseFloat(paidAmount) || 0;
     const parsedDebt = parseFloat(debtAmount) || 0;
 
-    onAddPatient({
-      name: name.trim(),
-      gender,
-      age: age ? parseInt(age, 10) : undefined,
-      phone: phone.trim() || undefined,
-      date,
-      time: time.trim() || undefined,
-      totalAmount: parsedPaid + parsedDebt,
-      paidAmount: parsedPaid,
-      debtAmount: parsedDebt,
-      notes: notes.trim() || undefined,
-      medicalHistory: medicalHistory.trim() || undefined,
-      teeth: teeth.length > 0 ? teeth : undefined,
-    });
+    onAddPatient(
+      {
+        name: name.trim(),
+        gender,
+        age: age ? parseInt(age, 10) : undefined,
+        phone: phone.trim() || undefined,
+        date,
+        time: time.trim() || undefined,
+        totalAmount: parsedPaid + parsedDebt,
+        paidAmount: parsedPaid,
+        debtAmount: parsedDebt,
+        notes: notes.trim() || undefined,
+        medicalHistory: medicalHistory.trim() || undefined,
+        teeth: teeth.length > 0 ? teeth : undefined,
+      },
+      { autoBookAppointment }
+    );
     onClose();
   };
 
@@ -374,6 +384,24 @@ export function AddPatientModal({
                 </button>
               </div>
             </div>
+          </div>
+
+          {/* Auto-Schedule in Calendar Toggle */}
+          <div className="flex items-center justify-between p-3 rounded-xl border border-indigo-100 dark:border-indigo-900/50 bg-indigo-50/40 dark:bg-indigo-950/20">
+            <label
+              htmlFor="auto-book-apt"
+              className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-indigo-900 dark:text-indigo-200 select-none"
+            >
+              <Calendar className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+              <span>{t.autoBookAppointment}</span>
+            </label>
+            <input
+              id="auto-book-apt"
+              type="checkbox"
+              checked={autoBookAppointment}
+              onChange={(e) => setAutoBookAppointment(e.target.checked)}
+              className="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 cursor-pointer accent-indigo-600"
+            />
           </div>
 
           {/* Payment: Paid & Debt */}

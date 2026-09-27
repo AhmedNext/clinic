@@ -17,6 +17,8 @@ export interface Translations {
   clinicSubtitle: string;
   signOut: string;
   signOutTooltip: string;
+  autoBookAppointment: string;
+  bookPatientCase: string;
 
   // Stats
   totalPatients: string;
@@ -247,6 +249,8 @@ export const translations: Record<Language, Translations> = {
     clinicPro: "Clinic Pro",
     activeCloud: "Active Cloud",
     clinicSubtitle: "Dr. Qayssar Salah • Clinic & Odontogram",
+    autoBookAppointment: "Auto-schedule in appointments calendar",
+    bookPatientCase: "Add & Book Patient Case",
     signOut: "Sign out",
     signOutTooltip: "Log out from clinic system",
 
@@ -478,6 +482,8 @@ export const translations: Record<Language, Translations> = {
     clinicPro: "عيادة احترافية",
     activeCloud: "متصل سحابياً",
     clinicSubtitle: "د. قيصر صلاح • إدارة العيادة ومخطط الأسنان",
+    autoBookAppointment: "حجز موعد في جدول المواعيد تلقائياً",
+    bookPatientCase: "إضافة وحجز ملف مريض",
     signOut: "تسجيل الخروج",
     signOutTooltip: "تسجيل الخروج من نظام العيادة",
 
@@ -709,6 +715,8 @@ export const translations: Record<Language, Translations> = {
     clinicPro: "نۆرینگەی تایبەت",
     activeCloud: "کلاودی چالاک",
     clinicSubtitle: "د. قەیسەر سەڵاح • نۆرینگەی ددان و چارەسەر",
+    autoBookAppointment: "تۆمارکردنی نۆرە لە خشتەی نۆرەکان بە خۆکار",
+    bookPatientCase: "زیادکردن و حجزکردنی نەخۆش",
     signOut: "دەرچوون",
     signOutTooltip: "دەرچوون لە سیستەمی نۆرینگە",
 

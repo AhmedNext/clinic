@@ -110,6 +110,7 @@ export default function DashboardPage() {
   const [viewMode, setViewMode] = useState<"table" | "grid">("grid");
   const [sortOrder, setSortOrder] = useState<"desc" | "asc">("desc"); // 'desc' = newest first
   const [notification, setNotification] = useState<string | null>(null);
+  const [addPatientInitialDate, setAddPatientInitialDate] = useState<string | null>(null);
 
   const supabase = useMemo(() => createClient(), []);
 
@@ -172,7 +173,10 @@ export default function DashboardPage() {
   };
 
   // Patient CRUD
-  const handleAddPatient = async (data: Omit<Patient, "id">) => {
+  const handleAddPatient = async (
+    data: Omit<Patient, "id">,
+    options?: { autoBookAppointment?: boolean }
+  ) => {
     const now = Date.now();
     const patientId = `pat-${now}-${Math.random().toString(36).substring(2, 6)}`;
 
@@ -196,6 +200,27 @@ export default function DashboardPage() {
     };
     setPatients((prev) => [newPatient, ...prev]);
     showToast(`Added case for "${newPatient.name}"`);
+
+    // Auto-schedule appointment in calendar when enabled
+    if (options?.autoBookAppointment !== false && data.date) {
+      const aptTime = data.time || "10:00 AM";
+      const newApt: Appointment = {
+        id: `apt-${now}-${Math.random().toString(36).substring(2, 6)}`,
+        patientName: data.name,
+        phone: data.phone || "",
+        date: data.date,
+        time: aptTime,
+        treatment: data.notes?.trim() ? data.notes.slice(0, 40) : "General Consultation",
+        status: "scheduled",
+        createdAt: now,
+      };
+      setAppointments((prev) => [newApt, ...prev]);
+      try {
+        await upsertAppointmentToDB(newApt);
+      } catch (err) {
+        console.error("Failed to auto-save appointment:", err);
+      }
+    }
 
     try {
       await upsertPatientToDB(newPatient);
@@ -681,6 +706,10 @@ export default function DashboardPage() {
             onAddAppointment={handleAddAppointment}
             onToggleStatus={handleToggleAppointmentStatus}
             onDeleteAppointment={handleDeleteAppointment}
+            onOpenAddPatient={(dateStr) => {
+              setAddPatientInitialDate(dateStr);
+              setIsModalOpen(true);
+            }}
           />
         ) : activeTab === "materials" ? (
           /* ================= CLINIC MATERIALS & EXPENSES TAB ================= */
@@ -1006,7 +1035,14 @@ export default function DashboardPage() {
       {/* Add Patient Modal */}
       <AddPatientModal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        initialDate={
+          addPatientInitialDate ||
+          (monthFilter !== "all" ? `${monthFilter}-01` : undefined)
+        }
+        onClose={() => {
+          setIsModalOpen(false);
+          setAddPatientInitialDate(null);
+        }}
         onAddPatient={handleAddPatient}
       />
 
