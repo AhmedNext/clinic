@@ -11,6 +11,9 @@ function getSupabase() {
 
 // Map DB row to Patient type
 export function mapRowToPatient(row: any): Patient {
+  const history = Array.isArray(row.history) ? row.history : [];
+  const latestTime = history[0]?.time || (row.time ?? undefined);
+
   return {
     id: row.id,
     name: row.name,
@@ -18,12 +21,13 @@ export function mapRowToPatient(row: any): Patient {
     age: row.age ?? undefined,
     phone: row.phone ?? undefined,
     date: row.date,
+    time: latestTime,
     totalAmount: row.total_amount ? Number(row.total_amount) : 0,
     paidAmount: row.paid_amount ? Number(row.paid_amount) : 0,
     debtAmount: row.debt_amount ? Number(row.debt_amount) : 0,
     notes: row.notes ?? undefined,
     medicalHistory: row.medical_history ?? undefined,
-    history: Array.isArray(row.history) ? row.history : [],
+    history,
     teeth: Array.isArray(row.teeth) ? row.teeth : [],
     createdAt: row.created_at ? Number(row.created_at) : undefined,
   };
@@ -31,6 +35,26 @@ export function mapRowToPatient(row: any): Patient {
 
 // Map Patient type to DB row
 export function mapPatientToRow(patient: Patient): any {
+  // Preserve patient.time in the latest history entry so it saves in JSONB without DB migrations
+  const history = [...(patient.history || [])];
+  if (patient.time) {
+    if (history.length > 0) {
+      history[0] = { ...history[0], time: patient.time };
+    } else {
+      history.push({
+        id: `hist-${Date.now()}`,
+        date: patient.date,
+        time: patient.time,
+        title: "Initial Visit",
+        notes: "",
+        fee: patient.totalAmount ?? 0,
+        paid: patient.paidAmount ?? 0,
+        debt: patient.debtAmount ?? 0,
+        createdAt: Date.now(),
+      });
+    }
+  }
+
   return {
     id: patient.id,
     name: patient.name,
@@ -43,7 +67,7 @@ export function mapPatientToRow(patient: Patient): any {
     debt_amount: patient.debtAmount ?? 0,
     notes: patient.notes ?? null,
     medical_history: patient.medicalHistory ?? null,
-    history: patient.history || [],
+    history,
     teeth: patient.teeth || [],
     created_at: patient.createdAt ?? Date.now(),
     updated_at: new Date().toISOString(),

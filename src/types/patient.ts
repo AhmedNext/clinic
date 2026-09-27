@@ -7,6 +7,7 @@ export type PaymentStatus = "paid" | "partial" | "unpaid";
 export interface PatientHistoryEntry {
   id: string;
   date: string; // YYYY-MM-DD
+  time?: string; // e.g. "10:30 AM"
   title: string; // e.g. "Follow-up Visit", "Initial Consultation", "Lab Work", "Treatment"
   notes: string;
   fee?: number;
@@ -22,6 +23,7 @@ export interface Patient {
   age?: number;
   phone?: string;
   date: string; // YYYY-MM-DD (latest visit/consultation)
+  time?: string; // e.g. "10:30 AM"
   totalAmount?: number; // Total fee/charges for this case in Iraqi Dinar (IQD)
   paidAmount?: number;  // Amount paid by the patient in Iraqi Dinar (IQD)
   debtAmount?: number;  // Remaining unpaid balance / debt in Iraqi Dinar (IQD)

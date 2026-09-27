@@ -1,11 +1,13 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { X, Calendar, User, FileText, CheckCircle2, Banknote, Phone } from "lucide-react";
+import { X, Calendar, Clock, User, FileText, CheckCircle2, Banknote, Phone } from "lucide-react";
 import { Gender, Patient } from "@/types/patient";
 import { ToothRecord } from "@/types/dental";
 import { DentalChart } from "./dental/DentalChart";
 import { PatientAvatar } from "./PatientAvatar";
+import { CircleClockPickerModal } from "./ui/CircleClockPickerModal";
+import { BetterDatePickerModal } from "./ui/BetterDatePickerModal";
 
 interface AddPatientModalProps {
   isOpen: boolean;
@@ -31,6 +33,9 @@ export function AddPatientModal({
   const [age, setAge] = useState<string>("");
   const [phone, setPhone] = useState<string>("");
   const [date, setDate] = useState(getTodayString());
+  const [time, setTime] = useState("");
+  const [isClockPickerOpen, setIsClockPickerOpen] = useState(false);
+  const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
   const [paidAmount, setPaidAmount] = useState<string>("0");
   const [debtAmount, setDebtAmount] = useState<string>("0");
   const [notes, setNotes] = useState("");
@@ -73,6 +78,7 @@ export function AddPatientModal({
       setAge("");
       setPhone("");
       setDate(getTodayString());
+      setTime("");
       setPaidAmount("0");
       setDebtAmount("0");
       setNotes("");
@@ -120,6 +126,7 @@ export function AddPatientModal({
       age: age ? parseInt(age, 10) : undefined,
       phone: phone.trim() || undefined,
       date,
+      time: time.trim() || undefined,
       totalAmount: parsedPaid + parsedDebt,
       paidAmount: parsedPaid,
       debtAmount: parsedDebt,
@@ -293,26 +300,77 @@ export function AddPatientModal({
             </div>
           </div>
 
-          {/* Consultation Date */}
-          <div>
-            <label
-              htmlFor="patient-date"
-              className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1"
-            >
-              Case / Visit Date *
-            </label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                <Calendar className="w-4 h-4" />
+          {/* Case Date & Visit Time */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {/* Consultation Date */}
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <label
+                  htmlFor="patient-date"
+                  className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400"
+                >
+                  Case / Visit Date *
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setIsDatePickerOpen(true)}
+                  className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer"
+                >
+                  Better Calendar 📅
+                </button>
               </div>
-              <input
-                id="patient-date"
-                type="date"
-                required
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 dark:focus:border-indigo-400 text-sm transition-all"
-              />
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                  <Calendar className="w-4 h-4" />
+                </div>
+                <input
+                  id="patient-date"
+                  type="date"
+                  required
+                  value={date}
+                  onChange={(e) => setDate(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 dark:focus:border-indigo-400 text-sm transition-all"
+                />
+              </div>
+            </div>
+
+            {/* Visit Time (Circle Clock) */}
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <label
+                  htmlFor="patient-time"
+                  className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400"
+                >
+                  Visit Time
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setIsClockPickerOpen(true)}
+                  className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer"
+                >
+                  Circle Clock 🕒
+                </button>
+              </div>
+              <div className="relative flex items-center">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                  <Clock className="w-4 h-4" />
+                </div>
+                <input
+                  id="patient-time"
+                  type="text"
+                  placeholder="e.g. 10:30 AM"
+                  value={time}
+                  onChange={(e) => setTime(e.target.value)}
+                  className="w-full pl-10 pr-20 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 text-sm transition-all"
+                />
+                <button
+                  type="button"
+                  onClick={() => setIsClockPickerOpen(true)}
+                  className="absolute right-1.5 px-2.5 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 hover:bg-indigo-100 text-xs font-bold cursor-pointer"
+                >
+                  Clock
+                </button>
+              </div>
             </div>
           </div>
 
@@ -472,6 +530,24 @@ export function AddPatientModal({
           </div>
         </form>
       </div>
+
+      {/* Circle Clock Time Picker */}
+      <CircleClockPickerModal
+        isOpen={isClockPickerOpen}
+        initialTime={time}
+        patientName={name}
+        onClose={() => setIsClockPickerOpen(false)}
+        onSaveTime={(newTime) => setTime(newTime)}
+      />
+
+      {/* Better Calendar Date Picker */}
+      <BetterDatePickerModal
+        isOpen={isDatePickerOpen}
+        initialDate={date}
+        patientName={name}
+        onClose={() => setIsDatePickerOpen(false)}
+        onSaveDate={(newDate) => setDate(newDate)}
+      />
     </div>
   );
 }

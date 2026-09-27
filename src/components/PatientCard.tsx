@@ -1,10 +1,21 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { Patient, calculateDebt, formatIQD, getWhatsAppUrl } from "@/types/patient";
 import { PatientAvatar } from "./PatientAvatar";
-import { Calendar, Trash2, FileText, Pencil, History, Phone, Check } from "lucide-react";
+import {
+  Calendar,
+  Clock,
+  Trash2,
+  FileText,
+  Pencil,
+  History,
+  Phone,
+  Check,
+} from "lucide-react";
 import { formatStaticDate } from "@/utils/date";
+import { CircleClockPickerModal } from "./ui/CircleClockPickerModal";
+import { BetterDatePickerModal } from "./ui/BetterDatePickerModal";
 
 interface PatientCardProps {
   patient: Patient;
@@ -13,6 +24,7 @@ interface PatientCardProps {
   onViewHistory: (patient: Patient) => void;
   onOpenDentalChart: (patient: Patient) => void;
   onSettleDebt?: (patient: Patient) => void;
+  onUpdatePatient?: (patient: Patient) => void;
 }
 
 export const PatientCard = React.memo(function PatientCard({
@@ -22,7 +34,11 @@ export const PatientCard = React.memo(function PatientCard({
   onViewHistory,
   onOpenDentalChart,
   onSettleDebt,
+  onUpdatePatient,
 }: PatientCardProps) {
+  const [isClockPickerOpen, setIsClockPickerOpen] = useState(false);
+  const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
+
   const isMale = patient.gender === "male";
   const debt = calculateDebt(patient.totalAmount, patient.paidAmount, patient.debtAmount);
   const paid = patient.paidAmount ?? 0;
@@ -32,18 +48,39 @@ export const PatientCard = React.memo(function PatientCard({
   );
   const visitsCount = sortedHistory.length;
 
+  const handleSaveTime = (newTime: string) => {
+    if (onUpdatePatient) {
+      onUpdatePatient({
+        ...patient,
+        time: newTime || undefined,
+      });
+    }
+  };
+
+  const handleSaveDate = (newDate: string) => {
+    if (onUpdatePatient && newDate) {
+      onUpdatePatient({
+        ...patient,
+        date: newDate,
+      });
+    }
+  };
+
   return (
     <div className="group flex flex-col rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm hover:shadow-lg hover:border-indigo-200 dark:hover:border-indigo-800/60 transition-all duration-200 overflow-hidden">
-
       {/* ── TOP COLOUR BAR ── */}
-      <div className={`h-1 w-full ${isMale ? "bg-gradient-to-r from-sky-400 to-indigo-500" : "bg-gradient-to-r from-rose-400 to-pink-500"}`} />
+      <div
+        className={`h-1 w-full ${
+          isMale
+            ? "bg-gradient-to-r from-sky-400 to-indigo-500"
+            : "bg-gradient-to-r from-rose-400 to-pink-500"
+        }`}
+      />
 
       {/* ── MAIN BODY ── */}
       <div className="p-4 flex flex-col gap-3">
-
         {/* Row 1: Avatar + Info + Action icons */}
         <div className="flex items-start justify-between gap-3">
-
           {/* Avatar + name + badges */}
           <div className="flex items-center gap-3 min-w-0">
             <div className="flex-shrink-0">
@@ -55,11 +92,13 @@ export const PatientCard = React.memo(function PatientCard({
               </h3>
               {/* Badges row */}
               <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
-                <span className={`inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[11px] font-semibold border ${
-                  isMale
-                    ? "bg-sky-50 dark:bg-sky-950/40 text-sky-700 dark:text-sky-300 border-sky-200 dark:border-sky-800"
-                    : "bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800"
-                }`}>
+                <span
+                  className={`inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[11px] font-semibold border ${
+                    isMale
+                      ? "bg-sky-50 dark:bg-sky-950/40 text-sky-700 dark:text-sky-300 border-sky-200 dark:border-sky-800"
+                      : "bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800"
+                  }`}
+                >
                   <span>{isMale ? "♂" : "♀"}</span>
                   <span className="capitalize">{patient.gender}</span>
                 </span>
@@ -80,7 +119,9 @@ export const PatientCard = React.memo(function PatientCard({
                   }`}
                 >
                   <History className="w-3 h-3 text-indigo-500" />
-                  <span>{visitsCount} {visitsCount === 1 ? "visit" : "visits"}</span>
+                  <span>
+                    {visitsCount} {visitsCount === 1 ? "visit" : "visits"}
+                  </span>
                 </span>
 
                 <span className="text-[10px] text-slate-400 dark:text-slate-600 font-mono">
@@ -121,12 +162,63 @@ export const PatientCard = React.memo(function PatientCard({
           </div>
         </div>
 
-        {/* Row 2: Payment status strip */}
-        <div className={`flex items-center justify-between px-3 py-2 rounded-xl text-xs ${
-          debt > 0
-            ? "bg-rose-50 dark:bg-rose-950/30 border border-rose-100 dark:border-rose-900/40"
-            : "bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-100 dark:border-emerald-900/40"
-        }`}>
+        {/* ── ROW 2: INTERACTIVE DATE & CIRCLE CLOCK TIME BUTTONS (Tap on phone) ── */}
+        <div className="grid grid-cols-2 gap-2 p-1.5 rounded-xl bg-slate-50 dark:bg-slate-850/60 border border-slate-200/80 dark:border-slate-800">
+          {/* Better Date Picker Trigger */}
+          <button
+            type="button"
+            onClick={() => setIsDatePickerOpen(true)}
+            title="Tap to change visit date"
+            className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-700/80 hover:border-indigo-400 dark:hover:border-indigo-500 hover:bg-indigo-50/50 dark:hover:bg-indigo-950/30 text-left transition-all cursor-pointer active:scale-95 shadow-2xs group/date"
+          >
+            <div className="p-1 rounded-md bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 group-hover/date:bg-indigo-600 group-hover/date:text-white transition-colors">
+              <Calendar className="w-3.5 h-3.5" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400 block leading-none">
+                Date
+              </span>
+              <span className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate block mt-0.5">
+                {formatStaticDate(patient.date)}
+              </span>
+            </div>
+          </button>
+
+          {/* Circle Clock Picker Trigger */}
+          <button
+            type="button"
+            onClick={() => setIsClockPickerOpen(true)}
+            title="Tap to choose time with circle clock"
+            className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-700/80 hover:border-indigo-400 dark:hover:border-indigo-500 hover:bg-indigo-50/50 dark:hover:bg-indigo-950/30 text-left transition-all cursor-pointer active:scale-95 shadow-2xs group/time"
+          >
+            <div className="p-1 rounded-md bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 group-hover/time:bg-indigo-600 group-hover/time:text-white transition-colors">
+              <Clock className="w-3.5 h-3.5" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400 block leading-none">
+                Time (Clock)
+              </span>
+              <span
+                className={`text-xs font-bold truncate block mt-0.5 ${
+                  patient.time
+                    ? "text-indigo-600 dark:text-indigo-400"
+                    : "text-slate-400 italic font-medium"
+                }`}
+              >
+                {patient.time || "Set Time 🕒"}
+              </span>
+            </div>
+          </button>
+        </div>
+
+        {/* Row 3: Payment status strip */}
+        <div
+          className={`flex items-center justify-between px-3 py-2 rounded-xl text-xs ${
+            debt > 0
+              ? "bg-rose-50 dark:bg-rose-950/30 border border-rose-100 dark:border-rose-900/40"
+              : "bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-100 dark:border-emerald-900/40"
+          }`}
+        >
           <span className="text-slate-500 dark:text-slate-400">
             Paid:{" "}
             <strong className="text-slate-800 dark:text-slate-200 font-semibold">
@@ -159,7 +251,7 @@ export const PatientCard = React.memo(function PatientCard({
           )}
         </div>
 
-        {/* Row 3: Contact buttons */}
+        {/* Row 4: Contact buttons */}
         {patient.phone && (
           <div className="grid grid-cols-2 gap-2">
             <a
@@ -183,26 +275,30 @@ export const PatientCard = React.memo(function PatientCard({
           </div>
         )}
 
-        {/* Row 4: Dental chart button */}
+        {/* Row 5: Dental chart button */}
         <button
           type="button"
           onClick={() => onOpenDentalChart(patient)}
           className="group/dent w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold bg-indigo-50 dark:bg-indigo-950/40 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 border border-indigo-200/80 dark:border-indigo-800 text-indigo-800 dark:text-indigo-200 transition-all cursor-pointer active:scale-[0.98]"
         >
           <span className="inline-flex items-center gap-2">
-            <span className="text-base group-hover/dent:scale-110 transition-transform inline-block">🦷</span>
+            <span className="text-base group-hover/dent:scale-110 transition-transform inline-block">
+              🦷
+            </span>
             <span>3D Dental Chart</span>
           </span>
-          <span className={`text-[11px] px-2 py-0.5 rounded-full font-bold border ${
-            (patient.teeth?.length ?? 0) > 0
-              ? "bg-indigo-600 text-white border-indigo-600"
-              : "bg-white dark:bg-slate-900 text-indigo-500 border-indigo-200 dark:border-indigo-800"
-          }`}>
+          <span
+            className={`text-[11px] px-2 py-0.5 rounded-full font-bold border ${
+              (patient.teeth?.length ?? 0) > 0
+                ? "bg-indigo-600 text-white border-indigo-600"
+                : "bg-white dark:bg-slate-900 text-indigo-500 border-indigo-200 dark:border-indigo-800"
+            }`}
+          >
             {patient.teeth?.length ?? 0} teeth
           </span>
         </button>
 
-        {/* Row 5: Latest Treatment / History Snippet */}
+        {/* Row 6: Latest Treatment / History Snippet */}
         {sortedHistory.length > 0 && (
           <button
             type="button"
@@ -231,23 +327,8 @@ export const PatientCard = React.memo(function PatientCard({
         )}
       </div>
 
-      {/* ── FOOTER: Date + Notes + History link ── */}
+      {/* ── FOOTER: Clinical Notes & History link ── */}
       <div className="px-4 pb-4 pt-0 space-y-2">
-        {/* Date + history link */}
-        <div className="flex items-center justify-between text-xs">
-          <div className="flex items-center gap-1.5 text-slate-400 dark:text-slate-500">
-            <Calendar className="w-3.5 h-3.5 flex-shrink-0" />
-            <span>Last visit: <span className="text-slate-600 dark:text-slate-300 font-medium">{formatStaticDate(patient.date)}</span></span>
-          </div>
-          <button
-            onClick={() => onViewHistory(patient)}
-            className="text-[11px] text-indigo-500 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 font-semibold hover:underline cursor-pointer transition-colors"
-          >
-            History →
-          </button>
-        </div>
-
-        {/* Clinical notes */}
         {patient.notes ? (
           <div className="flex items-start gap-2 p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 text-xs text-slate-500 dark:text-slate-400">
             <FileText className="w-3.5 h-3.5 flex-shrink-0 mt-0.5 text-slate-400" />
@@ -257,6 +338,24 @@ export const PatientCard = React.memo(function PatientCard({
           <p className="text-[11px] italic text-slate-300 dark:text-slate-700">No notes</p>
         )}
       </div>
+
+      {/* Circle Clock Picker Modal (Analog Clock Dial) */}
+      <CircleClockPickerModal
+        isOpen={isClockPickerOpen}
+        initialTime={patient.time}
+        patientName={patient.name}
+        onClose={() => setIsClockPickerOpen(false)}
+        onSaveTime={handleSaveTime}
+      />
+
+      {/* Better Interactive Calendar Date Picker Modal */}
+      <BetterDatePickerModal
+        isOpen={isDatePickerOpen}
+        initialDate={patient.date}
+        patientName={patient.name}
+        onClose={() => setIsDatePickerOpen(false)}
+        onSaveDate={handleSaveDate}
+      />
     </div>
   );
 });

@@ -948,6 +948,7 @@ export default function DashboardPage() {
                       onViewHistory={(patient) => setHistoryPatient(patient)}
                       onOpenDentalChart={(patient) => setDentalPatient(patient)}
                       onSettleDebt={handleSettleDebt}
+                      onUpdatePatient={handleUpdatePatient}
                     />
                   ))}
                 </div>

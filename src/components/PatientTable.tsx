@@ -3,7 +3,7 @@
 import React from "react";
 import { Patient, calculateDebt, formatIQD, getWhatsAppUrl } from "@/types/patient";
 import { PatientAvatar } from "./PatientAvatar";
-import { Calendar, Trash2, FileText, Pencil, History, Phone, Check } from "lucide-react";
+import { Calendar, Clock, Trash2, FileText, Pencil, History, Phone, Check } from "lucide-react";
 import { formatStaticDate } from "@/utils/date";
 
 interface PatientTableProps {
@@ -131,6 +131,12 @@ export const PatientTable = React.memo(function PatientTable({
                       <Calendar className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 flex-shrink-0" />
                       <span>{formatDate(patient.date)}</span>
                     </div>
+                    {patient.time && (
+                      <div className="mt-0.5 inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/50 border border-indigo-100 dark:border-indigo-900/40">
+                        <Clock className="w-2.5 h-2.5" />
+                        <span>{patient.time}</span>
+                      </div>
+                    )}
                     {patient.history && patient.history.length > 0 && (
                       <div className="mt-1">
                         <button
