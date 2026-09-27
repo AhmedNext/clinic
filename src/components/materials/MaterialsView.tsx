@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useRef } from "react";
 import { ClinicMaterial, NewClinicMaterial } from "@/types/material";
 import { formatIQD } from "@/types/patient";
 import {
@@ -14,6 +14,7 @@ import {
   Store,
   Receipt,
   Sparkles,
+  Pencil,
 } from "lucide-react";
 
 interface MaterialsViewProps {
@@ -23,14 +24,33 @@ interface MaterialsViewProps {
   onDeleteMaterial: (id: string) => Promise<void>;
 }
 
+/**
+ * Format raw number/string into comma-separated thousands
+ * e.g. 95000 -> "95,000", 110000 -> "110,000"
+ * Also normalizes Eastern Arabic numerals if typed/pasted
+ */
+function formatNumberWithCommas(val: number | string): string {
+  if (val === undefined || val === null || val === "") return "";
+  const raw = String(val)
+    .replace(/[٠-٩]/g, (d) => "٠١٢٣٤٥٦٧٨٩".indexOf(d).toString())
+    .replace(/[۰-۹]/g, (d) => "۰۱۲۳۴۵۶۷۸۹".indexOf(d).toString())
+    .replace(/\D/g, "");
+  if (!raw) return "";
+  const normalized = raw.replace(/^0+(?=\d)/, "");
+  return normalized.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+
 export function MaterialsView({
   materials,
   onAddMaterial,
+  onUpdateMaterial,
   onDeleteMaterial,
 }: MaterialsViewProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingItem, setEditingItem] = useState<ClinicMaterial | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const costInputRef = useRef<HTMLInputElement>(null);
 
   // Exactly 3 fields for the doctor:
   // 1. DATE
@@ -41,10 +61,42 @@ export function MaterialsView({
   const [formCostPrice, setFormCostPrice] = useState("");
 
   const handleOpenAdd = () => {
+    setEditingItem(null);
     setFormDate(new Date().toISOString().substring(0, 10));
     setFormSupplier("");
     setFormCostPrice("");
     setIsModalOpen(true);
+  };
+
+  const handleOpenEdit = (item: ClinicMaterial) => {
+    setEditingItem(item);
+    setFormDate(item.date || new Date().toISOString().substring(0, 10));
+    setFormSupplier(item.supplier || "");
+    setFormCostPrice(formatNumberWithCommas(item.costPrice));
+    setIsModalOpen(true);
+  };
+
+  const handleCostPriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const input = e.target;
+    const oldCursor = input.selectionStart || 0;
+    const digitsBeforeCursor = input.value.slice(0, oldCursor).replace(/\D/g, "").length;
+
+    const formatted = formatNumberWithCommas(input.value);
+    setFormCostPrice(formatted);
+
+    // Keep cursor properly positioned relative to digits
+    requestAnimationFrame(() => {
+      if (!costInputRef.current) return;
+      let targetIndex = 0;
+      let digitCount = 0;
+      while (targetIndex < formatted.length && digitCount < digitsBeforeCursor) {
+        if (/\d/.test(formatted[targetIndex])) {
+          digitCount++;
+        }
+        targetIndex++;
+      }
+      costInputRef.current.setSelectionRange(targetIndex, targetIndex);
+    });
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -53,13 +105,25 @@ export function MaterialsView({
 
     setIsSubmitting(true);
     try {
-      const amount = Math.max(0, Number(formCostPrice) || 0);
-      await onAddMaterial({
-        date: formDate || new Date().toISOString().substring(0, 10),
-        supplier: formSupplier.trim(),
-        costPrice: amount,
-      });
+      const cleanNumber = Number(formCostPrice.replace(/,/g, "")) || 0;
+      const amount = Math.max(0, cleanNumber);
+
+      if (editingItem && onUpdateMaterial) {
+        await onUpdateMaterial({
+          ...editingItem,
+          date: formDate || new Date().toISOString().substring(0, 10),
+          supplier: formSupplier.trim(),
+          costPrice: amount,
+        });
+      } else {
+        await onAddMaterial({
+          date: formDate || new Date().toISOString().substring(0, 10),
+          supplier: formSupplier.trim(),
+          costPrice: amount,
+        });
+      }
       setIsModalOpen(false);
+      setEditingItem(null);
     } catch (err) {
       console.error("Save material error:", err);
     } finally {
@@ -240,13 +304,24 @@ export function MaterialsView({
 
                     {/* Actions */}
                     <td className="py-3 px-4 text-right whitespace-nowrap">
-                      <button
-                        onClick={() => onDeleteMaterial(item.id)}
-                        title="Delete expense record"
-                        className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/50 transition-colors cursor-pointer"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                      <div className="inline-flex items-center gap-1">
+                        {onUpdateMaterial && (
+                          <button
+                            onClick={() => handleOpenEdit(item)}
+                            title="Edit expense record"
+                            className="p-1.5 rounded-lg text-slate-400 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/50 transition-colors cursor-pointer"
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </button>
+                        )}
+                        <button
+                          onClick={() => onDeleteMaterial(item.id)}
+                          title="Delete expense record"
+                          className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/50 transition-colors cursor-pointer"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -273,10 +348,10 @@ export function MaterialsView({
                 </div>
                 <div>
                   <h3 className="font-black text-slate-900 dark:text-slate-100 text-sm">
-                    Add Material Expense
+                    {editingItem ? "Edit Material Expense" : "Add Material Expense"}
                   </h3>
                   <p className="text-[11px] text-slate-400">
-                    Enter the 3 simple purchase details
+                    {editingItem ? "Update purchase details" : "Enter the 3 simple purchase details"}
                   </p>
                 </div>
               </div>
@@ -331,23 +406,33 @@ export function MaterialsView({
 
               {/* Field 3: TOTAL MONEY SPENT */}
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">
-                  3. Total Money Spent (IQD) *
-                </label>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">
+                    3. Total Money Spent (IQD) *
+                  </label>
+                  {formCostPrice && (
+                    <span className="text-[11px] font-mono font-bold text-amber-600 dark:text-amber-400">
+                      {formCostPrice} IQD
+                    </span>
+                  )}
+                </div>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-amber-500">
                     <DollarSign className="w-4 h-4" />
                   </div>
                   <input
-                    type="number"
+                    ref={costInputRef}
+                    type="text"
+                    inputMode="numeric"
                     required
-                    min="0"
-                    step="1000"
-                    placeholder="e.g. 50000"
+                    placeholder="e.g. 95,000"
                     value={formCostPrice}
-                    onChange={(e) => setFormCostPrice(e.target.value)}
-                    className="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all font-mono font-bold"
+                    onChange={handleCostPriceChange}
+                    className="w-full pl-10 pr-14 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all font-mono font-bold"
                   />
+                  <div className="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none text-xs font-bold text-slate-400">
+                    IQD
+                  </div>
                 </div>
               </div>
 
@@ -365,7 +450,7 @@ export function MaterialsView({
                   disabled={isSubmitting}
                   className="px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold shadow-sm shadow-amber-600/30 active:scale-95 transition-all cursor-pointer disabled:opacity-50"
                 >
-                  {isSubmitting ? "Saving..." : "Save Expense"}
+                  {isSubmitting ? "Saving..." : editingItem ? "Update Expense" : "Save Expense"}
                 </button>
               </div>
             </form>
