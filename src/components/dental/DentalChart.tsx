@@ -15,6 +15,9 @@ import {
   Eraser,
   MousePointer,
   CheckCircle2,
+  FileText,
+  X,
+  Sparkles,
 } from "lucide-react";
 
 interface DentalChartProps {
@@ -87,6 +90,7 @@ export function DentalChart({
   const [activeTool, setActiveTool] = useState<ToothTreatment | "erase">("treated");
   const [selectedTeethNumbers, setSelectedTeethNumbers] = useState<number[]>([]);
   const [treatmentNote, setTreatmentNote] = useState("");
+  const [activeTooth, setActiveTooth] = useState<ToothInfo | null>(null);
 
   // Map tooth records by number for fast lookup
   const recordsMap = new Map<number, ToothRecord>(
@@ -107,42 +111,89 @@ export function DentalChart({
   const lowerTeethNumbers = lowerTeethSequence.map((t) => t.number);
   const allTeethNumbers = [...upperTeethNumbers, ...lowerTeethNumbers];
 
+  // Quick preset chips for rapid charting
+  const NOTE_PRESETS = [
+    "Composite filling",
+    "Deep cavity",
+    "Root canal session",
+    "Crown fitted",
+    "Extraction needed",
+    "Sensitive to cold",
+    "Fractured cusp",
+  ];
+
   // When clicking on a tooth:
   const handleToothClick = (tooth: ToothInfo) => {
     if (readonly) return;
 
-    const existingRecord = recordsMap.get(tooth.number);
+    setActiveTooth(tooth);
+    setSelectedTeethNumbers([tooth.number]);
 
-    // If Erase tool is active: remove treatment
+    const existingRecord = recordsMap.get(tooth.number);
+    setTreatmentNote(existingRecord?.notes || "");
+
+    // If Erase tool is active:
     if (activeTool === "erase") {
       if (existingRecord) {
         onRemoveTooth(tooth.number);
       }
-      setSelectedTeethNumbers([tooth.number]);
-      setTreatmentNote("");
       return;
     }
 
-    // If tooth already has THIS status: toggle off (remove)
-    if (existingRecord && existingRecord.status === activeTool) {
-      onRemoveTooth(tooth.number);
-      setSelectedTeethNumbers([tooth.number]);
-      setTreatmentNote("");
+    // If tooth does not have a record yet, create one with activeTool
+    if (!existingRecord) {
+      const newRecord: ToothRecord = {
+        toothNumber: tooth.number,
+        status: activeTool,
+        procedure: TREATMENT_METADATA[activeTool].label,
+        notes: undefined,
+        updatedAt: Date.now(),
+      };
+      onUpdateTooth(newRecord);
+    }
+  };
+
+  // Immediate note editing for the active tooth
+  const handleActiveToothNoteChange = (text: string) => {
+    setTreatmentNote(text);
+    if (!activeTooth) return;
+
+    const existingRecord = recordsMap.get(activeTooth.number);
+    const updatedRecord: ToothRecord = {
+      toothNumber: activeTooth.number,
+      status: existingRecord?.status || (activeTool === "erase" ? "treated" : activeTool),
+      procedure:
+        existingRecord?.procedure ||
+        TREATMENT_METADATA[activeTool === "erase" ? "treated" : activeTool].label,
+      notes: text.trim() || undefined,
+      updatedAt: Date.now(),
+    };
+    onUpdateTooth(updatedRecord);
+  };
+
+  // Immediate status change for the active tooth
+  const handleActiveToothStatusChange = (status: ToothTreatment | "erase") => {
+    if (!activeTooth) return;
+
+    if (status === "erase") {
+      onRemoveTooth(activeTooth.number);
       return;
     }
 
-    // Otherwise: apply the active procedure tool and store!
-    const newRecord: ToothRecord = {
-      toothNumber: tooth.number,
-      status: activeTool,
-      procedure: TREATMENT_METADATA[activeTool].label,
+    const existingRecord = recordsMap.get(activeTooth.number);
+    const updatedRecord: ToothRecord = {
+      toothNumber: activeTooth.number,
+      status,
+      procedure: TREATMENT_METADATA[status].label,
       notes: treatmentNote.trim() || existingRecord?.notes || undefined,
       updatedAt: Date.now(),
     };
+    onUpdateTooth(updatedRecord);
+  };
 
-    onUpdateTooth(newRecord);
-    setSelectedTeethNumbers([tooth.number]);
-    setTreatmentNote(existingRecord?.notes || "");
+  const handleAppendPreset = (preset: string) => {
+    const newNote = treatmentNote.trim() ? `${treatmentNote.trim()}, ${preset}` : preset;
+    handleActiveToothNoteChange(newNote);
   };
 
   // Quick selection helpers
@@ -219,7 +270,9 @@ export function DentalChart({
   // Render individual tooth item in the column
   const renderToothItem = (tooth: ToothInfo) => {
     const record = recordsMap.get(tooth.number);
-    const isSelected = selectedTeethNumbers.includes(tooth.number);
+    const isSelected =
+      activeTooth?.number === tooth.number || selectedTeethNumbers.includes(tooth.number);
+    const hasNote = Boolean(record?.notes);
 
     return (
       <button
@@ -229,7 +282,7 @@ export function DentalChart({
         onClick={() => handleToothClick(tooth)}
         title={`${tooth.number} - ${tooth.name} (${tooth.arabicName})${
           record ? ` • ${TREATMENT_METADATA[record.status].label}` : " • Click to mark"
-        }`}
+        }${record?.notes ? ` • Note: ${record.notes}` : ""}`}
         className={`
           relative flex flex-col items-center justify-center p-0.5 sm:p-1 rounded-xl transition-all duration-150 cursor-pointer group active:scale-95
           ${
@@ -240,6 +293,16 @@ export function DentalChart({
           ${record && !isSelected ? "ring-1 ring-emerald-500/40 bg-emerald-50/50 dark:bg-emerald-950/30" : ""}
         `}
       >
+        {/* Note indicator badge icon */}
+        {hasNote && (
+          <span
+            className="absolute top-0 right-0 z-20 text-[10px] leading-none drop-shadow-xs"
+            title={`Note: ${record?.notes}`}
+          >
+            📝
+          </span>
+        )}
+
         <div className="w-5 sm:w-7 md:w-8 lg:w-9 h-14 sm:h-18 md:h-20 flex items-center justify-center">
           <Tooth3DGraphic
             category={tooth.category}
@@ -542,16 +605,23 @@ export function DentalChart({
               <div className="w-full grid grid-cols-[repeat(16,minmax(0,1fr))] gap-0.5 sm:gap-1 text-center mb-0.5">
                 {upperTeethSequence.map((tooth) => {
                   const cat = getFdiCategory(tooth.number);
-                  const isSelected = selectedTeethNumbers.includes(tooth.number);
+                  const isSelected = activeTooth?.number === tooth.number || selectedTeethNumbers.includes(tooth.number);
+                  const rec = recordsMap.get(tooth.number);
+                  const hasNote = Boolean(rec?.notes);
+
                   return (
-                    <div
+                    <button
                       key={tooth.number}
-                      className={`text-[11px] sm:text-xs md:text-sm font-bold font-mono transition-transform ${
+                      type="button"
+                      onClick={() => handleToothClick(tooth)}
+                      className={`relative flex items-center justify-center gap-0.5 text-[11px] sm:text-xs md:text-sm font-bold font-mono transition-transform cursor-pointer ${
                         isSelected ? "scale-125 font-black text-indigo-600" : cat.textColor
                       }`}
+                      title={hasNote ? `Tooth ${tooth.number} Note: ${rec?.notes}` : `Tooth ${tooth.number}`}
                     >
-                      {tooth.number}
-                    </div>
+                      <span>{tooth.number}</span>
+                      {hasNote && <span className="text-[10px]" title={rec?.notes}>📝</span>}
+                    </button>
                   );
                 })}
               </div>
@@ -578,16 +648,23 @@ export function DentalChart({
               <div className="w-full grid grid-cols-[repeat(16,minmax(0,1fr))] gap-0.5 sm:gap-1 text-center mt-1 mb-0.5">
                 {lowerTeethSequence.map((tooth) => {
                   const cat = getFdiCategory(tooth.number);
-                  const isSelected = selectedTeethNumbers.includes(tooth.number);
+                  const isSelected = activeTooth?.number === tooth.number || selectedTeethNumbers.includes(tooth.number);
+                  const rec = recordsMap.get(tooth.number);
+                  const hasNote = Boolean(rec?.notes);
+
                   return (
-                    <div
+                    <button
                       key={tooth.number}
-                      className={`text-[11px] sm:text-xs md:text-sm font-bold font-mono transition-transform ${
+                      type="button"
+                      onClick={() => handleToothClick(tooth)}
+                      className={`relative flex items-center justify-center gap-0.5 text-[11px] sm:text-xs md:text-sm font-bold font-mono transition-transform cursor-pointer ${
                         isSelected ? "scale-125 font-black text-indigo-600" : cat.textColor
                       }`}
+                      title={hasNote ? `Tooth ${tooth.number} Note: ${rec?.notes}` : `Tooth ${tooth.number}`}
                     >
-                      {tooth.number}
-                    </div>
+                      <span>{tooth.number}</span>
+                      {hasNote && <span className="text-[10px]" title={rec?.notes}>📝</span>}
+                    </button>
                   );
                 })}
               </div>
@@ -680,7 +757,158 @@ export function DentalChart({
         </div>
       </div>
 
-      {/* ================= 3. SUMMARY OF WORKED TEETH ================= */}
+      {/* ================= 3. SELECTED TOOTH CLINICAL NOTE & DETAIL PANEL ================= */}
+      {activeTooth && (
+        <div className="mt-3.5 p-3.5 sm:p-5 rounded-2xl sm:rounded-3xl bg-indigo-50/90 dark:bg-indigo-950/60 border-2 border-indigo-500/50 shadow-lg animate-in slide-in-from-top-2 duration-200">
+          <div className="flex items-center justify-between gap-3 pb-3 border-b border-indigo-200/70 dark:border-indigo-800/70">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <span className="text-2xl flex-shrink-0">🦷</span>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="font-black text-sm sm:text-base text-slate-900 dark:text-slate-100">
+                    Tooth #{activeTooth.number} — {activeTooth.name}
+                  </span>
+                  <span className="text-xs text-slate-500 dark:text-slate-400">
+                    ({activeTooth.arabicName})
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">
+                  <span className="font-semibold text-indigo-700 dark:text-indigo-300">
+                    {activeTooth.jaw === "upper"
+                      ? "Upper Maxilla (الفك العلوي)"
+                      : "Lower Mandible (الفك السفلي)"}
+                  </span>
+                  <span>•</span>
+                  <span className="capitalize font-semibold text-slate-600 dark:text-slate-300">
+                    {getFdiCategory(activeTooth.number).label}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setActiveTooth(null)}
+              className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-white dark:hover:bg-slate-800 transition-colors cursor-pointer flex-shrink-0"
+              title="Close note panel"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+
+          {/* Condition / Procedure Selector */}
+          <div className="py-3">
+            <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
+              Tooth Condition / Status:
+            </label>
+            <div className="flex items-center gap-1.5 flex-wrap">
+              {(
+                [
+                  "treated",
+                  "filling",
+                  "root_canal",
+                  "crown",
+                  "extraction",
+                  "decay",
+                ] as ToothTreatment[]
+              ).map((statusKey) => {
+                const meta = TREATMENT_METADATA[statusKey];
+                const isCurrentStatus =
+                  recordsMap.get(activeTooth.number)?.status === statusKey;
+                return (
+                  <button
+                    key={statusKey}
+                    type="button"
+                    onClick={() => handleActiveToothStatusChange(statusKey)}
+                    className={`px-3 py-1 rounded-xl text-xs font-bold flex items-center gap-1.5 border transition-all cursor-pointer ${
+                      isCurrentStatus
+                        ? "ring-2 ring-indigo-500 scale-105 shadow-xs"
+                        : "opacity-75 hover:opacity-100"
+                    } ${meta.badgeBg} ${meta.badgeBorder} ${meta.badgeText}`}
+                  >
+                    <span
+                      className="w-2 h-2 rounded-full"
+                      style={{ backgroundColor: meta.color }}
+                    />
+                    <span>{meta.label}</span>
+                    {isCurrentStatus && <Check className="w-3.5 h-3.5 ml-0.5" />}
+                  </button>
+                );
+              })}
+
+              <button
+                type="button"
+                onClick={() => handleActiveToothStatusChange("erase")}
+                className="px-2.5 py-1 rounded-xl text-xs font-semibold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 hover:bg-rose-100 cursor-pointer flex items-center gap-1"
+              >
+                <Eraser className="w-3.5 h-3.5" />
+                <span>Remove Treatment</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Clinical Note Input Box */}
+          <div className="pt-1">
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                <FileText className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                <span>Clinical Note for Tooth #{activeTooth.number}:</span>
+              </label>
+              <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1">
+                <CheckCircle2 className="w-3 h-3" />
+                <span>Auto-saved to patient</span>
+              </span>
+            </div>
+
+            <textarea
+              rows={3}
+              placeholder={`Write diagnosis or clinical note for Tooth #${activeTooth.number} (e.g. mesial occlusal caries, fractured cusp, sensitive to percussion)...`}
+              value={treatmentNote}
+              onChange={(e) => handleActiveToothNoteChange(e.target.value)}
+              className="w-full px-3.5 py-2.5 rounded-xl border border-indigo-200 dark:border-indigo-800 bg-white dark:bg-slate-900 text-xs sm:text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-xs resize-none"
+            />
+
+            {/* Quick Note Suggestions */}
+            <div className="flex items-center gap-1.5 flex-wrap mt-2">
+              <span className="text-[10px] text-slate-400 font-semibold flex items-center gap-1">
+                <Sparkles className="w-3 h-3 text-amber-500" />
+                <span>Quick:</span>
+              </span>
+              {NOTE_PRESETS.map((preset) => (
+                <button
+                  key={preset}
+                  type="button"
+                  onClick={() => handleAppendPreset(preset)}
+                  className="px-2 py-0.5 rounded-lg text-[10px] font-medium bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-indigo-400 hover:text-indigo-600 dark:hover:text-indigo-300 transition-colors cursor-pointer"
+                >
+                  + {preset}
+                </button>
+              ))}
+            </div>
+
+            <div className="flex items-center justify-end gap-2 mt-3 pt-2.5 border-t border-indigo-200/50 dark:border-indigo-900/50">
+              {treatmentNote && (
+                <button
+                  type="button"
+                  onClick={() => handleActiveToothNoteChange("")}
+                  className="px-3 py-1.5 rounded-xl text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
+                >
+                  Clear Note
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => setActiveTooth(null)}
+                className="px-4 py-1.5 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow-sm shadow-indigo-600/20 cursor-pointer transition-colors"
+              >
+                Done
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ================= 4. SUMMARY OF WORKED TEETH ================= */}
       <div className="mt-3.5 pt-3 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-slate-500 dark:text-slate-400">
         <div className="flex items-center gap-2 flex-wrap">
           <Activity className="w-4 h-4 text-emerald-500 flex-shrink-0" />
