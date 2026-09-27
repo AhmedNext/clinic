@@ -92,7 +92,7 @@ export function MonthlyReportView({
         <div className="p-4 sm:p-5 rounded-2xl border border-emerald-200/70 dark:border-emerald-900/50 bg-gradient-to-br from-emerald-50 to-emerald-100/50 dark:from-emerald-950/30 dark:to-emerald-900/10 shadow-xs">
           <div className="flex items-center justify-between mb-2">
             <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-300">
-              Total Collected
+              Total Income Collected
             </span>
             <div className="p-1.5 rounded-lg bg-emerald-200/60 dark:bg-emerald-800/40 text-emerald-700 dark:text-emerald-300">
               <CheckCircle className="w-4 h-4" />
@@ -109,7 +109,7 @@ export function MonthlyReportView({
         <div className="p-4 sm:p-5 rounded-2xl border border-rose-200/70 dark:border-rose-900/50 bg-gradient-to-br from-rose-50 to-rose-100/50 dark:from-rose-950/30 dark:to-rose-900/10 shadow-xs">
           <div className="flex items-center justify-between mb-2">
             <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-rose-700 dark:text-rose-300">
-              Outstanding Debts
+              Unpaid Debts
             </span>
             <div className="p-1.5 rounded-lg bg-rose-200/60 dark:bg-rose-800/40 text-rose-700 dark:text-rose-300">
               <AlertCircle className="w-4 h-4" />
@@ -121,14 +121,14 @@ export function MonthlyReportView({
           <p className="text-[10px] sm:text-xs text-rose-600/70 dark:text-rose-400/60 mt-1">
             {grandBilled > 0
               ? `${Math.round((grandDebt / grandBilled) * 100)}% unpaid`
-              : "No billing yet"}
+              : "All accounts paid"}
           </p>
         </div>
 
         <div className="p-4 sm:p-5 rounded-2xl border border-indigo-200/70 dark:border-indigo-900/50 bg-gradient-to-br from-indigo-50 to-indigo-100/50 dark:from-indigo-950/30 dark:to-indigo-900/10 shadow-xs">
           <div className="flex items-center justify-between mb-2">
             <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-indigo-700 dark:text-indigo-300">
-              Total Billed
+              Total Case Charges
             </span>
             <div className="p-1.5 rounded-lg bg-indigo-200/60 dark:bg-indigo-800/40 text-indigo-700 dark:text-indigo-300">
               <TrendingUp className="w-4 h-4" />
@@ -138,7 +138,7 @@ export function MonthlyReportView({
             {formatIQD(grandBilled)}
           </div>
           <p className="text-[10px] sm:text-xs text-indigo-600/70 dark:text-indigo-400/60 mt-1">
-            {patients.length} total patients
+            {patients.length} total patient cases
           </p>
         </div>
       </div>

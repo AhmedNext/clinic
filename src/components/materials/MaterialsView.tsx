@@ -214,7 +214,7 @@ export function MaterialsView({
 
   return (
     <div className="w-full space-y-6 animate-in fade-in duration-200">
-      {/* ================= 1. SLEEK APPLE HEADER ================= */}
+      {/* ================= 1. SLEEK HEADER ================= */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-2 border-b border-slate-200/60 dark:border-slate-800/60">
         <div>
           <div className="flex items-center gap-2">
@@ -226,7 +226,7 @@ export function MaterialsView({
             </h2>
           </div>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-            Doctor inventory management, procurement costs & patient procedure pricing
+            Track clinic supplies, purchase costs, and stock levels.
           </p>
         </div>
 
@@ -239,15 +239,15 @@ export function MaterialsView({
         </button>
       </div>
 
-      {/* ================= 2. APPLE-GRADE KPI CARDS ================= */}
+      {/* ================= 2. DOCTOR KPI CARDS ================= */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-        {/* Card 1: Total Spent on Inventory */}
+        {/* Card 1: Total Spent on Materials */}
         <div className="p-4 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800/70 shadow-xs relative overflow-hidden group">
           <div className="flex items-center justify-between text-slate-400 mb-2">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-              Inventory Spend
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
+              Total Spent on Materials
             </span>
-            <div className="w-7 h-7 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
+            <div className="w-7 h-7 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center">
               <DollarSign className="w-3.5 h-3.5" />
             </div>
           </div>
@@ -255,38 +255,38 @@ export function MaterialsView({
             {formatIQD(stats.totalStockValueCost)}
           </div>
           <p className="text-[11px] text-slate-400 mt-1 flex items-center gap-1 font-medium">
-            <span>Invested in</span>
+            <span>Total cost for</span>
             <span className="font-bold text-slate-700 dark:text-slate-300">{stats.totalUnits} items in clinic</span>
           </p>
         </div>
 
-        {/* Card 2: Items in Stock */}
+        {/* Card 2: Registered Products */}
         <div className="p-4 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800/70 shadow-xs">
           <div className="flex items-center justify-between text-slate-400 mb-2">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-              Total Products
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
+              Products in Clinic
             </span>
             <div className="w-7 h-7 rounded-xl bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-400 flex items-center justify-center">
               <Package className="w-3.5 h-3.5" />
             </div>
           </div>
           <div className="text-xl sm:text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tight">
-            {stats.productCount} <span className="text-xs font-normal text-slate-400">kinds</span>
+            {stats.productCount} <span className="text-xs font-normal text-slate-400">{stats.productCount === 1 ? "product" : "products"}</span>
           </div>
           <p className="text-[11px] text-slate-400 mt-1 font-medium">
-            Across {MATERIAL_CATEGORIES.length} clinical categories
+            Dental supplies & materials
           </p>
         </div>
 
-        {/* Card 3: Low Stock Alerts */}
+        {/* Card 3: Stock Alerts */}
         <div className={`p-4 rounded-3xl border shadow-xs transition-colors ${
           stats.lowStockCount > 0
             ? "bg-amber-50/40 dark:bg-amber-950/20 border-amber-200 dark:border-amber-900/40"
             : "bg-white dark:bg-slate-900 border-slate-200/70 dark:border-slate-800/70"
         }`}>
           <div className="flex items-center justify-between text-slate-400 mb-2">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-              Low Stock Warnings
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
+              Low Stock Alerts
             </span>
             <div className={`w-7 h-7 rounded-xl flex items-center justify-center ${
               stats.lowStockCount > 0
@@ -300,11 +300,11 @@ export function MaterialsView({
             <span>{stats.lowStockCount}</span>
             {stats.lowStockCount > 0 ? (
               <span className="text-xs px-2 py-0.5 rounded-full font-bold bg-amber-100 dark:bg-amber-900/60 text-amber-700 dark:text-amber-300">
-                Action Required
+                Needs Reorder
               </span>
             ) : (
               <span className="text-xs px-2 py-0.5 rounded-full font-bold bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300">
-                Well Stocked
+                All In Stock
               </span>
             )}
           </div>
@@ -312,15 +312,15 @@ export function MaterialsView({
             onClick={() => setOnlyLowStock(!onlyLowStock)}
             className="text-[11px] text-indigo-600 dark:text-indigo-400 hover:underline mt-1 font-semibold cursor-pointer block"
           >
-            {onlyLowStock ? "Show all items" : "Filter low stock items →"}
+            {onlyLowStock ? "Show all supplies" : "Show low stock only →"}
           </button>
         </div>
 
-        {/* Card 4: Potential Procedure Revenue */}
+        {/* Card 4: Treatment Billing Value */}
         <div className="p-4 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800/70 shadow-xs">
           <div className="flex items-center justify-between text-slate-400 mb-2">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-              Procedure Potential
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
+              Treatment Billing Value
             </span>
             <div className="w-7 h-7 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
               <TrendingUp className="w-3.5 h-3.5" />
@@ -330,7 +330,7 @@ export function MaterialsView({
             {formatIQD(stats.totalPotentialPatientValue)}
           </div>
           <p className="text-[11px] text-slate-400 mt-1 font-medium">
-            Projected patient revenue
+            Expected revenue from treatments
           </p>
         </div>
       </div>

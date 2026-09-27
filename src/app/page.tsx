@@ -608,9 +608,10 @@ export default function DashboardPage() {
         ) : (
           /* ================= PATIENTS CASES TAB ================= */
           <>
-            {/* Quick Stats Overview (updates when month is filtered to show monthly collection & debts) */}
+            {/* Quick Stats Overview (shows income, materials spend, net profit, debts) */}
             <StatsOverview
               patients={monthFilter === "all" ? patients : filteredAndSortedPatients}
+              materials={materials}
               monthSubtitle={monthFilter === "all" ? undefined : formatMonthName(monthFilter)}
             />
 
@@ -623,7 +624,7 @@ export default function DashboardPage() {
                 </div>
                 <input
                   type="text"
-                  placeholder="Search patient name, phone, notes..."
+                  placeholder="Search patient name, procedure, tooth, phone..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full pl-10 pr-4 py-2.5 sm:py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-base sm:text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 shadow-xs transition-all"
