@@ -26,6 +26,7 @@ import {
   RotateCcw,
   Maximize2,
   Minimize2,
+  Edit3,
 } from "lucide-react";
 
 interface DentalChartProps {
@@ -101,6 +102,11 @@ export function DentalChart({
   const upperTeethNumbers = [18, 17, 16, 15, 14, 13, 12, 11, 21, 22, 23, 24, 25, 26, 27, 28];
   const lowerTeethNumbers = [48, 47, 46, 45, 44, 43, 42, 41, 31, 32, 33, 34, 35, 36, 37, 38];
   const allTeethNumbers = [...upperTeethNumbers, ...lowerTeethNumbers];
+
+  // All teeth that have clinical notes
+  const teethWithNotes = teethRecords.filter(
+    (r) => r.notes && r.notes.trim().length > 0
+  );
 
   // Quadrants & Anatomical groups
   const quadrantGroups = [
@@ -563,7 +569,7 @@ export function DentalChart({
                 onKeyDown={(e) => {
                   if (e.key === "Enter") handleApplyBatchNote();
                 }}
-                className="flex-1 px-2.5 py-1 rounded-lg border border-indigo-200 dark:border-indigo-800 bg-white dark:bg-slate-900 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-indigo-500 shadow-xs"
+                className="flex-1 px-2.5 py-1 rounded-lg border border-indigo-200 dark:border-indigo-800 bg-white dark:bg-slate-900 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-xs"
               />
               <button
                 type="button"
@@ -619,7 +625,7 @@ export function DentalChart({
             {CROWN_POLYGONS.map((poly) => {
               const isSelected = selectedTeethNumbers.includes(poly.num);
               const record = recordsMap.get(poly.num);
-              const hasNote = Boolean(record?.notes);
+              const hasNote = Boolean(record?.notes && record.notes.trim().length > 0);
               const toothInfo = ALL_TEETH.find((t) => t.number === poly.num);
 
               return (
@@ -752,17 +758,31 @@ export function DentalChart({
                     </g>
                   )}
 
-                  {/* Note indicator icon */}
+                  {/* Direct note indicator tag directly on the chart */}
                   {hasNote && (
-                    <text
-                      x={poly.centerX + 10}
-                      y={poly.centerY - 6}
-                      fontSize="11"
-                      className="select-none filter drop-shadow-xs"
-                      pointerEvents="none"
-                    >
-                      📝
-                    </text>
+                    <g pointerEvents="none">
+                      <rect
+                        x={poly.centerX - 18}
+                        y={poly.num < 30 ? poly.centerY - 24 : poly.centerY + 11}
+                        width="36"
+                        height="13"
+                        rx="3"
+                        fill="#ffffff"
+                        stroke="#f59e0b"
+                        strokeWidth="1"
+                        className="filter drop-shadow-xs"
+                      />
+                      <text
+                        x={poly.centerX}
+                        y={poly.num < 30 ? poly.centerY - 15 : poly.centerY + 20}
+                        textAnchor="middle"
+                        fontSize="8.5"
+                        fontWeight="bold"
+                        fill="#b45309"
+                      >
+                        📝 Note
+                      </text>
+                    </g>
                   )}
                 </g>
               );
@@ -771,7 +791,78 @@ export function DentalChart({
         </div>
       </div>
 
-      {/* ================= 4. SINGLE SELECTED TOOTH CLINICAL NOTE & DETAIL PANEL ================= */}
+      {/* ================= 4. PERMANENT CLINICAL NOTES DIRECT FEED (ALWAYS VISIBLE WITHOUT CLICKING) ================= */}
+      {teethWithNotes.length > 0 && (
+        <div className="mt-2.5 sm:mt-3.5 p-2.5 sm:p-4 rounded-xl sm:rounded-2xl bg-amber-50/80 dark:bg-amber-950/40 border border-amber-200/80 dark:border-amber-800/80 shadow-xs animate-in slide-in-from-top-2 duration-150">
+          <div className="flex items-center justify-between gap-2 mb-2 pb-1.5 border-b border-amber-200/70 dark:border-amber-900/70">
+            <div className="flex items-center gap-1.5 text-xs font-bold text-amber-900 dark:text-amber-200">
+              <FileText className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+              <span>Tooth Notes & Diagnoses ({teethWithNotes.length}):</span>
+            </div>
+            <span className="text-[10px] text-amber-700 dark:text-amber-300 font-semibold">
+              Directly visible • Tap note to edit
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {teethWithNotes.map((rec) => {
+              const tooth = ALL_TEETH.find((t) => t.number === rec.toothNumber);
+              const meta = TREATMENT_METADATA[rec.status];
+              const isCurrentlyActive = activeTooth?.number === rec.toothNumber;
+
+              return (
+                <div
+                  key={rec.toothNumber}
+                  onClick={() => {
+                    if (tooth) {
+                      setActiveTooth(tooth);
+                      setSelectedTeethNumbers([tooth.number]);
+                      setTreatmentNote(rec.notes || "");
+                    }
+                  }}
+                  className={`
+                    group flex flex-col p-2.5 rounded-xl bg-white dark:bg-slate-900 border transition-all cursor-pointer shadow-2xs
+                    ${
+                      isCurrentlyActive
+                        ? "border-indigo-500 ring-2 ring-indigo-500/40 shadow-xs"
+                        : "border-amber-200/80 dark:border-amber-900/80 hover:border-indigo-400 hover:shadow-xs"
+                    }
+                  `}
+                >
+                  <div className="flex items-center justify-between gap-1.5 mb-1.5">
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <span className="px-1.5 py-0.2 rounded-md text-xs font-mono font-black bg-indigo-50 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 flex-shrink-0">
+                        #{rec.toothNumber}
+                      </span>
+                      <span className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">
+                        {tooth?.name}
+                      </span>
+                      <span className="text-[10px] text-slate-400 hidden xs:inline truncate">
+                        ({tooth?.arabicName})
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-1 flex-shrink-0">
+                      <span
+                        className={`text-[9px] px-1.5 py-0.2 rounded-full font-bold border ${meta.badgeBg} ${meta.badgeBorder} ${meta.badgeText}`}
+                      >
+                        {meta.label}
+                      </span>
+                      <Edit3 className="w-3 h-3 text-slate-400 group-hover:text-indigo-600 transition-colors" />
+                    </div>
+                  </div>
+
+                  <p className="text-xs text-slate-700 dark:text-slate-300 whitespace-pre-wrap font-medium pl-2 border-l-2 border-amber-400 dark:border-amber-500">
+                    {rec.notes}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* ================= 5. SINGLE SELECTED TOOTH CLINICAL NOTE & DETAIL PANEL ================= */}
       {selectedCount === 1 && activeTooth && (
         <div className="mt-2.5 sm:mt-3.5 p-2.5 sm:p-5 rounded-xl sm:rounded-3xl bg-indigo-50/90 dark:bg-indigo-950/60 border-2 border-indigo-500/50 shadow-lg animate-in slide-in-from-top-2 duration-200">
           <div className="flex items-center justify-between gap-2 pb-2 sm:pb-3 border-b border-indigo-200/70 dark:border-indigo-800/70">
@@ -866,7 +957,7 @@ export function DentalChart({
             <div className="flex items-center justify-between mb-1">
               <label className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1">
                 <FileText className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
-                <span>Clinical Note:</span>
+                <span>Clinical Note for Tooth #{activeTooth.number}:</span>
               </label>
               <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-0.5">
                 <CheckCircle2 className="w-3 h-3" />
@@ -922,7 +1013,7 @@ export function DentalChart({
         </div>
       )}
 
-      {/* ================= 5. SUMMARY OF WORKED TEETH ================= */}
+      {/* ================= 6. SUMMARY OF WORKED TEETH ================= */}
       <div className="mt-2.5 pt-2 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 text-xs text-slate-500 dark:text-slate-400">
         <div className="flex items-center gap-1.5 flex-wrap">
           <Activity className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" />
