@@ -14,6 +14,7 @@ import { EditPatientModal } from "@/components/EditPatientModal";
 import { PatientHistoryModal } from "@/components/PatientHistoryModal";
 import { DentalChartModal } from "@/components/dental/DentalChartModal";
 import { AppointmentsView } from "@/components/appointments/AppointmentsView";
+import { MonthlyReportView } from "@/components/MonthlyReportView";
 import {
   Search,
   LayoutList,
@@ -41,7 +42,7 @@ export default function DashboardPage() {
   const [sessionChecked, setSessionChecked] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  const [activeTab, setActiveTab] = useState<"patients" | "appointments">("patients");
+  const [activeTab, setActiveTab] = useState<"patients" | "appointments" | "reports">("patients");
   const [patients, setPatients] = useState<Patient[]>([]);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -102,6 +103,102 @@ export default function DashboardPage() {
 
     loadData();
   }, [isAuthenticated]);
+
+  // Seed dummy data for demo / testing
+  const seedDummyData = async () => {
+    const dummyPatients: Omit<Patient, "id">[] = [
+      {
+        name: "Zainab Ali",
+        gender: "female" as const,
+        age: 32,
+        phone: "07701234567",
+        date: "2026-09-15",
+        totalAmount: 75000,
+        paidAmount: 75000,
+        debtAmount: 0,
+        notes: "Composite filling on upper molar",
+        history: [
+          { id: "dh1", date: "2026-09-15", title: "Composite Filling", notes: "Upper right molar #16", fee: 0, paid: 75000, debt: 0, createdAt: Date.now() },
+        ],
+      },
+      {
+        name: "Omar Hassan",
+        gender: "male" as const,
+        age: 45,
+        phone: "07809876543",
+        date: "2026-09-20",
+        totalAmount: 250000,
+        paidAmount: 150000,
+        debtAmount: 100000,
+        notes: "Root canal treatment, 2 sessions remaining",
+        history: [
+          { id: "dh2", date: "2026-09-20", title: "Root Canal Session 1", notes: "Lower left molar #36 — pulp removal", fee: 0, paid: 150000, debt: 100000, createdAt: Date.now() },
+        ],
+      },
+      {
+        name: "Sara Mohammed",
+        gender: "female" as const,
+        age: 28,
+        phone: "07501112233",
+        date: "2026-08-10",
+        totalAmount: 50000,
+        paidAmount: 50000,
+        debtAmount: 0,
+        notes: "Routine scaling and polishing",
+        history: [
+          { id: "dh3", date: "2026-08-10", title: "Scaling & Polishing", notes: "Full mouth cleaning", fee: 0, paid: 50000, debt: 0, createdAt: Date.now() },
+        ],
+      },
+      {
+        name: "Ali Karim",
+        gender: "male" as const,
+        age: 55,
+        phone: "07711223344",
+        date: "2026-08-25",
+        totalAmount: 500000,
+        paidAmount: 300000,
+        debtAmount: 200000,
+        notes: "Full upper denture",
+        history: [
+          { id: "dh4a", date: "2026-08-05", title: "Impression & Measurements", notes: "Upper jaw impression taken", fee: 0, paid: 100000, debt: 0, createdAt: Date.now() },
+          { id: "dh4b", date: "2026-08-25", title: "Denture Fitting", notes: "Full upper denture delivered — minor adjustments", fee: 0, paid: 200000, debt: 200000, createdAt: Date.now() },
+        ],
+      },
+      {
+        name: "Fatima Nouri",
+        gender: "female" as const,
+        age: 38,
+        phone: "07601234500",
+        date: "2026-07-18",
+        totalAmount: 120000,
+        paidAmount: 120000,
+        debtAmount: 0,
+        notes: "Extraction + post-op",
+        history: [
+          { id: "dh5", date: "2026-07-18", title: "Wisdom Tooth Extraction", notes: "Lower right #48, surgical extraction under local anaesthesia", fee: 0, paid: 120000, debt: 0, createdAt: Date.now() },
+        ],
+      },
+      {
+        name: "Hussein Saleh",
+        gender: "male" as const,
+        age: 22,
+        phone: "07901234567",
+        date: "2026-07-05",
+        totalAmount: 35000,
+        paidAmount: 25000,
+        debtAmount: 10000,
+        notes: "Checkup + small filling",
+        history: [
+          { id: "dh6", date: "2026-07-05", title: "Checkup & Small Filling", notes: "Upper premolar #25", fee: 0, paid: 25000, debt: 10000, createdAt: Date.now() },
+        ],
+      },
+    ];
+
+    for (const data of dummyPatients) {
+      await handleAddPatient(data);
+    }
+    showToast(`Seeded ${dummyPatients.length} demo patients across 3 months`);
+  };
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -489,6 +586,25 @@ export default function DashboardPage() {
             onToggleStatus={handleToggleAppointmentStatus}
             onDeleteAppointment={handleDeleteAppointment}
           />
+        ) : activeTab === "reports" ? (
+          /* ================= MONTHLY REPORTS TAB ================= */
+          <>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-black text-slate-900 dark:text-slate-100">Monthly Financial Reports</h2>
+              {patients.length === 0 && (
+                <button
+                  onClick={seedDummyData}
+                  className="px-4 py-2 rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white shadow-sm cursor-pointer transition-colors"
+                >
+                  + Load Demo Data
+                </button>
+              )}
+            </div>
+            <MonthlyReportView
+              patients={patients}
+              onViewHistory={(patient) => setHistoryPatient(patient)}
+            />
+          </>
         ) : (
           /* ================= PATIENTS CASES TAB ================= */
           <>
