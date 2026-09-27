@@ -126,7 +126,8 @@ export async function fetchPatientsFromDB(): Promise<Patient[]> {
     const { data, error } = await getSupabase()
       .from("patients")
       .select("*")
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })
+      .limit(5000);
 
     if (!error && data) {
       const parsed = data.map(mapRowToPatient);
