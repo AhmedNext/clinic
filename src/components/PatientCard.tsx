@@ -67,13 +67,13 @@ export const PatientCard = React.memo(function PatientCard({
   };
 
   return (
-    <div className="group flex flex-col rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm hover:shadow-lg hover:border-indigo-200 dark:hover:border-indigo-800/60 transition-all duration-200 overflow-hidden">
+    <div className="group flex flex-col rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900/95 shadow-2xs hover:shadow-xl hover:border-indigo-300 dark:hover:border-indigo-500/50 hover:-translate-y-1 transition-all duration-300 overflow-hidden">
       {/* ── TOP COLOUR BAR ── */}
       <div
-        className={`h-1 w-full ${
+        className={`h-1.5 w-full ${
           isMale
-            ? "bg-gradient-to-r from-sky-400 to-indigo-500"
-            : "bg-gradient-to-r from-rose-400 to-pink-500"
+            ? "bg-gradient-to-r from-sky-400 via-indigo-500 to-indigo-600"
+            : "bg-gradient-to-r from-rose-400 via-pink-500 to-purple-600"
         }`}
       />
 
@@ -163,15 +163,15 @@ export const PatientCard = React.memo(function PatientCard({
         </div>
 
         {/* ── ROW 2: INTERACTIVE DATE & CIRCLE CLOCK TIME BUTTONS (Tap on phone) ── */}
-        <div className="grid grid-cols-2 gap-2 p-1.5 rounded-xl bg-slate-50 dark:bg-slate-850/60 border border-slate-200/80 dark:border-slate-800">
+        <div className="grid grid-cols-2 gap-2 p-1.5 rounded-xl bg-slate-50/80 dark:bg-slate-950/50 border border-slate-200/70 dark:border-slate-800/60">
           {/* Better Date Picker Trigger */}
           <button
             type="button"
             onClick={() => setIsDatePickerOpen(true)}
             title="Tap to change visit date"
-            className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-700/80 hover:border-indigo-400 dark:hover:border-indigo-500 hover:bg-indigo-50/50 dark:hover:bg-indigo-950/30 text-left transition-all cursor-pointer active:scale-95 shadow-2xs group/date"
+            className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-white dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800/80 hover:border-indigo-400 dark:hover:border-indigo-500 hover:bg-indigo-50/50 dark:hover:bg-indigo-950/30 text-left transition-all cursor-pointer active:scale-95 shadow-2xs group/date"
           >
-            <div className="p-1 rounded-md bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 group-hover/date:bg-indigo-600 group-hover/date:text-white transition-colors">
+            <div className="p-1 rounded-md bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 group-hover/date:bg-indigo-600 group-hover/date:text-white transition-colors">
               <Calendar className="w-3.5 h-3.5" />
             </div>
             <div className="min-w-0 flex-1">
@@ -189,9 +189,9 @@ export const PatientCard = React.memo(function PatientCard({
             type="button"
             onClick={() => setIsClockPickerOpen(true)}
             title="Tap to choose time with circle clock"
-            className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-700/80 hover:border-indigo-400 dark:hover:border-indigo-500 hover:bg-indigo-50/50 dark:hover:bg-indigo-950/30 text-left transition-all cursor-pointer active:scale-95 shadow-2xs group/time"
+            className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-white dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800/80 hover:border-indigo-400 dark:hover:border-indigo-500 hover:bg-indigo-50/50 dark:hover:bg-indigo-950/30 text-left transition-all cursor-pointer active:scale-95 shadow-2xs group/time"
           >
-            <div className="p-1 rounded-md bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 group-hover/time:bg-indigo-600 group-hover/time:text-white transition-colors">
+            <div className="p-1 rounded-md bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 group-hover/time:bg-indigo-600 group-hover/time:text-white transition-colors">
               <Clock className="w-3.5 h-3.5" />
             </div>
             <div className="min-w-0 flex-1">
@@ -213,10 +213,10 @@ export const PatientCard = React.memo(function PatientCard({
 
         {/* Row 3: Payment status strip */}
         <div
-          className={`flex items-center justify-between px-3 py-2 rounded-xl text-xs ${
+          className={`flex items-center justify-between px-3 py-2 rounded-xl text-xs font-mono transition-colors ${
             debt > 0
-              ? "bg-rose-50 dark:bg-rose-950/30 border border-rose-100 dark:border-rose-900/40"
-              : "bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-100 dark:border-emerald-900/40"
+              ? "bg-rose-50/80 dark:bg-rose-950/30 border border-rose-200/60 dark:border-rose-900/40"
+              : "bg-emerald-50/80 dark:bg-emerald-950/30 border border-emerald-200/60 dark:border-emerald-900/40"
           }`}
         >
           <span className="text-slate-500 dark:text-slate-400">
@@ -257,9 +257,9 @@ export const PatientCard = React.memo(function PatientCard({
             <a
               href={`tel:${patient.phone}`}
               title={`Call ${patient.phone}`}
-              className="flex items-center justify-center gap-1.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60 text-slate-600 dark:text-slate-300 hover:bg-sky-50 hover:border-sky-200 hover:text-sky-700 dark:hover:bg-sky-950/40 dark:hover:text-sky-300 active:scale-95 transition-all text-xs font-semibold"
+              className="flex items-center justify-center gap-1.5 py-2 rounded-xl border border-slate-200/90 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/80 text-slate-700 dark:text-slate-200 hover:bg-sky-50 hover:border-sky-300 hover:text-sky-700 dark:hover:bg-sky-950/40 dark:hover:text-sky-300 active:scale-95 transition-all text-xs font-semibold"
             >
-              <Phone className="w-3.5 h-3.5 flex-shrink-0" />
+              <Phone className="w-3.5 h-3.5 flex-shrink-0 text-slate-500 dark:text-slate-400" />
               <span className="font-mono truncate">{patient.phone}</span>
             </a>
             <a
@@ -267,7 +267,7 @@ export const PatientCard = React.memo(function PatientCard({
               target="_blank"
               rel="noopener noreferrer"
               title={`WhatsApp ${patient.name}`}
-              className="flex items-center justify-center gap-1.5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white active:scale-95 transition-all text-xs font-bold shadow-sm cursor-pointer"
+              className="flex items-center justify-center gap-1.5 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white shadow-xs hover:shadow-md hover:shadow-emerald-500/20 active:scale-95 transition-all text-xs font-bold cursor-pointer"
             >
               <span className="text-sm leading-none">💬</span>
               <span>WhatsApp</span>
@@ -279,19 +279,19 @@ export const PatientCard = React.memo(function PatientCard({
         <button
           type="button"
           onClick={() => onOpenDentalChart(patient)}
-          className="group/dent w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold bg-indigo-50 dark:bg-indigo-950/40 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 border border-indigo-200/80 dark:border-indigo-800 text-indigo-800 dark:text-indigo-200 transition-all cursor-pointer active:scale-[0.98]"
+          className="group/dent w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold bg-gradient-to-r from-indigo-50/90 via-slate-50 to-violet-50/90 dark:from-indigo-950/40 dark:via-slate-900 dark:to-violet-950/40 hover:from-indigo-100 hover:to-violet-100 dark:hover:from-indigo-900/60 dark:hover:to-violet-900/60 border border-indigo-200/80 dark:border-indigo-800/70 text-indigo-900 dark:text-indigo-200 transition-all cursor-pointer active:scale-[0.98] shadow-2xs"
         >
           <span className="inline-flex items-center gap-2">
             <span className="text-base group-hover/dent:scale-110 transition-transform inline-block">
               🦷
             </span>
-            <span>3D Dental Chart</span>
+            <span className="tracking-tight">3D Dental Chart</span>
           </span>
           <span
-            className={`text-[11px] px-2 py-0.5 rounded-full font-bold border ${
+            className={`text-[11px] px-2 py-0.5 rounded-full font-bold border transition-colors ${
               (patient.teeth?.length ?? 0) > 0
-                ? "bg-indigo-600 text-white border-indigo-600"
-                : "bg-white dark:bg-slate-900 text-indigo-500 border-indigo-200 dark:border-indigo-800"
+                ? "bg-indigo-600 text-white border-indigo-600 shadow-xs"
+                : "bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 border-indigo-200 dark:border-indigo-800"
             }`}
           >
             {patient.teeth?.length ?? 0} teeth

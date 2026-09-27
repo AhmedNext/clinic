@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
+import Image from "next/image";
 import dynamic from "next/dynamic";
 import { Patient, Gender, calculateDebt, formatIQD, PatientHistoryEntry } from "@/types/patient";
 import { ToothRecord } from "@/types/dental";
@@ -631,11 +632,22 @@ export default function DashboardPage() {
   // Show loading splash while checking local stored session
   if (!sessionChecked) {
     return (
-      <div className="min-h-screen w-full flex flex-col items-center justify-center bg-slate-950 text-white">
-        <div className="w-12 h-12 rounded-2xl bg-indigo-600 flex items-center justify-center text-2xl shadow-xl shadow-indigo-600/30 animate-pulse mb-3">
-          🦷
+      <div className="min-h-screen w-full flex flex-col items-center justify-center bg-slate-950 text-white relative overflow-hidden">
+        <div className="absolute w-72 h-72 bg-indigo-600/20 rounded-full blur-3xl pointer-events-none" />
+        <div className="relative w-16 h-16 rounded-2xl p-0.5 bg-gradient-to-tr from-indigo-500 via-violet-500 to-cyan-400 shadow-xl shadow-indigo-500/30 ring-4 ring-white/10 mb-4 animate-pulse">
+          <div className="w-full h-full rounded-[14px] bg-slate-900 overflow-hidden relative flex items-end justify-center">
+            <Image
+              src="/dr.png"
+              alt="Dr. Qayssar"
+              width={64}
+              height={64}
+              priority
+              className="w-full h-full object-cover object-top scale-115"
+            />
+          </div>
         </div>
-        <p className="text-xs text-slate-400 font-medium">Verifying clinic session...</p>
+        <h2 className="text-base font-bold text-white tracking-tight">Dr.Qayssar Dental Clinic</h2>
+        <p className="text-xs text-slate-400 font-medium mt-1">Verifying clinic session...</p>
       </div>
     );
   }
@@ -704,7 +716,7 @@ export default function DashboardPage() {
               onOpenRentModal={() => setIsRentModalOpen(true)}
             />
 
-            {/* Filter and Control Toolbar (Mobile-first) */}
+            {/* Filter and Control Toolbar (Mobbin-style segmented controls) */}
             <div className="mb-4 sm:mb-6 flex flex-col md:flex-row gap-2.5 sm:gap-3 md:items-center md:justify-between">
               {/* Left: Search input */}
               <div className="relative flex-1 max-w-full md:max-w-md">
@@ -716,19 +728,27 @@ export default function DashboardPage() {
                   placeholder="Search patient name, procedure, tooth, phone..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 sm:py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-base sm:text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 shadow-xs transition-all"
+                  className="w-full pl-10 pr-9 py-2.5 rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/25 focus:border-indigo-500 shadow-2xs transition-all"
                 />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery("")}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs w-5 h-5 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 transition-colors cursor-pointer"
+                  >
+                    ×
+                  </button>
+                )}
               </div>
 
               {/* Right: Horizontally swipeable filter chips on mobile */}
               <div className="overflow-x-auto no-scrollbar flex items-center gap-2 pb-1 -mx-1 px-1 sm:mx-0 sm:px-0 sm:flex-wrap">
                 {/* Gender Filters */}
-                <div className="inline-flex rounded-xl border border-slate-200 dark:border-slate-800 p-0.5 bg-white dark:bg-slate-900 shadow-xs flex-shrink-0">
+                <div className="inline-flex rounded-2xl border border-slate-200/90 dark:border-slate-800 p-0.5 bg-slate-100/70 dark:bg-slate-900/80 backdrop-blur-md shadow-2xs flex-shrink-0">
                   <button
                     onClick={() => setGenderFilter("all")}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                       genderFilter === "all"
-                        ? "bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100"
+                        ? "bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 shadow-xs"
                         : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
                     }`}
                   >
@@ -736,9 +756,9 @@ export default function DashboardPage() {
                   </button>
                   <button
                     onClick={() => setGenderFilter("male")}
-                    className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
+                    className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                       genderFilter === "male"
-                        ? "bg-sky-50 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300"
+                        ? "bg-sky-50 dark:bg-sky-950/80 text-sky-700 dark:text-sky-300 border border-sky-200/80 dark:border-sky-800 shadow-xs"
                         : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
                     }`}
                   >
@@ -747,9 +767,9 @@ export default function DashboardPage() {
                   </button>
                   <button
                     onClick={() => setGenderFilter("female")}
-                    className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
+                    className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                       genderFilter === "female"
-                        ? "bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300"
+                        ? "bg-rose-50 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300 border border-rose-200/80 dark:border-rose-800 shadow-xs"
                         : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
                     }`}
                   >
@@ -759,12 +779,12 @@ export default function DashboardPage() {
                 </div>
 
                 {/* Payment & Debt Filter */}
-                <div className="inline-flex rounded-xl border border-slate-200 dark:border-slate-800 p-0.5 bg-white dark:bg-slate-900 shadow-xs flex-shrink-0">
+                <div className="inline-flex rounded-2xl border border-slate-200/90 dark:border-slate-800 p-0.5 bg-slate-100/70 dark:bg-slate-900/80 backdrop-blur-md shadow-2xs flex-shrink-0">
                   <button
                     onClick={() => setPaymentFilter("all")}
-                    className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                       paymentFilter === "all"
-                        ? "bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100"
+                        ? "bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 shadow-xs"
                         : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
                     }`}
                   >
@@ -772,9 +792,9 @@ export default function DashboardPage() {
                   </button>
                   <button
                     onClick={() => setPaymentFilter("paid")}
-                    className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
+                    className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                       paymentFilter === "paid"
-                        ? "bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300"
+                        ? "bg-emerald-50 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800 shadow-xs"
                         : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
                     }`}
                   >
@@ -783,14 +803,14 @@ export default function DashboardPage() {
                   </button>
                   <button
                     onClick={() => setPaymentFilter("debt")}
-                    className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
+                    className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                       paymentFilter === "debt"
-                        ? "bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300"
+                        ? "bg-rose-50 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300 border border-rose-200/80 dark:border-rose-800 shadow-xs"
                         : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
                     }`}
                   >
                     <span>Debts</span>
-                    <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-rose-100 dark:bg-rose-900/60 text-rose-700 dark:text-rose-300 font-bold">
+                    <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-rose-200/80 dark:bg-rose-900/80 text-rose-800 dark:text-rose-200 font-black">
                       {
                         patients.filter(
                           (p) =>
@@ -806,14 +826,14 @@ export default function DashboardPage() {
                 </div>
 
                 {/* Month / Billing Month Filter */}
-                <div className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs flex-shrink-0">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md shadow-2xs flex-shrink-0">
                   <Calendar className="w-3.5 h-3.5 text-indigo-500 flex-shrink-0" />
                   <label htmlFor="month-select" className="sr-only">Filter by Month</label>
                   <select
                     id="month-select"
                     value={monthFilter}
                     onChange={(e) => setMonthFilter(e.target.value)}
-                    className="bg-transparent text-xs font-semibold text-slate-700 dark:text-slate-300 focus:outline-none cursor-pointer pr-1"
+                    className="bg-transparent text-xs font-bold text-slate-700 dark:text-slate-300 focus:outline-none cursor-pointer pr-1"
                   >
                     <option value="all">All Months</option>
                     {availableMonths.map((ym) => (
@@ -841,23 +861,23 @@ export default function DashboardPage() {
                   title={`Sorted: ${
                     sortOrder === "desc" ? "Newest First" : "Oldest First"
                   }`}
-                  className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/60 text-xs font-semibold text-slate-600 dark:text-slate-300 shadow-xs transition-colors cursor-pointer whitespace-nowrap flex-shrink-0"
+                  className="inline-flex items-center gap-1.5 px-3 py-2 rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md hover:bg-slate-50 dark:hover:bg-slate-800/60 text-xs font-bold text-slate-700 dark:text-slate-300 shadow-2xs transition-all cursor-pointer whitespace-nowrap flex-shrink-0"
                 >
-                  <ArrowUpDown className="w-3.5 h-3.5 text-slate-400" />
+                  <ArrowUpDown className="w-3.5 h-3.5 text-indigo-500" />
                   <span>
                     {sortOrder === "desc" ? "Newest" : "Oldest"}
                   </span>
                 </button>
 
                 {/* Table / Grid view switcher (desktop only) */}
-                <div className="hidden sm:inline-flex rounded-xl border border-slate-200 dark:border-slate-800 p-0.5 bg-white dark:bg-slate-900 shadow-xs flex-shrink-0">
+                <div className="hidden sm:inline-flex rounded-2xl border border-slate-200/90 dark:border-slate-800 p-0.5 bg-slate-100/70 dark:bg-slate-900/80 backdrop-blur-md shadow-2xs flex-shrink-0">
                   <button
                     onClick={() => setViewMode("table")}
                     aria-label="Table view"
                     title="Table view"
-                    className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                    className={`p-1.5 rounded-xl transition-all cursor-pointer ${
                       viewMode === "table"
-                        ? "bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100"
+                        ? "bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 shadow-xs"
                         : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
                     }`}
                   >
@@ -867,9 +887,9 @@ export default function DashboardPage() {
                     onClick={() => setViewMode("grid")}
                     aria-label="Grid view"
                     title="Card grid view"
-                    className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                    className={`p-1.5 rounded-xl transition-all cursor-pointer ${
                       viewMode === "grid"
-                        ? "bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100"
+                        ? "bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 shadow-xs"
                         : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
                     }`}
                   >

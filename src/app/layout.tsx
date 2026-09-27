@@ -15,6 +15,11 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Dr.Qayssar Dental Clinic — Cases & Odontogram",
   description: "Personal patient case tracking and 3D dental chart management dashboard",
+  icons: {
+    icon: "/dr.png",
+    shortcut: "/dr.png",
+    apple: "/dr.png",
+  },
 };
 
 export const viewport: Viewport = {

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Image from "next/image";
 import { Lock, Mail, ShieldCheck, ArrowRight, Eye, EyeOff, AlertCircle } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
 
@@ -43,22 +44,53 @@ export function LoginScreen({ onSuccess }: LoginModalProps) {
   };
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center p-4 bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-950 text-slate-100">
-      <div className="w-full max-w-md bg-white/10 dark:bg-slate-900/80 backdrop-blur-xl border border-white/15 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl shadow-indigo-950/50">
-        {/* Clinic Brand */}
-        <div className="text-center mb-8">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-tr from-indigo-500 to-violet-500 flex items-center justify-center text-3xl shadow-lg shadow-indigo-500/30 ring-4 ring-white/10">
-            🦷
+    <div className="min-h-screen w-full relative flex items-center justify-center p-4 bg-slate-950 text-slate-100 overflow-hidden selection:bg-indigo-500 selection:text-white">
+      {/* Ambient Radial Lights */}
+      <div className="absolute top-1/4 -left-20 w-96 h-96 bg-indigo-600/25 rounded-full blur-[128px] pointer-events-none" />
+      <div className="absolute bottom-1/4 -right-20 w-96 h-96 bg-violet-600/20 rounded-full blur-[128px] pointer-events-none" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-cyan-600/10 rounded-full blur-[140px] pointer-events-none" />
+      {/* Medical subtle dot grid pattern */}
+      <div className="absolute inset-0 bg-[radial-gradient(#6366f1_1px,transparent_1px)] [background-size:24px_24px] opacity-15 pointer-events-none" />
+
+      <div className="relative z-10 w-full max-w-md bg-slate-900/85 backdrop-blur-2xl border border-white/15 rounded-3xl p-6 sm:p-8 shadow-2xl shadow-indigo-950/80 ring-1 ring-white/10">
+        {/* Clinic Brand & Doctor Portrait */}
+        <div className="text-center mb-7 relative">
+          <div className="relative inline-block mx-auto mb-4 group">
+            {/* Ambient outer glow */}
+            <div className="absolute -inset-1.5 bg-gradient-to-tr from-indigo-500 via-violet-500 to-cyan-400 rounded-3xl blur-md opacity-70 group-hover:opacity-100 transition duration-700 animate-pulse" />
+
+            {/* Doctor Photo Frame */}
+            <div className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-3xl p-1 bg-gradient-to-tr from-indigo-500 via-violet-500 to-cyan-400 shadow-2xl ring-4 ring-white/10">
+              <div className="w-full h-full rounded-[20px] bg-gradient-to-b from-slate-800 via-indigo-950 to-slate-950 overflow-hidden relative flex items-end justify-center">
+                {/* Radial spotlight behind doctor */}
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(99,102,241,0.45)_0%,_transparent_75%)]" />
+                <Image
+                  src="/dr.png"
+                  alt="Dr. Qayssar Dental"
+                  width={140}
+                  height={140}
+                  priority
+                  className="w-full h-full object-cover object-top scale-115 drop-shadow-[0_8px_16px_rgba(0,0,0,0.6)] transition-transform duration-500 group-hover:scale-120"
+                />
+              </div>
+            </div>
+
+            {/* Online / Active Clinic Badge */}
+            <div className="absolute -bottom-1 -right-1 px-2 py-0.5 rounded-full bg-emerald-500 text-white text-[10px] font-black shadow-lg border-2 border-slate-900 flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+              <span>LIVE</span>
+            </div>
           </div>
-          <h1 className="text-xl sm:text-2xl font-black tracking-tight text-white flex items-center justify-center gap-2">
-            Dr.Qayssar Dental
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
-              <ShieldCheck className="w-3 h-3 text-indigo-400" />
+
+          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white flex items-center justify-center gap-2">
+            <span>Dr. Qayssar Dental</span>
+            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-indigo-500/25 text-indigo-300 border border-indigo-400/30 shadow-xs">
+              <ShieldCheck className="w-3.5 h-3.5 text-indigo-400" />
               Pro
             </span>
           </h1>
-          <p className="text-xs text-slate-400 mt-1">
-            Private Clinic Access • Dr. Qayssar Saleh
+          <p className="text-xs sm:text-sm text-slate-300/80 font-medium mt-1">
+            Private Clinical Management & Odontogram Suite
           </p>
         </div>
 
@@ -84,7 +116,7 @@ export function LoginScreen({ onSuccess }: LoginModalProps) {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="doctor@example.com"
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-black/20 border border-white/10 text-white placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all"
+                className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-black/30 border border-white/10 text-white placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all"
               />
             </div>
           </div>
@@ -101,7 +133,7 @@ export function LoginScreen({ onSuccess }: LoginModalProps) {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••••••"
-                className="w-full pl-10 pr-10 py-2.5 rounded-xl bg-black/20 border border-white/10 text-white placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all"
+                className="w-full pl-10 pr-10 py-2.5 rounded-xl bg-black/30 border border-white/10 text-white placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all"
               />
               <button
                 type="button"
@@ -117,7 +149,7 @@ export function LoginScreen({ onSuccess }: LoginModalProps) {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full py-3 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 active:scale-[0.99] text-white text-sm font-bold shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-50"
+              className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-indigo-600 via-indigo-500 to-violet-600 hover:from-indigo-500 hover:to-violet-500 active:scale-[0.99] text-white text-sm font-bold shadow-lg shadow-indigo-600/35 hover:shadow-indigo-600/50 flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-50"
             >
               {isLoading ? (
                 <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -131,9 +163,18 @@ export function LoginScreen({ onSuccess }: LoginModalProps) {
           </div>
         </form>
 
-        <div className="mt-6 text-center">
-          <p className="text-[11px] text-slate-500">
-            🔒 Protected by Row-Level Security • Permanent Session Saved on this Device
+        {/* Offline / Cached Clinic Access Shortcut */}
+        <div className="mt-5 pt-4 border-t border-white/10 text-center space-y-2">
+          <button
+            type="button"
+            onClick={onSuccess}
+            className="w-full py-2 px-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-indigo-300 hover:text-white text-xs font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer group"
+          >
+            <span>Enter Clinic Workspace (Offline Cache)</span>
+            <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+          </button>
+          <p className="text-[11px] text-slate-400">
+            🔒 Protected by Row-Level Security • Dr. Qayssar salah Clinic
           </p>
         </div>
       </div>
