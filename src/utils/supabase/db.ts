@@ -2,7 +2,11 @@ import { createClient } from "@/utils/supabase/client";
 import { Patient } from "@/types/patient";
 import { Appointment } from "@/types/appointment";
 
-const supabase = createClient();
+// Always get a fresh client so the auth session (JWT) is current.
+// A module-level singleton would be created before login, missing the user token.
+function getSupabase() {
+  return createClient();
+}
 
 // Map DB row to Patient type
 export function mapRowToPatient(row: any): Patient {
@@ -78,7 +82,7 @@ export function mapAppointmentToRow(apt: Appointment): any {
 
 // ================= PATIENT API =================
 export async function fetchPatientsFromDB(): Promise<Patient[]> {
-  const { data, error } = await supabase
+  const { data, error } = await getSupabase()
     .from("patients")
     .select("*")
     .order("created_at", { ascending: false });
@@ -92,7 +96,7 @@ export async function fetchPatientsFromDB(): Promise<Patient[]> {
 
 export async function upsertPatientToDB(patient: Patient): Promise<void> {
   const row = mapPatientToRow(patient);
-  const { error } = await supabase.from("patients").upsert(row);
+  const { error } = await getSupabase().from("patients").upsert(row);
   if (error) {
     console.error("Error saving patient to Supabase:", error);
     throw error;
@@ -100,7 +104,7 @@ export async function upsertPatientToDB(patient: Patient): Promise<void> {
 }
 
 export async function deletePatientFromDB(id: string): Promise<void> {
-  const { error } = await supabase.from("patients").delete().eq("id", id);
+  const { error } = await getSupabase().from("patients").delete().eq("id", id);
   if (error) {
     console.error("Error deleting patient from Supabase:", error);
     throw error;
@@ -109,7 +113,7 @@ export async function deletePatientFromDB(id: string): Promise<void> {
 
 // ================= APPOINTMENT API =================
 export async function fetchAppointmentsFromDB(): Promise<Appointment[]> {
-  const { data, error } = await supabase
+  const { data, error } = await getSupabase()
     .from("appointments")
     .select("*")
     .order("date", { ascending: true });
@@ -123,7 +127,7 @@ export async function fetchAppointmentsFromDB(): Promise<Appointment[]> {
 
 export async function upsertAppointmentToDB(apt: Appointment): Promise<void> {
   const row = mapAppointmentToRow(apt);
-  const { error } = await supabase.from("appointments").upsert(row);
+  const { error } = await getSupabase().from("appointments").upsert(row);
   if (error) {
     console.error("Error saving appointment to Supabase:", error);
     throw error;
@@ -131,7 +135,7 @@ export async function upsertAppointmentToDB(apt: Appointment): Promise<void> {
 }
 
 export async function deleteAppointmentFromDB(id: string): Promise<void> {
-  const { error } = await supabase.from("appointments").delete().eq("id", id);
+  const { error } = await getSupabase().from("appointments").delete().eq("id", id);
   if (error) {
     console.error("Error deleting appointment from Supabase:", error);
     throw error;

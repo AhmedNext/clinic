@@ -4,8 +4,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { Patient, Gender, calculateDebt, PatientHistoryEntry } from "@/types/patient";
 import { ToothRecord } from "@/types/dental";
 import { Appointment, AppointmentStatus } from "@/types/appointment";
-import { INITIAL_PATIENTS } from "@/data/initialPatients";
-import { INITIAL_APPOINTMENTS } from "@/data/initialAppointments";
+
 import { Header } from "@/components/Header";
 import { StatsOverview } from "@/components/StatsOverview";
 import { PatientTable } from "@/components/PatientTable";
@@ -36,8 +35,7 @@ import {
 import { createClient } from "@/utils/supabase/client";
 import { LoginScreen } from "@/components/LoginScreen";
 
-const PATIENTS_STORAGE_KEY = "qaissar_patient_cases";
-const APPOINTMENTS_STORAGE_KEY = "qaissar_dental_appointments";
+
 
 export default function DashboardPage() {
   const [sessionChecked, setSessionChecked] = useState(false);
@@ -88,40 +86,15 @@ export default function DashboardPage() {
 
     async function loadData() {
       setIsLoading(true);
-
-      // 1. Initial cached read from localStorage for instant display
-      try {
-        const stored = localStorage.getItem(PATIENTS_STORAGE_KEY);
-        if (stored) {
-          const parsed = JSON.parse(stored);
-          if (Array.isArray(parsed)) setPatients(parsed);
-        }
-        const storedApts = localStorage.getItem(APPOINTMENTS_STORAGE_KEY);
-        if (storedApts) {
-          const parsedApts = JSON.parse(storedApts);
-          if (Array.isArray(parsedApts)) setAppointments(parsedApts);
-        }
-      } catch (e) {
-        console.error("Local cache read error", e);
-      }
-
-      // 2. Fetch fresh data from Supabase
       try {
         const [dbPatients, dbApts] = await Promise.all([
           fetchPatientsFromDB(),
           fetchAppointmentsFromDB(),
         ]);
-
-        if (dbPatients) {
-          setPatients(dbPatients);
-          localStorage.setItem(PATIENTS_STORAGE_KEY, JSON.stringify(dbPatients));
-        }
-        if (dbApts) {
-          setAppointments(dbApts);
-          localStorage.setItem(APPOINTMENTS_STORAGE_KEY, JSON.stringify(dbApts));
-        }
+        setPatients(dbPatients);
+        setAppointments(dbApts);
       } catch (err) {
-        console.warn("Supabase fetch error, using cached data:", err);
+        console.error("Supabase fetch error:", err);
       } finally {
         setIsLoading(false);
       }
@@ -149,39 +122,35 @@ export default function DashboardPage() {
       id: `pat-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
       createdAt: Date.now(),
     };
-    const updated = [newPatient, ...patients];
-    setPatients(updated);
-    localStorage.setItem(PATIENTS_STORAGE_KEY, JSON.stringify(updated));
+    setPatients((prev) => [newPatient, ...prev]);
     showToast(`Added case for "${newPatient.name}"`);
 
     try {
       await upsertPatientToDB(newPatient);
     } catch (e) {
-      console.warn("Could not sync new patient to Supabase:", e);
+      console.error("Failed to save patient to Supabase:", e);
+      showToast("⚠️ Failed to save to cloud");
     }
   };
 
   const handleUpdatePatient = async (updatedPatient: Patient) => {
-    const updated = patients.map((p) =>
-      p.id === updatedPatient.id ? updatedPatient : p
+    setPatients((prev) =>
+      prev.map((p) => (p.id === updatedPatient.id ? updatedPatient : p))
     );
-    setPatients(updated);
-    localStorage.setItem(PATIENTS_STORAGE_KEY, JSON.stringify(updated));
     showToast(`Updated case for "${updatedPatient.name}"`);
     setEditingPatient(null);
 
     try {
       await upsertPatientToDB(updatedPatient);
     } catch (e) {
-      console.warn("Could not sync updated patient to Supabase:", e);
+      console.error("Failed to update patient in Supabase:", e);
+      showToast("⚠️ Failed to save to cloud");
     }
   };
 
   const handleDeletePatient = async (id: string) => {
     const target = patients.find((p) => p.id === id);
-    const updated = patients.filter((p) => p.id !== id);
-    setPatients(updated);
-    localStorage.setItem(PATIENTS_STORAGE_KEY, JSON.stringify(updated));
+    setPatients((prev) => prev.filter((p) => p.id !== id));
     if (target) {
       showToast(`Removed case for "${target.name}"`);
     }
@@ -189,7 +158,8 @@ export default function DashboardPage() {
     try {
       await deletePatientFromDB(id);
     } catch (e) {
-      console.warn("Could not sync patient deletion to Supabase:", e);
+      console.error("Failed to delete patient from Supabase:", e);
+      showToast("⚠️ Failed to delete from cloud");
     }
   };
 
@@ -226,14 +196,14 @@ export default function DashboardPage() {
     });
 
     setPatients(updated);
-    localStorage.setItem(PATIENTS_STORAGE_KEY, JSON.stringify(updated));
     showToast("Logged new consultation in patient history");
 
     if (targetUpdatedPatient) {
       try {
         await upsertPatientToDB(targetUpdatedPatient);
       } catch (e) {
-        console.warn("Could not sync history entry to Supabase:", e);
+        console.error("Failed to save history to Supabase:", e);
+        showToast("⚠️ Failed to save to cloud");
       }
     }
   };
@@ -250,14 +220,14 @@ export default function DashboardPage() {
     });
 
     setPatients(updated);
-    localStorage.setItem(PATIENTS_STORAGE_KEY, JSON.stringify(updated));
     showToast("Removed history record");
 
     if (targetUpdatedPatient) {
       try {
         await upsertPatientToDB(targetUpdatedPatient);
       } catch (e) {
-        console.warn("Could not sync deleted history entry to Supabase:", e);
+        console.error("Failed to delete history from Supabase:", e);
+        showToast("⚠️ Failed to save to cloud");
       }
     }
   };
@@ -303,14 +273,14 @@ export default function DashboardPage() {
     });
 
     setPatients(updated);
-    localStorage.setItem(PATIENTS_STORAGE_KEY, JSON.stringify(updated));
     showToast("Updated visit record in Supabase");
 
     if (targetUpdatedPatient) {
       try {
         await upsertPatientToDB(targetUpdatedPatient);
       } catch (e) {
-        console.warn("Could not sync updated history entry to Supabase:", e);
+        console.error("Failed to update history in Supabase:", e);
+        showToast("⚠️ Failed to save to cloud");
       }
     }
   };
@@ -326,14 +296,14 @@ export default function DashboardPage() {
     });
 
     setPatients(updated);
-    localStorage.setItem(PATIENTS_STORAGE_KEY, JSON.stringify(updated));
     setDentalPatient((prev) => (prev && prev.id === patientId ? { ...prev, teeth } : prev));
 
     if (targetUpdatedPatient) {
       try {
         await upsertPatientToDB(targetUpdatedPatient);
       } catch (e) {
-        console.warn("Could not sync dental odontogram to Supabase:", e);
+        console.error("Failed to save dental chart to Supabase:", e);
+        showToast("⚠️ Failed to save to cloud");
       }
     }
   };
@@ -345,15 +315,14 @@ export default function DashboardPage() {
       id: `apt-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
       createdAt: Date.now(),
     };
-    const updated = [newApt, ...appointments];
-    setAppointments(updated);
-    localStorage.setItem(APPOINTMENTS_STORAGE_KEY, JSON.stringify(updated));
+    setAppointments((prev) => [newApt, ...prev]);
     showToast(`Booked appointment for "${newApt.patientName}"`);
 
     try {
       await upsertAppointmentToDB(newApt);
     } catch (e) {
-      console.warn("Could not sync new appointment to Supabase:", e);
+      console.error("Failed to save appointment to Supabase:", e);
+      showToast("⚠️ Failed to save to cloud");
     }
   };
 
@@ -370,23 +339,21 @@ export default function DashboardPage() {
       return a;
     });
     setAppointments(updated);
-    localStorage.setItem(APPOINTMENTS_STORAGE_KEY, JSON.stringify(updated));
     showToast("Appointment status updated");
 
     if (targetApt) {
       try {
         await upsertAppointmentToDB(targetApt);
       } catch (e) {
-        console.warn("Could not sync appointment update to Supabase:", e);
+        console.error("Failed to update appointment in Supabase:", e);
+        showToast("⚠️ Failed to save to cloud");
       }
     }
   };
 
   const handleDeleteAppointment = async (id: string) => {
     const target = appointments.find((a) => a.id === id);
-    const updated = appointments.filter((a) => a.id !== id);
-    setAppointments(updated);
-    localStorage.setItem(APPOINTMENTS_STORAGE_KEY, JSON.stringify(updated));
+    setAppointments((prev) => prev.filter((a) => a.id !== id));
     if (target) {
       showToast(`Removed appointment for "${target.patientName}"`);
     }
@@ -394,7 +361,8 @@ export default function DashboardPage() {
     try {
       await deleteAppointmentFromDB(id);
     } catch (e) {
-      console.warn("Could not sync appointment deletion to Supabase:", e);
+      console.error("Failed to delete appointment from Supabase:", e);
+      showToast("⚠️ Failed to delete from cloud");
     }
   };
 
