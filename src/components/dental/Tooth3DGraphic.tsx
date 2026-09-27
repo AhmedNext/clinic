@@ -72,28 +72,29 @@ export function Tooth3DGraphic({
           {/* Enamel pearl gradient */}
           <linearGradient id={crownGrad} x1="15%" y1="0%" x2="85%" y2="100%">
             <stop offset="0%" stopColor="#ffffff" />
-            <stop offset="30%" stopColor="#f8fafc" />
-            <stop offset="65%" stopColor="#e8edf4" />
-            <stop offset="100%" stopColor="#d0d9e8" />
+            <stop offset="35%" stopColor="#f8fafc" />
+            <stop offset="70%" stopColor="#edf2f7" />
+            <stop offset="100%" stopColor="#dce4ef" />
           </linearGradient>
 
-          {/* Root dentine gradient */}
+          {/* Natural Dentin Root gradient (matching the warm authentic FDI anatomical chart) */}
           <linearGradient id={rootGrad} x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#f1f3f7" />
-            <stop offset="50%" stopColor="#dde3ed" />
-            <stop offset="100%" stopColor="#c8d3e0" />
+            <stop offset="0%" stopColor="#fdf8ed" />
+            <stop offset="35%" stopColor="#f7e9c8" />
+            <stop offset="75%" stopColor="#eed6a2" />
+            <stop offset="100%" stopColor="#debe85" />
           </linearGradient>
 
           {/* Enamel specular shine */}
           <radialGradient id={shineGrad} cx="30%" cy="25%" r="50%">
-            <stop offset="0%" stopColor="#ffffff" stopOpacity="0.92" />
-            <stop offset="55%" stopColor="#ffffff" stopOpacity="0.25" />
+            <stop offset="0%" stopColor="#ffffff" stopOpacity="0.95" />
+            <stop offset="55%" stopColor="#ffffff" stopOpacity="0.3" />
             <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
           </radialGradient>
 
           {/* Soft shadow */}
           <filter id={shadowFilter} x="-25%" y="-25%" width="150%" height="150%">
-            <feDropShadow dx="0" dy="2" stdDeviation="2.5" floodColor="#0f172a" floodOpacity="0.18" />
+            <feDropShadow dx="0" dy="1.5" stdDeviation="2" floodColor="#0f172a" floodOpacity="0.14" />
           </filter>
         </defs>
 
@@ -107,17 +108,17 @@ export function Tooth3DGraphic({
                 {/* Palatal root (centre-back) */}
                 <path
                   d="M21 44 C20 36 19 24 18 13 C17 8 19 5 21 7 C22 9 23 9 24 7 C26 5 28 8 27 13 C26 24 25 36 24 44 Z"
-                  fill={`url(#${rootGrad})`} stroke="#c8d3e0" strokeWidth="0.6"
+                  fill={`url(#${rootGrad})`} stroke="#cbb389" strokeWidth="0.6"
                 />
                 {/* Mesiobuccal root (left) */}
                 <path
                   d="M16 44 C14 36 11 25 10 14 C9 8 11 6 13 8 C15 10 16 18 17 38 Z"
-                  fill={`url(#${rootGrad})`} stroke="#c8d3e0" strokeWidth="0.6"
+                  fill={`url(#${rootGrad})`} stroke="#cbb389" strokeWidth="0.6"
                 />
                 {/* Distobuccal root (right) */}
                 <path
                   d="M29 44 C31 36 34 26 35 15 C36 9 34 7 32 9 C30 11 29 20 28 38 Z"
-                  fill={`url(#${rootGrad})`} stroke="#c8d3e0" strokeWidth="0.6"
+                  fill={`url(#${rootGrad})`} stroke="#cbb389" strokeWidth="0.6"
                 />
                 {/* Crown — wide, flat-bottomed, multi-cusp */}
                 <path
@@ -144,12 +145,12 @@ export function Tooth3DGraphic({
                 {/* Buccal root */}
                 <path
                   d="M19 44 C18 34 16 20 15 10 C14 5 16 3 18 6 C19 8 20 16 21 42 Z"
-                  fill={`url(#${rootGrad})`} stroke="#c8d3e0" strokeWidth="0.6"
+                  fill={`url(#${rootGrad})`} stroke="#cbb389" strokeWidth="0.6"
                 />
                 {/* Palatal root */}
                 <path
                   d="M26 44 C27 34 29 20 30 10 C31 5 29 3 27 6 C26 8 25 16 24 42 Z"
-                  fill={`url(#${rootGrad})`} stroke="#c8d3e0" strokeWidth="0.6"
+                  fill={`url(#${rootGrad})`} stroke="#cbb389" strokeWidth="0.6"
                 />
                 {/* Crown — slightly narrower, two cusps */}
                 <path
@@ -171,7 +172,7 @@ export function Tooth3DGraphic({
                 {/* Long single tapering root */}
                 <path
                   d="M20 44 C19 30 18 16 19 6 C20 2 22 1 24 1 C26 1 28 2 29 6 C30 16 29 30 28 44 Z"
-                  fill={`url(#${rootGrad})`} stroke="#c8d3e0" strokeWidth="0.6"
+                  fill={`url(#${rootGrad})`} stroke="#cbb389" strokeWidth="0.6"
                 />
                 {/* Crown — pointed cusp top, convex labial face */}
                 <path
@@ -190,7 +191,7 @@ export function Tooth3DGraphic({
                 {/* Straight root */}
                 <path
                   d="M20 44 C19 30 19 16 20 7 C21 3 23 1 24 1 C25 1 27 3 28 7 C29 16 29 30 28 44 Z"
-                  fill={`url(#${rootGrad})`} stroke="#c8d3e0" strokeWidth="0.6"
+                  fill={`url(#${rootGrad})`} stroke="#cbb389" strokeWidth="0.6"
                 />
                 {/* Chisel-shaped crown */}
                 <path
@@ -226,12 +227,12 @@ export function Tooth3DGraphic({
                 {/* Mesial root */}
                 <path
                   d="M16 44 C14 52 11 63 10 72 C9 78 11 80 13 78 C15 76 16 66 18 46 Z"
-                  fill={`url(#${rootGrad})`} stroke="#c8d3e0" strokeWidth="0.6"
+                  fill={`url(#${rootGrad})`} stroke="#cbb389" strokeWidth="0.6"
                 />
                 {/* Distal root */}
                 <path
                   d="M29 44 C31 52 34 63 35 72 C36 78 34 80 32 78 C30 76 29 66 27 46 Z"
-                  fill={`url(#${rootGrad})`} stroke="#c8d3e0" strokeWidth="0.6"
+                  fill={`url(#${rootGrad})`} stroke="#cbb389" strokeWidth="0.6"
                 />
                 <ellipse cx="15" cy="26" rx="6" ry="11" fill={`url(#${shineGrad})`} />
               </>
@@ -250,7 +251,7 @@ export function Tooth3DGraphic({
                 />
                 <path
                   d="M18 44 C18 56 20 66 22 76 C24 66 26 56 26 44 Z"
-                  fill={`url(#${rootGrad})`} stroke="#c8d3e0" strokeWidth="0.6"
+                  fill={`url(#${rootGrad})`} stroke="#cbb389" strokeWidth="0.6"
                 />
                 <ellipse cx="16" cy="27" rx="5" ry="10" fill={`url(#${shineGrad})`} />
               </>
@@ -266,7 +267,7 @@ export function Tooth3DGraphic({
                 <path d="M24 44 V 10" stroke="#94a3b8" strokeWidth="0.6" strokeLinecap="round" opacity="0.35" />
                 <path
                   d="M20 44 C19 56 20 66 22 78 C24 66 25 56 25 44 Z"
-                  fill={`url(#${rootGrad})`} stroke="#c8d3e0" strokeWidth="0.6"
+                  fill={`url(#${rootGrad})`} stroke="#cbb389" strokeWidth="0.6"
                 />
                 <ellipse cx="17" cy="26" rx="4" ry="11" fill={`url(#${shineGrad})`} />
               </>
@@ -284,7 +285,7 @@ export function Tooth3DGraphic({
                 <path d="M20 44 V 32 M28 44 V 32" stroke="#94a3b8" strokeWidth="0.5" strokeLinecap="round" opacity="0.2" />
                 <path
                   d="M19 44 C18 56 20 67 22 78 C24 67 26 56 26 44 Z"
-                  fill={`url(#${rootGrad})`} stroke="#c8d3e0" strokeWidth="0.6"
+                  fill={`url(#${rootGrad})`} stroke="#cbb389" strokeWidth="0.6"
                 />
                 <ellipse cx="17" cy="27" rx="5" ry="10" fill={`url(#${shineGrad})`} />
               </>

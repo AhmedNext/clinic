@@ -3,7 +3,6 @@
 import React, { useState } from "react";
 import {
   ALL_TEETH,
-  CATEGORY_COLORS,
   TREATMENT_METADATA,
   ToothInfo,
   ToothRecord,
@@ -16,8 +15,6 @@ import {
   Eraser,
   MousePointer,
   CheckCircle2,
-  Layers,
-  ArrowRight,
 } from "lucide-react";
 
 interface DentalChartProps {
@@ -27,6 +24,55 @@ interface DentalChartProps {
   onRemoveTooth: (toothNumber: number) => void;
   onRemoveMultipleTeeth?: (toothNumbers: number[]) => void;
   readonly?: boolean;
+}
+
+// FDI category definitions & exact colors matching the anatomical reference chart
+export const FDI_CATEGORIES = {
+  molars: {
+    label: "molaires",
+    color: "#a21caf",
+    textColor: "text-fuchsia-700 dark:text-fuchsia-400",
+    borderClass: "border-fuchsia-500",
+    bgClass: "bg-fuchsia-500",
+  },
+  premolars: {
+    label: "Prémolaires",
+    color: "#16a34a",
+    textColor: "text-emerald-600 dark:text-emerald-400",
+    borderClass: "border-emerald-500",
+    bgClass: "bg-emerald-500",
+  },
+  canine: {
+    label: "canine",
+    color: "#ea580c",
+    textColor: "text-orange-600 dark:text-orange-400",
+    borderClass: "border-orange-500",
+    bgClass: "bg-orange-500",
+  },
+  incisors: {
+    label: "incisives",
+    color: "#0284c7",
+    textColor: "text-sky-600 dark:text-sky-400",
+    borderClass: "border-sky-500",
+    bgClass: "bg-sky-500",
+  },
+} as const;
+
+export function getFdiCategory(toothNumber: number) {
+  // Molars: 18, 17, 16 / 26, 27, 28 / 48, 47, 46 / 36, 37, 38
+  if ([18, 17, 16, 26, 27, 28, 48, 47, 46, 36, 37, 38].includes(toothNumber)) {
+    return FDI_CATEGORIES.molars;
+  }
+  // Premolars: 15, 14 / 24, 25 / 45, 44 / 34, 35
+  if ([15, 14, 24, 25, 45, 44, 34, 35].includes(toothNumber)) {
+    return FDI_CATEGORIES.premolars;
+  }
+  // Canines: 13, 23, 43, 33
+  if ([13, 23, 43, 33].includes(toothNumber)) {
+    return FDI_CATEGORIES.canine;
+  }
+  // Incisors: 12, 11, 21, 22 / 42, 41, 31, 32
+  return FDI_CATEGORIES.incisors;
 }
 
 export function DentalChart({
@@ -42,23 +88,24 @@ export function DentalChart({
   const [selectedTeethNumbers, setSelectedTeethNumbers] = useState<number[]>([]);
   const [treatmentNote, setTreatmentNote] = useState("");
 
-  // Mobile-first Jaw View: "upper" (18-28), "lower" (48-38), or "all" (Full panorama)
-  const [jawView, setJawView] = useState<"upper" | "lower" | "all">("upper");
-
   // Map tooth records by number for fast lookup
   const recordsMap = new Map<number, ToothRecord>(
     teethRecords.map((r) => [r.toothNumber, r])
   );
 
-  // Group teeth into Upper and Lower jaws
-  const upperRightTeeth = ALL_TEETH.filter((t) => t.jaw === "upper" && t.side === "right");
-  const upperLeftTeeth = ALL_TEETH.filter((t) => t.jaw === "upper" && t.side === "left");
-  const lowerRightTeeth = ALL_TEETH.filter((t) => t.jaw === "lower" && t.side === "right");
-  const lowerLeftTeeth = ALL_TEETH.filter((t) => t.jaw === "lower" && t.side === "left");
+  // Exact 16 Upper Teeth in horizontal FDI order (Right to Left): 18 -> 28
+  const upperTeethSequence = [18, 17, 16, 15, 14, 13, 12, 11, 21, 22, 23, 24, 25, 26, 27, 28].map(
+    (num) => ALL_TEETH.find((t) => t.number === num)!
+  );
 
-  const upperTeethNumbers = ALL_TEETH.filter((t) => t.jaw === "upper").map((t) => t.number);
-  const lowerTeethNumbers = ALL_TEETH.filter((t) => t.jaw === "lower").map((t) => t.number);
-  const allTeethNumbers = ALL_TEETH.map((t) => t.number);
+  // Exact 16 Lower Teeth in horizontal FDI order (Right to Left): 48 -> 38
+  const lowerTeethSequence = [48, 47, 46, 45, 44, 43, 42, 41, 31, 32, 33, 34, 35, 36, 37, 38].map(
+    (num) => ALL_TEETH.find((t) => t.number === num)!
+  );
+
+  const upperTeethNumbers = upperTeethSequence.map((t) => t.number);
+  const lowerTeethNumbers = lowerTeethSequence.map((t) => t.number);
+  const allTeethNumbers = [...upperTeethNumbers, ...lowerTeethNumbers];
 
   // When clicking on a tooth:
   const handleToothClick = (tooth: ToothInfo) => {
@@ -84,7 +131,7 @@ export function DentalChart({
       return;
     }
 
-    // Otherwise: IMMEDIATELY apply the active procedure tool and store!
+    // Otherwise: apply the active procedure tool and store!
     const newRecord: ToothRecord = {
       toothNumber: tooth.number,
       status: activeTool,
@@ -99,18 +146,9 @@ export function DentalChart({
   };
 
   // Quick selection helpers
-  const handleSelectUpper = () => {
-    setSelectedTeethNumbers(upperTeethNumbers);
-    setJawView("upper");
-  };
-  const handleSelectLower = () => {
-    setSelectedTeethNumbers(lowerTeethNumbers);
-    setJawView("lower");
-  };
-  const handleSelectAll = () => {
-    setSelectedTeethNumbers(allTeethNumbers);
-    setJawView("all");
-  };
+  const handleSelectUpper = () => setSelectedTeethNumbers(upperTeethNumbers);
+  const handleSelectLower = () => setSelectedTeethNumbers(lowerTeethNumbers);
+  const handleSelectAll = () => setSelectedTeethNumbers(allTeethNumbers);
   const handleClearSelection = () => {
     setSelectedTeethNumbers([]);
     setTreatmentNote("");
@@ -170,8 +208,16 @@ export function DentalChart({
     }
   };
 
-  // Render individual tooth item with responsive sizing
-  const renderToothItem = (tooth: ToothInfo, isLarge: boolean = false) => {
+  const selectedCount = selectedTeethNumbers.length;
+  const singleSelectedTooth =
+    selectedCount === 1
+      ? ALL_TEETH.find((t) => t.number === selectedTeethNumbers[0])
+      : null;
+  const singleRecord =
+    selectedCount === 1 ? recordsMap.get(selectedTeethNumbers[0]) : null;
+
+  // Render individual tooth item in the column
+  const renderToothItem = (tooth: ToothInfo) => {
     const record = recordsMap.get(tooth.number);
     const isSelected = selectedTeethNumbers.includes(tooth.number);
 
@@ -185,45 +231,16 @@ export function DentalChart({
           record ? ` • ${TREATMENT_METADATA[record.status].label}` : " • Click to mark"
         }`}
         className={`
-          relative flex flex-col items-center justify-between rounded-xl transition-all duration-200 cursor-pointer group active:scale-95
-          ${
-            isLarge
-              ? "p-1.5 sm:p-2 min-w-[36px] sm:min-w-[44px]"
-              : "p-0.5 sm:p-1.5 min-w-[28px] sm:min-w-[38px]"
-          }
+          relative flex flex-col items-center justify-center p-0.5 sm:p-1 rounded-xl transition-all duration-150 cursor-pointer group active:scale-95
           ${
             isSelected
-              ? "bg-indigo-100 dark:bg-indigo-950 ring-2 ring-indigo-500 scale-105 z-20 shadow-md shadow-indigo-500/25"
+              ? "bg-indigo-100/90 dark:bg-indigo-950/80 ring-2 ring-indigo-500 scale-105 z-20 shadow-md shadow-indigo-500/25"
               : "hover:bg-slate-100/80 dark:hover:bg-slate-800/60"
           }
-          ${record && !isSelected ? "bg-emerald-50/70 dark:bg-emerald-950/40 ring-1 ring-emerald-500/30" : ""}
+          ${record && !isSelected ? "ring-1 ring-emerald-500/40 bg-emerald-50/50 dark:bg-emerald-950/30" : ""}
         `}
       >
-        {/* Upper number label (if upper jaw) */}
-        {tooth.jaw === "upper" && (
-          <span
-            className={`font-mono transition-colors leading-none mb-1 ${
-              isLarge ? "text-xs sm:text-sm font-black" : "text-[10px] sm:text-xs font-bold"
-            } ${
-              isSelected
-                ? "text-indigo-600 dark:text-indigo-400 font-extrabold scale-110"
-                : record
-                ? "text-emerald-600 dark:text-emerald-400 font-extrabold"
-                : "text-slate-600 dark:text-slate-400"
-            }`}
-          >
-            {tooth.number}
-          </span>
-        )}
-
-        {/* 3D Realistic Tooth Silhouette Graphic */}
-        <div
-          className={`flex items-center justify-center ${
-            isLarge
-              ? "w-7 sm:w-10 h-14 sm:h-20"
-              : "w-5 sm:w-8 h-12 sm:h-16"
-          }`}
-        >
+        <div className="w-5 sm:w-7 md:w-8 lg:w-9 h-14 sm:h-18 md:h-20 flex items-center justify-center">
           <Tooth3DGraphic
             category={tooth.category}
             jaw={tooth.jaw}
@@ -233,24 +250,7 @@ export function DentalChart({
           />
         </div>
 
-        {/* Lower number label (if lower jaw) */}
-        {tooth.jaw === "lower" && (
-          <span
-            className={`font-mono transition-colors leading-none mt-1 ${
-              isLarge ? "text-xs sm:text-sm font-black" : "text-[10px] sm:text-xs font-bold"
-            } ${
-              isSelected
-                ? "text-indigo-600 dark:text-indigo-400 font-extrabold scale-110"
-                : record
-                ? "text-emerald-600 dark:text-emerald-400 font-extrabold"
-                : "text-slate-600 dark:text-slate-400"
-            }`}
-          >
-            {tooth.number}
-          </span>
-        )}
-
-        {/* Tiny Status Indicator Dot */}
+        {/* Small badge dot if worked */}
         {record && (
           <span
             className="w-1.5 h-1.5 rounded-full mt-0.5"
@@ -261,57 +261,10 @@ export function DentalChart({
     );
   };
 
-  const selectedCount = selectedTeethNumbers.length;
-  const singleSelectedTooth =
-    selectedCount === 1
-      ? ALL_TEETH.find((t) => t.number === selectedTeethNumbers[0])
-      : null;
-  const singleRecord =
-    selectedCount === 1 ? recordsMap.get(selectedTeethNumbers[0]) : null;
-
   return (
     <div className="w-full flex flex-col bg-slate-50/70 dark:bg-slate-900/70 border border-slate-200/80 dark:border-slate-800 rounded-2xl sm:rounded-3xl p-2.5 sm:p-5 shadow-inner select-none backdrop-blur-xs">
-      {/* ================= 1. JAW VIEW SWITCHER (MOBILE-FIRST) ================= */}
-      <div className="flex items-center justify-between gap-2 mb-3">
-        <div className="flex-1 grid grid-cols-3 p-1 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs">
-          <button
-            type="button"
-            onClick={() => setJawView("upper")}
-            className={`flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-              jawView === "upper"
-                ? "bg-indigo-600 text-white shadow-sm shadow-indigo-600/25"
-                : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
-            }`}
-          >
-            <span>Upper (18-28)</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setJawView("lower")}
-            className={`flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-              jawView === "lower"
-                ? "bg-indigo-600 text-white shadow-sm shadow-indigo-600/25"
-                : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
-            }`}
-          >
-            <span>Lower (48-38)</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setJawView("all")}
-            className={`flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-              jawView === "all"
-                ? "bg-indigo-600 text-white shadow-sm shadow-indigo-600/25"
-                : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
-            }`}
-          >
-            <span>Both (32)</span>
-          </button>
-        </div>
-      </div>
-
-      {/* ================= 2. PROCEDURE TOOLBAR ================= */}
-      <div className="sticky top-0 z-30 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md p-2.5 sm:p-4 rounded-2xl border border-indigo-200/80 dark:border-indigo-800/80 shadow-md mb-3.5">
+      {/* ================= 1. PROCEDURE TOOLBAR ================= */}
+      <div className="sticky top-0 z-30 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md p-2.5 sm:p-3.5 rounded-2xl border border-indigo-200/80 dark:border-indigo-800/80 shadow-md mb-3.5">
         <div className="flex flex-col gap-2">
           {/* Header row: Status label + Auto-save badge */}
           <div className="flex items-center justify-between gap-2">
@@ -404,14 +357,14 @@ export function DentalChart({
                 onClick={handleSelectUpper}
                 className="px-2 py-0.5 rounded-lg text-[11px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:text-indigo-600 cursor-pointer"
               >
-                Upper
+                Upper (16)
               </button>
               <button
                 type="button"
                 onClick={handleSelectLower}
                 className="px-2 py-0.5 rounded-lg text-[11px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:text-indigo-600 cursor-pointer"
               >
-                Lower
+                Lower (16)
               </button>
               <button
                 type="button"
@@ -485,170 +438,249 @@ export function DentalChart({
         )}
       </div>
 
-      {/* ================= 3. ODONTOGRAM DISPLAY (MOBILE-FIRST) ================= */}
-      {jawView === "upper" && (
-        /* UPPER JAW DEDICATED VIEW: Roomy, big teeth for easy thumb tapping */
-        <div className="w-full flex flex-col items-center animate-in fade-in duration-200">
-          <div className="w-full flex items-center justify-between px-2 mb-2">
-            <span className="text-xs font-bold text-indigo-700 dark:text-indigo-300">
-              Upper Jaw (Maxilla)
-            </span>
-            <span className="text-[11px] text-slate-400">16 Teeth • 18 → 28</span>
-          </div>
+      {/* ================= 2. PANORAMIC FDI ODONTOGRAM (EXACT REFERENCE DIAGRAM) ================= */}
+      <div className="w-full bg-white dark:bg-slate-900/90 border border-slate-200/90 dark:border-slate-800 rounded-2xl sm:rounded-3xl p-3 sm:p-5 shadow-sm">
+        {/* Title & Top Direction */}
+        <div className="flex flex-col items-center justify-center mb-3">
+          <h3 className="text-base sm:text-lg font-black tracking-tight text-slate-900 dark:text-slate-100">
+            Numérotation dentaire
+          </h3>
+          <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 mt-0.5 uppercase tracking-wider">
+            Haut <span className="text-[10px] font-normal text-slate-400">(Upper / الفك العلوي)</span>
+          </span>
+        </div>
 
-          {/* Quadrant Row Container */}
-          <div className="w-full p-2 sm:p-4 rounded-2xl bg-white/90 dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800 shadow-xs flex flex-col gap-3">
-            {/* Quadrant 1: Right Upper (18 to 11) */}
-            <div>
-              <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center justify-between px-1">
-                <span>Right Quadrant (18 → 11)</span>
-                <span className="text-indigo-500 font-normal">يمين</span>
-              </div>
-              <div className="grid grid-cols-8 gap-0.5 sm:gap-1.5 p-1 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-100 dark:border-slate-800">
-                {upperRightTeeth.map((t) => renderToothItem(t, true))}
-              </div>
-            </div>
-
-            {/* Midline Divider */}
-            <div className="flex items-center justify-center gap-2 text-[10px] font-bold text-indigo-500 uppercase tracking-wider">
-              <div className="h-[1px] flex-1 bg-indigo-200 dark:bg-indigo-900/60" />
-              <span className="px-2 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800">
-                Central Midline (خط المنتصف)
+        {/* Scrollable FDI Panoramic Container */}
+        <div className="w-full overflow-x-auto pb-2 select-none">
+          <div className="min-w-[620px] max-w-4xl mx-auto flex items-center justify-between gap-1 sm:gap-3">
+            {/* Left Side Label (Dentist Right / Droite) */}
+            <div className="flex flex-col items-center justify-center text-center px-1 flex-shrink-0">
+              <span className="text-xs sm:text-sm font-black text-slate-800 dark:text-slate-200">
+                Droite
               </span>
-              <div className="h-[1px] flex-1 bg-indigo-200 dark:bg-indigo-900/60" />
-            </div>
-
-            {/* Quadrant 2: Left Upper (21 to 28) */}
-            <div>
-              <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center justify-between px-1">
-                <span>Left Quadrant (21 → 28)</span>
-                <span className="text-indigo-500 font-normal">يسار</span>
-              </div>
-              <div className="grid grid-cols-8 gap-0.5 sm:gap-1.5 p-1 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-100 dark:border-slate-800">
-                {upperLeftTeeth.map((t) => renderToothItem(t, true))}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {jawView === "lower" && (
-        /* LOWER JAW DEDICATED VIEW: Roomy, big teeth for easy thumb tapping */
-        <div className="w-full flex flex-col items-center animate-in fade-in duration-200">
-          <div className="w-full flex items-center justify-between px-2 mb-2">
-            <span className="text-xs font-bold text-indigo-700 dark:text-indigo-300">
-              Lower Jaw (Mandible)
-            </span>
-            <span className="text-[11px] text-slate-400">16 Teeth • 48 → 38</span>
-          </div>
-
-          <div className="w-full p-2 sm:p-4 rounded-2xl bg-white/90 dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800 shadow-xs flex flex-col gap-3">
-            {/* Quadrant 4: Right Lower (48 to 41) */}
-            <div>
-              <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center justify-between px-1">
-                <span>Right Lower Quadrant (48 → 41)</span>
-                <span className="text-indigo-500 font-normal">يمين</span>
-              </div>
-              <div className="grid grid-cols-8 gap-0.5 sm:gap-1.5 p-1 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-100 dark:border-slate-800">
-                {lowerRightTeeth.map((t) => renderToothItem(t, true))}
-              </div>
-            </div>
-
-            {/* Midline Divider */}
-            <div className="flex items-center justify-center gap-2 text-[10px] font-bold text-indigo-500 uppercase tracking-wider">
-              <div className="h-[1px] flex-1 bg-indigo-200 dark:bg-indigo-900/60" />
-              <span className="px-2 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800">
-                Central Midline (خط المنتصف)
+              <span className="text-[10px] font-bold text-indigo-500">
+                Right (يمين)
               </span>
-              <div className="h-[1px] flex-1 bg-indigo-200 dark:bg-indigo-900/60" />
             </div>
 
-            {/* Quadrant 3: Left Lower (31 to 38) */}
-            <div>
-              <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center justify-between px-1">
-                <span>Left Lower Quadrant (31 → 38)</span>
-                <span className="text-indigo-500 font-normal">يسار</span>
+            {/* Main Center Teeth FDI Matrix */}
+            <div className="flex-1 relative flex flex-col items-center">
+              {/* Soft Gingival Wash / Gum Blush Band (matching red halo in reference image) */}
+              <div className="absolute inset-x-2 top-1/2 -translate-y-1/2 h-24 sm:h-32 rounded-full bg-gradient-to-r from-rose-200/25 via-rose-300/40 to-rose-200/25 dark:from-rose-950/20 dark:via-rose-900/35 dark:to-rose-950/20 pointer-events-none blur-xs" />
+
+              {/* Central Midline Subtle Guide */}
+              <div className="absolute top-0 bottom-0 left-1/2 -translate-x-1/2 w-[1px] bg-indigo-500/25 dark:bg-indigo-400/20 pointer-events-none z-10" />
+
+              {/* ─── ROW 1: UPPER CATEGORIES & COLORED UNDERLINES ─── */}
+              <div className="w-full grid grid-cols-[repeat(16,minmax(0,1fr))] gap-0.5 sm:gap-1 text-center mb-1">
+                {/* 18, 17, 16: Molaires */}
+                <div className="col-span-3 flex flex-col items-center">
+                  <span className="text-[10px] sm:text-xs font-semibold text-fuchsia-700 dark:text-fuchsia-400 truncate">
+                    molaires
+                  </span>
+                  <div className="w-full h-0.5 sm:h-1 rounded-full bg-fuchsia-500/80 mt-0.5" />
+                </div>
+
+                {/* 15, 14: Prémolaires */}
+                <div className="col-span-2 flex flex-col items-center">
+                  <span className="text-[10px] sm:text-xs font-semibold text-emerald-600 dark:text-emerald-400 truncate">
+                    Prémolaires
+                  </span>
+                  <div className="w-full h-0.5 sm:h-1 rounded-full bg-emerald-500/80 mt-0.5" />
+                </div>
+
+                {/* 13: Canine */}
+                <div className="col-span-1 flex flex-col items-center">
+                  <span className="text-[10px] sm:text-xs font-semibold text-orange-600 dark:text-orange-400 truncate">
+                    canine
+                  </span>
+                  <div className="w-full h-0.5 sm:h-1 rounded-full bg-orange-500/80 mt-0.5" />
+                </div>
+
+                {/* 12, 11: Incisives */}
+                <div className="col-span-2 flex flex-col items-center">
+                  <span className="text-[10px] sm:text-xs font-semibold text-sky-600 dark:text-sky-400 truncate">
+                    incisives
+                  </span>
+                  <div className="w-full h-0.5 sm:h-1 rounded-full bg-sky-500/80 mt-0.5" />
+                </div>
+
+                {/* 21, 22: Incisives */}
+                <div className="col-span-2 flex flex-col items-center">
+                  <span className="text-[10px] sm:text-xs font-semibold text-sky-600 dark:text-sky-400 truncate">
+                    incisives
+                  </span>
+                  <div className="w-full h-0.5 sm:h-1 rounded-full bg-sky-500/80 mt-0.5" />
+                </div>
+
+                {/* 23: Canine */}
+                <div className="col-span-1 flex flex-col items-center">
+                  <span className="text-[10px] sm:text-xs font-semibold text-orange-600 dark:text-orange-400 truncate">
+                    canine
+                  </span>
+                  <div className="w-full h-0.5 sm:h-1 rounded-full bg-orange-500/80 mt-0.5" />
+                </div>
+
+                {/* 24, 25: Prémolaires */}
+                <div className="col-span-2 flex flex-col items-center">
+                  <span className="text-[10px] sm:text-xs font-semibold text-emerald-600 dark:text-emerald-400 truncate">
+                    Prémolaires
+                  </span>
+                  <div className="w-full h-0.5 sm:h-1 rounded-full bg-emerald-500/80 mt-0.5" />
+                </div>
+
+                {/* 26, 27, 28: Molaires */}
+                <div className="col-span-3 flex flex-col items-center">
+                  <span className="text-[10px] sm:text-xs font-semibold text-fuchsia-700 dark:text-fuchsia-400 truncate">
+                    molaires
+                  </span>
+                  <div className="w-full h-0.5 sm:h-1 rounded-full bg-fuchsia-500/80 mt-0.5" />
+                </div>
               </div>
-              <div className="grid grid-cols-8 gap-0.5 sm:gap-1.5 p-1 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-100 dark:border-slate-800">
-                {lowerLeftTeeth.map((t) => renderToothItem(t, true))}
+
+              {/* ─── ROW 2: UPPER TOOTH NUMBERS (COLORED MATCHING CATEGORY) ─── */}
+              <div className="w-full grid grid-cols-[repeat(16,minmax(0,1fr))] gap-0.5 sm:gap-1 text-center mb-0.5">
+                {upperTeethSequence.map((tooth) => {
+                  const cat = getFdiCategory(tooth.number);
+                  const isSelected = selectedTeethNumbers.includes(tooth.number);
+                  return (
+                    <div
+                      key={tooth.number}
+                      className={`text-[11px] sm:text-xs md:text-sm font-bold font-mono transition-transform ${
+                        isSelected ? "scale-125 font-black text-indigo-600" : cat.textColor
+                      }`}
+                    >
+                      {tooth.number}
+                    </div>
+                  );
+                })}
               </div>
+
+              {/* ─── ROW 3: UPPER TEETH GRAPHICS (18 TO 28, ROOTS UP, CROWNS DOWN) ─── */}
+              <div className="w-full grid grid-cols-[repeat(16,minmax(0,1fr))] gap-0.5 sm:gap-1 items-end relative z-10">
+                {upperTeethSequence.map((tooth) => (
+                  <div key={tooth.number} className="flex justify-center">
+                    {renderToothItem(tooth)}
+                  </div>
+                ))}
+              </div>
+
+              {/* ─── ROW 4: LOWER TEETH GRAPHICS (48 TO 38, CROWNS UP, ROOTS DOWN) ─── */}
+              <div className="w-full grid grid-cols-[repeat(16,minmax(0,1fr))] gap-0.5 sm:gap-1 items-start relative z-10 mt-1">
+                {lowerTeethSequence.map((tooth) => (
+                  <div key={tooth.number} className="flex justify-center">
+                    {renderToothItem(tooth)}
+                  </div>
+                ))}
+              </div>
+
+              {/* ─── ROW 5: LOWER TOOTH NUMBERS (COLORED MATCHING CATEGORY) ─── */}
+              <div className="w-full grid grid-cols-[repeat(16,minmax(0,1fr))] gap-0.5 sm:gap-1 text-center mt-1 mb-0.5">
+                {lowerTeethSequence.map((tooth) => {
+                  const cat = getFdiCategory(tooth.number);
+                  const isSelected = selectedTeethNumbers.includes(tooth.number);
+                  return (
+                    <div
+                      key={tooth.number}
+                      className={`text-[11px] sm:text-xs md:text-sm font-bold font-mono transition-transform ${
+                        isSelected ? "scale-125 font-black text-indigo-600" : cat.textColor
+                      }`}
+                    >
+                      {tooth.number}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* ─── ROW 6: LOWER CATEGORIES & COLORED UNDERLINES ─── */}
+              <div className="w-full grid grid-cols-[repeat(16,minmax(0,1fr))] gap-0.5 sm:gap-1 text-center mt-0.5">
+                {/* 48, 47, 46: Molaires */}
+                <div className="col-span-3 flex flex-col items-center">
+                  <div className="w-full h-0.5 sm:h-1 rounded-full bg-fuchsia-500/80 mb-0.5" />
+                  <span className="text-[10px] sm:text-xs font-semibold text-fuchsia-700 dark:text-fuchsia-400 truncate">
+                    molaires
+                  </span>
+                </div>
+
+                {/* 45, 44: Prémolaires */}
+                <div className="col-span-2 flex flex-col items-center">
+                  <div className="w-full h-0.5 sm:h-1 rounded-full bg-emerald-500/80 mb-0.5" />
+                  <span className="text-[10px] sm:text-xs font-semibold text-emerald-600 dark:text-emerald-400 truncate">
+                    Prémolaires
+                  </span>
+                </div>
+
+                {/* 43: Canine */}
+                <div className="col-span-1 flex flex-col items-center">
+                  <div className="w-full h-0.5 sm:h-1 rounded-full bg-orange-500/80 mb-0.5" />
+                  <span className="text-[10px] sm:text-xs font-semibold text-orange-600 dark:text-orange-400 truncate">
+                    canine
+                  </span>
+                </div>
+
+                {/* 42, 41: Incisives */}
+                <div className="col-span-2 flex flex-col items-center">
+                  <div className="w-full h-0.5 sm:h-1 rounded-full bg-sky-500/80 mb-0.5" />
+                  <span className="text-[10px] sm:text-xs font-semibold text-sky-600 dark:text-sky-400 truncate">
+                    incisives
+                  </span>
+                </div>
+
+                {/* 31, 32: Incisives */}
+                <div className="col-span-2 flex flex-col items-center">
+                  <div className="w-full h-0.5 sm:h-1 rounded-full bg-sky-500/80 mb-0.5" />
+                  <span className="text-[10px] sm:text-xs font-semibold text-sky-600 dark:text-sky-400 truncate">
+                    incisives
+                  </span>
+                </div>
+
+                {/* 33: Canine */}
+                <div className="col-span-1 flex flex-col items-center">
+                  <div className="w-full h-0.5 sm:h-1 rounded-full bg-orange-500/80 mb-0.5" />
+                  <span className="text-[10px] sm:text-xs font-semibold text-orange-600 dark:text-orange-400 truncate">
+                    canine
+                  </span>
+                </div>
+
+                {/* 34, 35: Prémolaires */}
+                <div className="col-span-2 flex flex-col items-center">
+                  <div className="w-full h-0.5 sm:h-1 rounded-full bg-emerald-500/80 mb-0.5" />
+                  <span className="text-[10px] sm:text-xs font-semibold text-emerald-600 dark:text-emerald-400 truncate">
+                    Prémolaires
+                  </span>
+                </div>
+
+                {/* 36, 37, 38: Molaires */}
+                <div className="col-span-3 flex flex-col items-center">
+                  <div className="w-full h-0.5 sm:h-1 rounded-full bg-fuchsia-500/80 mb-0.5" />
+                  <span className="text-[10px] sm:text-xs font-semibold text-fuchsia-700 dark:text-fuchsia-400 truncate">
+                    molaires
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Side Label (Dentist Left / Gauche) */}
+            <div className="flex flex-col items-center justify-center text-center px-1 flex-shrink-0">
+              <span className="text-xs sm:text-sm font-black text-slate-800 dark:text-slate-200">
+                Gauche
+              </span>
+              <span className="text-[10px] font-bold text-indigo-500">
+                Left (يسار)
+              </span>
             </div>
           </div>
         </div>
-      )}
 
-      {jawView === "all" && (
-        /* FULL 32-TEETH PANORAMIC VIEW: Touch-scrollable arch without breaking container */
-        <div className="w-full flex flex-col items-center">
-          <p className="text-[11px] text-slate-400 mb-1.5 sm:hidden">
-            👉 Tip: Swipe horizontally to view both sides, or switch to Upper/Lower tab above
-          </p>
-
-          <div className="w-full overflow-x-auto pb-2">
-            <div className="min-w-[580px] max-w-4xl mx-auto flex flex-col items-center">
-              {/* Upper Jaw Heading */}
-              <div className="text-center font-bold text-xs sm:text-sm text-purple-900 dark:text-purple-300 mb-1">
-                Upper jaw (Maxilla)
-              </div>
-
-              {/* Upper Teeth Row (18-11 and 21-28) */}
-              <div className="relative flex items-center justify-center gap-1 sm:gap-2 p-2 rounded-2xl bg-white/80 dark:bg-slate-900/80 shadow-xs border border-slate-200/80 dark:border-slate-800">
-                <div className="flex items-center gap-0.5 sm:gap-1">
-                  {upperRightTeeth.map((t) => renderToothItem(t, false))}
-                </div>
-
-                <div className="h-14 sm:h-20 w-[1.5px] bg-indigo-500/40 mx-1 flex flex-col justify-center items-center">
-                  <span className="text-[9px] font-bold text-indigo-400 rotate-90 uppercase tracking-tighter">
-                    Midline
-                  </span>
-                </div>
-
-                <div className="flex items-center gap-0.5 sm:gap-1">
-                  {upperLeftTeeth.map((t) => renderToothItem(t, false))}
-                </div>
-              </div>
-
-              {/* Occlusal Plane Band */}
-              <div className="w-full my-3 flex items-center justify-between px-2">
-                <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400">
-                  Right (يمين)
-                </span>
-                <div className="flex-1 mx-4 h-3.5 rounded-full bg-gradient-to-r from-rose-200/70 via-rose-300/85 to-rose-200/70 dark:from-rose-950/70 dark:via-rose-900/70 dark:to-rose-950/70 border border-rose-300/40 dark:border-rose-900/40 flex items-center justify-center shadow-xs">
-                  <span className="text-[10px] font-bold text-rose-700/90 dark:text-rose-300/90 uppercase tracking-widest">
-                    Occlusal Plane
-                  </span>
-                </div>
-                <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400">
-                  Left (يسار)
-                </span>
-              </div>
-
-              {/* Lower Teeth Row (48-41 and 31-38) */}
-              <div className="relative flex items-center justify-center gap-1 sm:gap-2 p-2 rounded-2xl bg-white/80 dark:bg-slate-900/80 shadow-xs border border-slate-200/80 dark:border-slate-800">
-                <div className="flex items-center gap-0.5 sm:gap-1">
-                  {lowerRightTeeth.map((t) => renderToothItem(t, false))}
-                </div>
-
-                <div className="h-14 sm:h-20 w-[1.5px] bg-indigo-500/40 mx-1 flex flex-col justify-center items-center">
-                  <span className="text-[9px] font-bold text-indigo-400 rotate-90 uppercase tracking-tighter">
-                    Midline
-                  </span>
-                </div>
-
-                <div className="flex items-center gap-0.5 sm:gap-1">
-                  {lowerLeftTeeth.map((t) => renderToothItem(t, false))}
-                </div>
-              </div>
-
-              <div className="text-center font-bold text-xs sm:text-sm text-purple-900 dark:text-purple-300 mt-1.5">
-                Lower jaw (Mandible)
-              </div>
-            </div>
-          </div>
+        {/* Bottom Direction Label */}
+        <div className="flex items-center justify-center mt-2 pt-1 border-t border-slate-100 dark:border-slate-800/80">
+          <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+            Bas <span className="text-[10px] font-normal text-slate-400">(Lower / الفك السفلي)</span>
+          </span>
         </div>
-      )}
+      </div>
 
-      {/* ================= 4. SUMMARY OF WORKED TEETH ================= */}
+      {/* ================= 3. SUMMARY OF WORKED TEETH ================= */}
       <div className="mt-3.5 pt-3 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-slate-500 dark:text-slate-400">
         <div className="flex items-center gap-2 flex-wrap">
           <Activity className="w-4 h-4 text-emerald-500 flex-shrink-0" />

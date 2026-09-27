@@ -3,6 +3,8 @@
 import React, { useState, useEffect } from "react";
 import { X, Calendar, User, FileText, CheckCircle2, Banknote, Phone } from "lucide-react";
 import { Gender, Patient, calculateDebt } from "@/types/patient";
+import { ToothRecord } from "@/types/dental";
+import { DentalChart } from "./dental/DentalChart";
 import { PatientAvatar } from "./PatientAvatar";
 
 interface EditPatientModalProps {
@@ -27,7 +29,35 @@ export function EditPatientModal({
   const [debtAmount, setDebtAmount] = useState<string>("0");
   const [notes, setNotes] = useState("");
   const [medicalHistory, setMedicalHistory] = useState("");
+  const [teeth, setTeeth] = useState<ToothRecord[]>([]);
+  const [showTeethChart, setShowTeethChart] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Teeth handlers
+  const handleUpdateTooth = (record: ToothRecord) => {
+    const exists = teeth.some((t) => t.toothNumber === record.toothNumber);
+    const updated = exists
+      ? teeth.map((t) => (t.toothNumber === record.toothNumber ? record : t))
+      : [...teeth, record];
+    setTeeth(updated);
+  };
+
+  const handleUpdateMultipleTeeth = (records: ToothRecord[]) => {
+    const map = new Map<number, ToothRecord>(teeth.map((t) => [t.toothNumber, t]));
+    for (const rec of records) {
+      map.set(rec.toothNumber, rec);
+    }
+    setTeeth(Array.from(map.values()));
+  };
+
+  const handleRemoveTooth = (toothNumber: number) => {
+    setTeeth(teeth.filter((t) => t.toothNumber !== toothNumber));
+  };
+
+  const handleRemoveMultipleTeeth = (toothNumbers: number[]) => {
+    const set = new Set(toothNumbers);
+    setTeeth(teeth.filter((t) => !set.has(t.toothNumber)));
+  };
 
   // Synchronize form values with selected patient when modal opens
   useEffect(() => {
@@ -43,6 +73,8 @@ export function EditPatientModal({
       setDebtAmount(debt.toString());
       setNotes(patient.notes || "");
       setMedicalHistory(patient.medicalHistory || "");
+      setTeeth(patient.teeth || []);
+      setShowTeethChart(false);
       setError(null);
     }
   }, [isOpen, patient]);
@@ -90,6 +122,7 @@ export function EditPatientModal({
       debtAmount: parsedDebt,
       notes: notes.trim() || undefined,
       medicalHistory: medicalHistory.trim() || undefined,
+      teeth,
     });
     onClose();
   };
@@ -104,7 +137,11 @@ export function EditPatientModal({
       aria-modal="true"
       aria-labelledby="edit-modal-title"
     >
-      <div className="w-full max-w-lg bg-white dark:bg-slate-900 border-0 sm:border border-slate-200 dark:border-slate-800 rounded-t-3xl sm:rounded-2xl shadow-2xl overflow-hidden flex flex-col h-[90dvh] sm:h-auto sm:max-h-[90vh] animate-in slide-in-from-bottom-5 sm:zoom-in-95">
+      <div
+        className={`w-full ${
+          showTeethChart ? "max-w-5xl" : "max-w-xl"
+        } bg-white dark:bg-slate-900 border-0 sm:border border-slate-200 dark:border-slate-800 rounded-t-3xl sm:rounded-2xl shadow-2xl overflow-hidden flex flex-col h-[90dvh] sm:h-auto sm:max-h-[92vh] animate-in slide-in-from-bottom-5 sm:zoom-in-95 transition-all duration-300`}
+      >
         {/* Header */}
         <div className="flex items-center justify-between px-5 sm:px-6 py-3.5 sm:py-4 border-b border-slate-100 dark:border-slate-800/80 bg-slate-50/70 dark:bg-slate-900/70">
           <div>
@@ -364,6 +401,52 @@ export function EditPatientModal({
               onChange={(e) => setMedicalHistory(e.target.value)}
               className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 dark:focus:border-indigo-400 text-sm transition-all resize-none"
             />
+          </div>
+
+          {/* FDI Teeth Chart / Odontogram Section */}
+          <div className="border border-indigo-100 dark:border-indigo-900/60 rounded-2xl bg-indigo-50/30 dark:bg-indigo-950/20 overflow-hidden shadow-xs transition-all">
+            <div className="p-3 sm:p-4 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <span className="text-xl sm:text-2xl flex-shrink-0">🦷</span>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100">
+                      Teeth Chart / FDI Odontogram
+                    </h3>
+                    <span className="text-[10px] sm:text-[11px] px-2 py-0.5 rounded-full font-bold bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
+                      {teeth.length} Worked
+                    </span>
+                  </div>
+                  <p className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 truncate">
+                    View and update treated teeth, fillings, root canals, or extractions
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setShowTeethChart(!showTeethChart)}
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex-shrink-0 border ${
+                  showTeethChart
+                    ? "bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700"
+                    : "bg-indigo-600 hover:bg-indigo-500 text-white border-indigo-600 shadow-sm shadow-indigo-600/20"
+                }`}
+              >
+                {showTeethChart ? "Hide Teeth Chart" : teeth.length > 0 ? "Edit Teeth Chart" : "+ Open Teeth Chart"}
+              </button>
+            </div>
+
+            {showTeethChart && (
+              <div className="p-2 sm:p-4 border-t border-indigo-100 dark:border-indigo-900/50 bg-white/70 dark:bg-slate-900/70">
+                <DentalChart
+                  teethRecords={teeth}
+                  onUpdateTooth={handleUpdateTooth}
+                  onUpdateMultipleTeeth={handleUpdateMultipleTeeth}
+                  onRemoveTooth={handleRemoveTooth}
+                  onRemoveMultipleTeeth={handleRemoveMultipleTeeth}
+                />
+              </div>
+            )}
           </div>
 
           {/* Action Buttons */}
