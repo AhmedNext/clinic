@@ -19,7 +19,6 @@ import {
   Sparkles,
   CheckSquare,
   Layers,
-  ChevronRight,
   RotateCcw,
 } from "lucide-react";
 
@@ -32,43 +31,43 @@ interface DentalChartProps {
   readonly?: boolean;
 }
 
-// Measured pixel coordinates from public/teeth.png (1537 x 1023)
-export const UPPER_HOTSPOTS = [
-  { num: 18, centerPct: 12.1, leftPct: 8.39, widthPct: 6.8 },
-  { num: 17, centerPct: 18.28, leftPct: 15.19, widthPct: 6.2 },
-  { num: 16, centerPct: 24.5, leftPct: 21.39, widthPct: 5.94 },
-  { num: 15, centerPct: 30.16, leftPct: 27.33, widthPct: 5.22 },
-  { num: 14, centerPct: 34.94, leftPct: 32.55, widthPct: 5.09 },
-  { num: 13, centerPct: 40.34, leftPct: 37.64, widthPct: 4.88 },
-  { num: 12, centerPct: 44.7, leftPct: 42.52, widthPct: 4.07 },
-  { num: 11, centerPct: 48.47, leftPct: 46.58, widthPct: 4.08 },
-  { num: 21, centerPct: 52.86, leftPct: 50.67, widthPct: 4.29 },
-  { num: 22, centerPct: 57.06, leftPct: 54.96, widthPct: 4.33 },
-  { num: 23, centerPct: 61.52, leftPct: 59.29, widthPct: 4.98 },
-  { num: 24, centerPct: 67.01, leftPct: 64.26, widthPct: 5.14 },
-  { num: 25, centerPct: 71.8, leftPct: 69.4, widthPct: 5.2 },
-  { num: 26, centerPct: 77.42, leftPct: 74.61, widthPct: 5.82 },
-  { num: 27, centerPct: 83.44, leftPct: 80.43, widthPct: 5.63 },
-  { num: 28, centerPct: 88.68, leftPct: 86.06, widthPct: 5.76 },
+// Measured pixel coordinates targeting ONLY the white crown enamel section of each tooth
+export const UPPER_CROWN_HOTSPOTS = [
+  { num: 18, leftPct: 8.39, widthPct: 6.8, topPct: 44.9, heightPct: 6.8 },
+  { num: 17, leftPct: 15.19, widthPct: 6.2, topPct: 44.9, heightPct: 6.8 },
+  { num: 16, leftPct: 21.39, widthPct: 5.94, topPct: 45.2, heightPct: 6.5 },
+  { num: 15, leftPct: 27.33, widthPct: 5.22, topPct: 44.8, heightPct: 6.9 },
+  { num: 14, leftPct: 32.55, widthPct: 5.09, topPct: 44.6, heightPct: 7.1 },
+  { num: 13, leftPct: 37.64, widthPct: 4.88, topPct: 43.6, heightPct: 8.1 },
+  { num: 12, leftPct: 42.52, widthPct: 4.07, topPct: 44.0, heightPct: 7.7 },
+  { num: 11, leftPct: 46.58, widthPct: 4.08, topPct: 42.9, heightPct: 8.8 },
+  { num: 21, leftPct: 50.67, widthPct: 4.29, topPct: 42.9, heightPct: 8.8 },
+  { num: 22, leftPct: 54.96, widthPct: 4.33, topPct: 44.0, heightPct: 7.7 },
+  { num: 23, leftPct: 59.29, widthPct: 4.98, topPct: 43.6, heightPct: 8.1 },
+  { num: 24, leftPct: 64.26, widthPct: 5.14, topPct: 44.6, heightPct: 7.1 },
+  { num: 25, leftPct: 69.4, widthPct: 5.2, topPct: 44.8, heightPct: 6.9 },
+  { num: 26, leftPct: 74.61, widthPct: 5.82, topPct: 45.2, heightPct: 6.5 },
+  { num: 27, leftPct: 80.43, widthPct: 5.63, topPct: 44.9, heightPct: 6.8 },
+  { num: 28, leftPct: 86.06, widthPct: 5.76, topPct: 44.9, heightPct: 6.8 },
 ];
 
-export const LOWER_HOTSPOTS = [
-  { num: 48, centerPct: 12.26, leftPct: 8.71, widthPct: 6.51 },
-  { num: 47, centerPct: 18.18, leftPct: 15.22, widthPct: 6.59 },
-  { num: 46, centerPct: 25.44, leftPct: 21.81, widthPct: 6.83 },
-  { num: 45, centerPct: 31.85, leftPct: 28.64, widthPct: 5.48 },
-  { num: 44, centerPct: 36.4, leftPct: 34.12, widthPct: 4.57 },
-  { num: 43, centerPct: 40.99, leftPct: 38.7, widthPct: 4.77 },
-  { num: 42, centerPct: 45.93, leftPct: 43.46, widthPct: 3.89 },
-  { num: 41, centerPct: 48.76, leftPct: 47.35, widthPct: 2.85 },
-  { num: 31, centerPct: 51.63, leftPct: 50.2, widthPct: 3.06 },
-  { num: 32, centerPct: 54.88, leftPct: 53.25, widthPct: 4.16 },
-  { num: 33, centerPct: 59.95, leftPct: 57.42, widthPct: 4.88 },
-  { num: 34, centerPct: 64.64, leftPct: 62.3, widthPct: 4.62 },
-  { num: 35, centerPct: 69.19, leftPct: 66.92, widthPct: 5.61 },
-  { num: 36, centerPct: 75.86, leftPct: 72.53, widthPct: 6.64 },
-  { num: 37, centerPct: 82.47, leftPct: 79.16, widthPct: 6.21 },
-  { num: 38, centerPct: 88.29, leftPct: 85.38, widthPct: 6.41 },
+export const LOWER_CROWN_HOTSPOTS = [
+  { num: 48, leftPct: 8.71, widthPct: 6.51, topPct: 51.8, heightPct: 7.2 },
+  { num: 47, leftPct: 15.22, widthPct: 6.59, topPct: 51.8, heightPct: 7.0 },
+  { num: 46, leftPct: 21.81, widthPct: 6.83, topPct: 51.8, heightPct: 6.8 },
+  { num: 45, leftPct: 28.64, widthPct: 5.48, topPct: 51.8, heightPct: 7.8 },
+  { num: 44, leftPct: 34.12, widthPct: 4.57, topPct: 51.8, heightPct: 7.8 },
+  { num: 43, leftPct: 38.7, widthPct: 4.77, topPct: 51.8, heightPct: 8.8 },
+  { num: 42, leftPct: 43.46, widthPct: 3.89, topPct: 51.8, heightPct: 8.2 },
+  { num: 41, leftPct: 47.35, widthPct: 2.85, topPct: 51.8, heightPct: 8.2 },
+  { num: 31, leftPct: 50.2, widthPct: 3.06, topPct: 51.8, heightPct: 8.2 },
+  { num: 32, leftPct: 53.25, widthPct: 4.16, topPct: 51.8, heightPct: 8.2 },
+  { num: 33, leftPct: 57.42, widthPct: 4.88, topPct: 51.8, heightPct: 8.8 },
+  { num: 34, leftPct: 62.3, widthPct: 4.62, topPct: 51.8, heightPct: 7.8 },
+  { num: 35, leftPct: 66.92, widthPct: 5.61, topPct: 51.8, heightPct: 7.8 },
+  { num: 36, leftPct: 72.53, widthPct: 6.64, topPct: 51.8, heightPct: 6.8 },
+  { num: 37, leftPct: 79.16, widthPct: 6.21, topPct: 51.8, heightPct: 7.0 },
+  { num: 38, leftPct: 85.38, widthPct: 6.41, topPct: 51.8, heightPct: 7.2 },
 ];
 
 export const FDI_CATEGORIES = {
@@ -129,8 +128,8 @@ export function DentalChart({
     teethRecords.map((r) => [r.toothNumber, r])
   );
 
-  const upperTeethNumbers = UPPER_HOTSPOTS.map((s) => s.num);
-  const lowerTeethNumbers = LOWER_HOTSPOTS.map((s) => s.num);
+  const upperTeethNumbers = UPPER_CROWN_HOTSPOTS.map((s) => s.num);
+  const lowerTeethNumbers = LOWER_CROWN_HOTSPOTS.map((s) => s.num);
   const allTeethNumbers = [...upperTeethNumbers, ...lowerTeethNumbers];
 
   // Quadrants & Anatomical groups
@@ -325,19 +324,6 @@ export function DentalChart({
     }
   };
 
-  // Save clinical note for single selected tooth
-  const handleSaveSingleNote = () => {
-    if (!activeTooth) return;
-    const existing = recordsMap.get(activeTooth.number);
-    onUpdateTooth({
-      toothNumber: activeTooth.number,
-      status: existing?.status || "treated",
-      procedure: existing?.procedure || TREATMENT_METADATA["treated"].label,
-      notes: treatmentNote.trim() || undefined,
-      updatedAt: Date.now(),
-    });
-  };
-
   // Apply batch note to all currently selected teeth
   const handleApplyBatchNote = () => {
     if (selectedTeethNumbers.length === 0 || !batchNote.trim()) return;
@@ -377,13 +363,14 @@ export function DentalChart({
   const singleRecord =
     selectedCount === 1 ? recordsMap.get(selectedTeethNumbers[0]) : null;
 
-  // Render a hotspot button overlay on top of teeth.png
-  const renderHotspot = (
-    spot: { num: number; leftPct: number; widthPct: number },
-    topPct: string,
-    heightPct: string,
-    isUpper: boolean
-  ) => {
+  // Render a hotspot button overlay positioned precisely over the white enamel crown
+  const renderCrownHotspot = (spot: {
+    num: number;
+    leftPct: number;
+    widthPct: number;
+    topPct: number;
+    heightPct: number;
+  }) => {
     const record = recordsMap.get(spot.num);
     const toothInfo = ALL_TEETH.find((t) => t.number === spot.num);
     const isSelected = selectedTeethNumbers.includes(spot.num);
@@ -398,101 +385,76 @@ export function DentalChart({
         style={{
           left: `${spot.leftPct}%`,
           width: `${spot.widthPct}%`,
-          top: topPct,
-          height: heightPct,
+          top: `${spot.topPct}%`,
+          height: `${spot.heightPct}%`,
         }}
         title={`Tooth #${spot.num} - ${toothInfo?.name || ""} (${toothInfo?.arabicName || ""})${
-          record ? ` • ${TREATMENT_METADATA[record.status].label}` : " • Tap to select"
+          record ? ` • ${TREATMENT_METADATA[record.status].label}` : " • Click white crown to select"
         }${record?.notes ? ` • Note: ${record.notes}` : ""}`}
         className={`
-          absolute z-10 flex flex-col items-center justify-between p-0.5 rounded-xl transition-all duration-150 cursor-pointer select-none group
+          absolute z-10 flex items-center justify-center rounded-lg transition-all duration-150 cursor-pointer select-none group
           ${
             isSelected
-              ? "bg-indigo-600/30 ring-2 sm:ring-[3px] ring-indigo-500 shadow-lg shadow-indigo-500/40 z-20 scale-[1.02] backdrop-blur-[0.5px]"
-              : "hover:bg-indigo-500/20 hover:ring-1 hover:ring-indigo-400/60"
+              ? "bg-indigo-600/35 ring-2 sm:ring-[2.5px] ring-indigo-500 shadow-md shadow-indigo-500/50 z-20 scale-[1.05]"
+              : "hover:bg-indigo-500/25 hover:ring-1 hover:ring-indigo-400/80"
           }
-          ${record && !isSelected ? "ring-1 ring-emerald-500/60 bg-emerald-500/10" : ""}
+          ${record && !isSelected ? "ring-1 ring-emerald-500/70 bg-emerald-500/15" : ""}
         `}
       >
-        {/* Floating Number Badge */}
-        <span
-          className={`
-            text-[9px] sm:text-[11px] font-black font-mono px-1 py-0.2 rounded-md transition-all duration-150 shadow-xs
-            ${isUpper ? "self-center mt-0.5" : "self-center mb-0.5 order-last"}
-            ${
-              isSelected
-                ? "bg-indigo-600 text-white shadow-md scale-110"
-                : "bg-white/80 dark:bg-slate-900/80 text-slate-700 dark:text-slate-300 group-hover:bg-indigo-50 group-hover:text-indigo-600"
-            }
-          `}
-        >
-          {spot.num}
-        </span>
-
         {/* Note indicator badge icon */}
         {hasNote && (
           <span
-            className="absolute top-1 right-1 z-30 text-[10px] sm:text-xs leading-none bg-amber-100/90 dark:bg-amber-950/90 text-amber-800 dark:text-amber-200 rounded-full px-1 py-0.5 shadow-xs border border-amber-300/80"
+            className="absolute -top-1.5 -right-1.5 z-30 text-[9px] sm:text-[11px] leading-none bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-200 rounded-full px-0.5 shadow-sm border border-amber-300"
             title={`Note: ${record?.notes}`}
           >
             📝
           </span>
         )}
 
-        {/* Treatment Graphic Overlay */}
+        {/* Treatment Graphic Overlay directly on the white crown */}
         {record && (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
             {record.status === "extraction" && (
               <svg
-                className="w-full h-full stroke-rose-600 stroke-[4px] drop-shadow-sm opacity-90 animate-in zoom-in-50 duration-150"
+                className="w-full h-full stroke-rose-600 stroke-[4px] drop-shadow-sm opacity-95 animate-in zoom-in-50 duration-150"
                 viewBox="0 0 40 40"
               >
-                <line x1="8" y1="8" x2="32" y2="32" strokeLinecap="round" />
-                <line x1="32" y1="8" x2="8" y2="32" strokeLinecap="round" />
+                <line x1="6" y1="6" x2="34" y2="34" strokeLinecap="round" />
+                <line x1="34" y1="6" x2="6" y2="34" strokeLinecap="round" />
               </svg>
             )}
 
             {record.status === "crown" && (
-              <span className="bg-gradient-to-r from-amber-500 to-amber-600 text-white text-[8px] sm:text-[9.5px] font-black px-1.5 py-0.5 rounded shadow-md border border-amber-300">
-                👑 CROWN
+              <span className="bg-amber-500 text-white text-[7px] sm:text-[8px] font-black px-1 py-0.2 rounded shadow-xs border border-amber-300">
+                👑
               </span>
             )}
 
             {record.status === "filling" && (
-              <div className="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full bg-blue-500 border-2 border-white shadow-md ring-1 ring-blue-600" />
+              <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-blue-500 border border-white shadow-xs ring-1 ring-blue-600" />
             )}
 
             {record.status === "root_canal" && (
               <svg
-                className="w-full h-full stroke-purple-600 stroke-[3.5px] stroke-dasharray-[3_2] drop-shadow-sm opacity-90"
+                className="w-full h-full stroke-purple-600 stroke-[3px] stroke-dasharray-[3_2] drop-shadow-sm opacity-95"
                 viewBox="0 0 40 40"
               >
-                <line x1="20" y1="6" x2="20" y2="34" strokeLinecap="round" />
+                <line x1="20" y1="4" x2="20" y2="36" strokeLinecap="round" />
               </svg>
             )}
 
             {record.status === "decay" && (
-              <div className="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full bg-rose-600 border-2 border-white shadow-md ring-1 ring-rose-700 flex items-center justify-center text-[8px] text-white font-bold">
+              <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-rose-600 border border-white shadow-xs ring-1 ring-rose-700 flex items-center justify-center text-[7px] text-white font-black">
                 !
               </div>
             )}
 
             {record.status === "treated" && (
-              <div className="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full bg-emerald-500 text-white flex items-center justify-center text-[9px] font-black shadow-md border border-white">
+              <div className="w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full bg-emerald-500 text-white flex items-center justify-center text-[8px] font-black shadow-xs border border-white">
                 ✓
               </div>
             )}
           </div>
-        )}
-
-        {/* Bottom indicator dot matching treatment color */}
-        {record && (
-          <span
-            className={`w-2 h-2 rounded-full absolute ${
-              isUpper ? "bottom-1" : "top-1"
-            } z-20 shadow-xs border border-white`}
-            style={{ backgroundColor: TREATMENT_METADATA[record.status].color }}
-          />
         )}
       </button>
     );
@@ -533,7 +495,7 @@ export function DentalChart({
             </button>
 
             <span className="hidden md:inline-block text-[11px] text-slate-400 font-medium">
-              (or hold <kbd className="px-1 py-0.5 rounded bg-slate-100 dark:bg-slate-800 border text-[10px]">Shift</kbd> to multi-select)
+              (click tooth crowns • hold <kbd className="px-1 py-0.5 rounded bg-slate-100 dark:bg-slate-800 border text-[10px]">Shift</kbd> to add)
             </span>
           </div>
 
@@ -760,7 +722,7 @@ export function DentalChart({
         </div>
       )}
 
-      {/* ================= 3. PANORAMIC FDI ODONTOGRAM (ORIGINAL IMAGE + ENHANCED HOTSPOTS) ================= */}
+      {/* ================= 3. PANORAMIC FDI ODONTOGRAM (WHITE ENAMEL CROWN HOTSPOTS) ================= */}
       <div className="w-full overflow-x-auto pb-2 select-none">
         <div className="min-w-[620px] max-w-4xl mx-auto relative aspect-[1537/1023] overflow-hidden rounded-2xl sm:rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-sm">
           {/* Original FDI anatomical illustration from public/teeth.png */}
@@ -771,11 +733,11 @@ export function DentalChart({
             draggable={false}
           />
 
-          {/* Upper Arch Hotspots (18 to 28) */}
-          {UPPER_HOTSPOTS.map((spot) => renderHotspot(spot, "27.5%", "25%", true))}
+          {/* Upper Arch White Crown Hotspots (18 to 28) */}
+          {UPPER_CROWN_HOTSPOTS.map((spot) => renderCrownHotspot(spot))}
 
-          {/* Lower Arch Hotspots (48 to 38) */}
-          {LOWER_HOTSPOTS.map((spot) => renderHotspot(spot, "52.5%", "28%", false))}
+          {/* Lower Arch White Crown Hotspots (48 to 38) */}
+          {LOWER_CROWN_HOTSPOTS.map((spot) => renderCrownHotspot(spot))}
         </div>
       </div>
 
@@ -941,7 +903,7 @@ export function DentalChart({
                 {teethRecords.map((r) => `#${r.toothNumber}`).join(", ")}
               </span>
             ) : (
-              <em className="text-slate-400">No teeth marked yet • Tap any tooth above</em>
+              <em className="text-slate-400">No teeth marked yet • Click any tooth crown above</em>
             )}
           </span>
         </div>
