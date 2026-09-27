@@ -8,6 +8,7 @@ import { DentalChart } from "./dental/DentalChart";
 import { PatientAvatar } from "./PatientAvatar";
 import { CircleClockPickerModal } from "./ui/CircleClockPickerModal";
 import { BetterDatePickerModal } from "./ui/BetterDatePickerModal";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface EditPatientModalProps {
   isOpen: boolean;
@@ -22,6 +23,7 @@ export function EditPatientModal({
   onClose,
   onUpdatePatient,
 }: EditPatientModalProps) {
+  const { t } = useLanguage();
   const [name, setName] = useState("");
   const [gender, setGender] = useState<Gender>("male");
   const [age, setAge] = useState<string>("");
@@ -156,10 +158,10 @@ export function EditPatientModal({
               id="edit-modal-title"
               className="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100"
             >
-              Edit Patient Case
+              {t.editPatient}
             </h2>
             <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-              Modify consultation details, paid amounts & debts
+              {t.recordPaidAndDebt}
             </p>
           </div>
           <button
@@ -182,13 +184,13 @@ export function EditPatientModal({
           {/* Gender Selector with distinct SVG previews */}
           <div>
             <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
-              Gender Identification *
+              {t.gender} *
             </label>
             <div className="grid grid-cols-2 gap-3">
               <button
                 type="button"
                 onClick={() => setGender("male")}
-                className={`flex items-center gap-3 p-3 rounded-xl border transition-all cursor-pointer text-left ${
+                className={`flex items-center gap-3 p-3 rounded-xl border transition-all cursor-pointer text-left rtl:text-right ${
                   gender === "male"
                     ? "border-sky-500 bg-sky-50/80 dark:bg-sky-950/40 ring-2 ring-sky-500/20 text-slate-900 dark:text-slate-100"
                     : "border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 bg-white dark:bg-slate-800/40 text-slate-600 dark:text-slate-400"
@@ -197,17 +199,17 @@ export function EditPatientModal({
                 <PatientAvatar gender="male" size="md" showBadge={false} />
                 <div className="flex-1">
                   <div className="text-sm font-semibold flex items-center justify-between">
-                    <span>Male</span>
+                    <span>{t.male}</span>
                     <span className="text-sky-600 dark:text-sky-400 text-xs font-bold">♂</span>
                   </div>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400">Patient case</p>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">{t.patientCase}</p>
                 </div>
               </button>
 
               <button
                 type="button"
                 onClick={() => setGender("female")}
-                className={`flex items-center gap-3 p-3 rounded-xl border transition-all cursor-pointer text-left ${
+                className={`flex items-center gap-3 p-3 rounded-xl border transition-all cursor-pointer text-left rtl:text-right ${
                   gender === "female"
                     ? "border-rose-500 bg-rose-50/80 dark:bg-rose-950/40 ring-2 ring-rose-500/20 text-slate-900 dark:text-slate-100"
                     : "border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 bg-white dark:bg-slate-800/40 text-slate-600 dark:text-slate-400"
@@ -216,10 +218,10 @@ export function EditPatientModal({
                 <PatientAvatar gender="female" size="md" showBadge={false} />
                 <div className="flex-1">
                   <div className="text-sm font-semibold flex items-center justify-between">
-                    <span>Female</span>
+                    <span>{t.female}</span>
                     <span className="text-rose-500 dark:text-rose-400 text-xs font-bold">♀</span>
                   </div>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400">Patient case</p>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">{t.patientCase}</p>
                 </div>
               </button>
             </div>
@@ -231,17 +233,17 @@ export function EditPatientModal({
               htmlFor="edit-patient-name"
               className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1"
             >
-              Patient Name *
+              {t.name} *
             </label>
             <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+              <div className="absolute inset-y-0 left-0 rtl:left-auto rtl:right-0 pl-3.5 rtl:pl-0 rtl:pr-3.5 flex items-center pointer-events-none text-slate-400">
                 <User className="w-4 h-4" />
               </div>
               <input
                 id="edit-patient-name"
                 type="text"
                 required
-                placeholder="e.g. John Doe, Sarah Jenkins"
+                placeholder={t.namePlaceholder}
                 value={name}
                 onChange={(e) => {
                   setName(e.target.value);
@@ -259,14 +261,14 @@ export function EditPatientModal({
                 htmlFor="edit-patient-age"
                 className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1"
               >
-                Age (Years)
+                {t.age}
               </label>
               <input
                 id="edit-patient-age"
                 type="number"
                 min="1"
                 max="120"
-                placeholder="e.g. 32"
+                placeholder={t.agePlaceholder}
                 value={age}
                 onChange={(e) => setAge(e.target.value)}
                 className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 text-sm transition-all"
@@ -278,19 +280,19 @@ export function EditPatientModal({
                 htmlFor="edit-patient-phone"
                 className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1"
               >
-                Phone (WhatsApp / Call)
+                {t.phone}
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                <div className="absolute inset-y-0 left-0 rtl:left-auto rtl:right-0 pl-3 rtl:pl-0 rtl:pr-3 flex items-center pointer-events-none text-slate-400">
                   <Phone className="w-3.5 h-3.5" />
                 </div>
                 <input
                   id="edit-patient-phone"
                   type="tel"
-                  placeholder="e.g. 0770 123 4567"
+                  placeholder={t.phonePlaceholder}
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  className="w-full pl-9 pr-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 text-sm transition-all"
+                  className="w-full pl-9 rtl:pl-3.5 rtl:pr-9 pr-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 text-sm transition-all"
                 />
               </div>
             </div>
@@ -305,18 +307,18 @@ export function EditPatientModal({
                   htmlFor="edit-patient-date"
                   className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400"
                 >
-                  Case / Visit Date *
+                  {t.date} *
                 </label>
                 <button
                   type="button"
                   onClick={() => setIsDatePickerOpen(true)}
                   className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer"
                 >
-                  Better Calendar 📅
+                  {t.betterCalendar}
                 </button>
               </div>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                <div className="absolute inset-y-0 left-0 rtl:left-auto rtl:right-0 pl-3.5 rtl:pl-0 rtl:pr-3.5 flex items-center pointer-events-none text-slate-400">
                   <Calendar className="w-4 h-4" />
                 </div>
                 <input
@@ -325,7 +327,7 @@ export function EditPatientModal({
                   required
                   value={date}
                   onChange={(e) => setDate(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 dark:focus:border-indigo-400 text-sm transition-all"
+                  className="w-full pl-10 rtl:pl-4 rtl:pr-10 pr-4 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 dark:focus:border-indigo-400 text-sm transition-all"
                 />
               </div>
             </div>
@@ -337,34 +339,34 @@ export function EditPatientModal({
                   htmlFor="edit-patient-time"
                   className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400"
                 >
-                  Visit Time
+                  {t.time}
                 </label>
                 <button
                   type="button"
                   onClick={() => setIsClockPickerOpen(true)}
                   className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer"
                 >
-                  Circle Clock 🕒
+                  {t.circleClock}
                 </button>
               </div>
               <div className="relative flex items-center">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                <div className="absolute inset-y-0 left-0 rtl:left-auto rtl:right-0 pl-3.5 rtl:pl-0 rtl:pr-3.5 flex items-center pointer-events-none text-slate-400">
                   <Clock className="w-4 h-4" />
                 </div>
                 <input
                   id="edit-patient-time"
                   type="text"
-                  placeholder="e.g. 10:30 AM"
+                  placeholder={t.timePlaceholder}
                   value={time}
                   onChange={(e) => setTime(e.target.value)}
-                  className="w-full pl-10 pr-20 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 text-sm transition-all"
+                  className="w-full pl-10 rtl:pl-20 rtl:pr-10 pr-20 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 text-sm transition-all"
                 />
                 <button
                   type="button"
                   onClick={() => setIsClockPickerOpen(true)}
-                  className="absolute right-1.5 px-2.5 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 hover:bg-indigo-100 text-xs font-bold cursor-pointer"
+                  className="absolute right-1.5 rtl:right-auto rtl:left-1.5 px-2.5 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 hover:bg-indigo-100 text-xs font-bold cursor-pointer"
                 >
-                  Clock
+                  {t.clockBtn}
                 </button>
               </div>
             </div>
@@ -374,7 +376,7 @@ export function EditPatientModal({
           <div className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/50 space-y-3">
             <span className="text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300 flex items-center gap-1.5">
               <Banknote className="w-3.5 h-3.5 text-indigo-500" />
-              <span>Payment (IQD)</span>
+              <span>{t.paidLabel} & {t.owesLabel} (IQD)</span>
             </span>
 
             <div className="grid grid-cols-2 gap-2.5">
@@ -384,7 +386,7 @@ export function EditPatientModal({
                   htmlFor="edit-patient-paid"
                   className="block text-[11px] font-medium text-emerald-600 dark:text-emerald-400 mb-1"
                 >
-                  Paid (IQD)
+                  {t.paidAmount} (IQD)
                 </label>
                 <input
                   id="edit-patient-paid"
@@ -404,7 +406,7 @@ export function EditPatientModal({
                   htmlFor="edit-patient-debt"
                   className="block text-[11px] font-medium text-rose-600 dark:text-rose-400 mb-1"
                 >
-                  Debt (IQD)
+                  {t.owesLabel} (IQD)
                 </label>
                 <input
                   id="edit-patient-debt"
@@ -432,7 +434,7 @@ export function EditPatientModal({
                 className="w-full mt-2 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow-2xs transition-all cursor-pointer"
               >
                 <Check className="w-3.5 h-3.5" />
-                <span>Patient Paid Debt (Set Debt to 0 IQD)</span>
+                <span>{t.markDebtPaid}</span>
               </button>
             )}
           </div>
@@ -443,19 +445,19 @@ export function EditPatientModal({
               htmlFor="edit-patient-notes"
               className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1"
             >
-              Current Case Notes / Symptoms <span className="text-slate-400 font-normal lowercase">(optional)</span>
+              {t.notes}
             </label>
             <div className="relative">
-              <div className="absolute top-2.5 left-3 pointer-events-none text-slate-400">
+              <div className="absolute top-2.5 left-3 rtl:left-auto rtl:right-3 pointer-events-none text-slate-400">
                 <FileText className="w-4 h-4" />
               </div>
               <textarea
                 id="edit-patient-notes"
                 rows={2}
-                placeholder="e.g. Routine checkup, ECG normal, prescribed amoxicillin..."
+                placeholder={t.notesPlaceholder}
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                className="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 dark:focus:border-indigo-400 text-sm transition-all resize-none"
+                className="w-full pl-9 rtl:pl-3 rtl:pr-9 pr-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 dark:focus:border-indigo-400 text-sm transition-all resize-none"
               />
             </div>
           </div>
@@ -466,12 +468,12 @@ export function EditPatientModal({
               htmlFor="edit-patient-medical-history"
               className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1"
             >
-              Past Medical History / Allergies <span className="text-slate-400 font-normal lowercase">(optional)</span>
+              {t.medicalHistoryTitle} <span className="text-slate-400 font-normal lowercase">{t.medicalHistoryOptional}</span>
             </label>
             <textarea
               id="edit-patient-medical-history"
               rows={2}
-              placeholder="e.g. Hypertension (Stage 1), Penicillin allergy, Type 2 diabetes..."
+              placeholder={t.medicalHistoryPlaceholder}
               value={medicalHistory}
               onChange={(e) => setMedicalHistory(e.target.value)}
               className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 dark:focus:border-indigo-400 text-sm transition-all resize-none"
@@ -486,14 +488,14 @@ export function EditPatientModal({
                 <div className="min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100">
-                      Teeth Chart / FDI Odontogram
+                      {t.fdiOdontogram}
                     </h3>
                     <span className="text-[10px] sm:text-[11px] px-2 py-0.5 rounded-full font-bold bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
-                      {teeth.length} Worked
+                      {teeth.length} {t.workedTeeth}
                     </span>
                   </div>
                   <p className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 truncate">
-                    View and update treated teeth, fillings, root canals, or extractions
+                    {t.teethChartSubtext}
                   </p>
                 </div>
               </div>
@@ -507,7 +509,7 @@ export function EditPatientModal({
                     : "bg-indigo-600 hover:bg-indigo-500 text-white border-indigo-600 shadow-sm shadow-indigo-600/20"
                 }`}
               >
-                {showTeethChart ? "Hide Teeth Chart" : teeth.length > 0 ? "Edit Teeth Chart" : "+ Open Teeth Chart"}
+                {showTeethChart ? t.hideTeethChart : teeth.length > 0 ? t.editTeethChart : t.openTeethChart}
               </button>
             </div>
 
@@ -531,14 +533,14 @@ export function EditPatientModal({
               onClick={onClose}
               className="px-4 py-2 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
             >
-              Cancel
+              {t.cancel}
             </button>
             <button
               type="submit"
               className="inline-flex items-center gap-2 px-5 py-2 rounded-xl text-sm font-semibold bg-indigo-600 hover:bg-indigo-500 text-white shadow-md shadow-indigo-600/20 active:scale-[0.98] transition-all cursor-pointer"
             >
               <CheckCircle2 className="w-4 h-4" />
-              <span>Save Changes</span>
+              <span>{t.save}</span>
             </button>
           </div>
         </form>

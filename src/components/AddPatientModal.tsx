@@ -164,7 +164,7 @@ export function AddPatientModal({
               {t.addPatient}
             </h2>
             <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-              Record paid amount & outstanding debt
+              {t.recordPaidAndDebt}
             </p>
           </div>
           <button
@@ -205,7 +205,7 @@ export function AddPatientModal({
                     <span>{t.male}</span>
                     <span className="text-sky-600 dark:text-sky-400 text-xs font-bold">♂</span>
                   </div>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400">Patient case</p>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">{t.patientCase}</p>
                 </div>
               </button>
 
@@ -224,7 +224,7 @@ export function AddPatientModal({
                     <span>{t.female}</span>
                     <span className="text-rose-500 dark:text-rose-400 text-xs font-bold">♀</span>
                   </div>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400">Patient case</p>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">{t.patientCase}</p>
                 </div>
               </button>
             </div>
@@ -247,7 +247,7 @@ export function AddPatientModal({
                 type="text"
                 autoFocus
                 required
-                placeholder="e.g. John Doe, Sarah Jenkins"
+                placeholder={t.namePlaceholder}
                 value={name}
                 onChange={(e) => {
                   setName(e.target.value);
@@ -272,7 +272,7 @@ export function AddPatientModal({
                 type="number"
                 min="1"
                 max="120"
-                placeholder="e.g. 32"
+                placeholder={t.agePlaceholder}
                 value={age}
                 onChange={(e) => setAge(e.target.value)}
                 className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 text-sm transition-all"
@@ -293,7 +293,7 @@ export function AddPatientModal({
                 <input
                   id="patient-phone"
                   type="tel"
-                  placeholder="e.g. 0770 123 4567"
+                  placeholder={t.phonePlaceholder}
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   className="w-full pl-9 rtl:pl-3.5 rtl:pr-9 pr-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 text-sm transition-all"
@@ -318,7 +318,7 @@ export function AddPatientModal({
                   onClick={() => setIsDatePickerOpen(true)}
                   className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer"
                 >
-                  Better Calendar 📅
+                  {t.betterCalendar}
                 </button>
               </div>
               <div className="relative">
@@ -350,7 +350,7 @@ export function AddPatientModal({
                   onClick={() => setIsClockPickerOpen(true)}
                   className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer"
                 >
-                  Circle Clock 🕒
+                  {t.circleClock}
                 </button>
               </div>
               <div className="relative flex items-center">
@@ -360,7 +360,7 @@ export function AddPatientModal({
                 <input
                   id="patient-time"
                   type="text"
-                  placeholder="e.g. 10:30 AM"
+                  placeholder={t.timePlaceholder}
                   value={time}
                   onChange={(e) => setTime(e.target.value)}
                   className="w-full pl-10 rtl:pl-20 rtl:pr-10 pr-20 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 text-sm transition-all"
@@ -370,7 +370,7 @@ export function AddPatientModal({
                   onClick={() => setIsClockPickerOpen(true)}
                   className="absolute right-1.5 rtl:right-auto rtl:left-1.5 px-2.5 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 hover:bg-indigo-100 text-xs font-bold cursor-pointer"
                 >
-                  Clock
+                  {t.clockBtn}
                 </button>
               </div>
             </div>
@@ -441,7 +441,7 @@ export function AddPatientModal({
               <textarea
                 id="patient-notes"
                 rows={2}
-                placeholder="e.g. Routine checkup, ECG normal, prescribed amoxicillin..."
+                placeholder={t.notesPlaceholder}
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 className="w-full pl-9 rtl:pl-3 rtl:pr-9 pr-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 dark:focus:border-indigo-400 text-sm transition-all resize-none"
@@ -455,12 +455,12 @@ export function AddPatientModal({
               htmlFor="patient-medical-history"
               className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1"
             >
-              Past Medical History / Allergies <span className="text-slate-400 font-normal lowercase">(optional)</span>
+              {t.medicalHistoryTitle} <span className="text-slate-400 font-normal lowercase">{t.medicalHistoryOptional}</span>
             </label>
             <textarea
               id="patient-medical-history"
               rows={2}
-              placeholder="e.g. Hypertension (Stage 1), Penicillin allergy, Type 2 diabetes..."
+              placeholder={t.medicalHistoryPlaceholder}
               value={medicalHistory}
               onChange={(e) => setMedicalHistory(e.target.value)}
               className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 dark:focus:border-indigo-400 text-sm transition-all resize-none"
@@ -482,7 +482,7 @@ export function AddPatientModal({
                     </span>
                   </div>
                   <p className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 truncate">
-                    Mark treated teeth, fillings, root canals, or extractions for this case
+                    {t.teethChartSubtext}
                   </p>
                 </div>
               </div>
@@ -496,7 +496,7 @@ export function AddPatientModal({
                     : "bg-indigo-600 hover:bg-indigo-500 text-white border-indigo-600 shadow-sm shadow-indigo-600/20"
                 }`}
               >
-                {showTeethChart ? "Hide Teeth Chart" : teeth.length > 0 ? "Edit Teeth Chart" : "+ Open Teeth Chart"}
+                {showTeethChart ? t.hideTeethChart : teeth.length > 0 ? t.editTeethChart : t.openTeethChart}
               </button>
             </div>
 

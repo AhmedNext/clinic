@@ -5,6 +5,7 @@ import { Language, Translations, translations } from "@/i18n/translations";
 
 interface LanguageContextType {
   lang: Language;
+  language: Language;
   setLang: (lang: Language) => void;
   t: Translations;
   isRTL: boolean;
@@ -12,6 +13,7 @@ interface LanguageContextType {
 
 const LanguageContext = createContext<LanguageContextType>({
   lang: "en",
+  language: "en",
   setLang: () => {},
   t: translations.en,
   isRTL: false,
@@ -50,7 +52,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const t = translations[lang] || translations.en;
 
   return (
-    <LanguageContext.Provider value={{ lang, setLang, t, isRTL }}>
+    <LanguageContext.Provider value={{ lang, language: lang, setLang, t, isRTL }}>
       {children}
     </LanguageContext.Provider>
   );

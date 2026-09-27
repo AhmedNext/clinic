@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { PatientAvatar } from "./PatientAvatar";
 import { useLanguage } from "@/context/LanguageContext";
+import { formatMonthName } from "@/utils/date";
 
 interface MonthlyReportViewProps {
   patients: Patient[];
@@ -47,7 +48,7 @@ export function MonthlyReportView({
   onViewHistory,
   onOpenRentModal,
 }: MonthlyReportViewProps) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [expandedMonth, setExpandedMonth] = useState<string | null>(null);
 
   const monthBuckets: MonthBucket[] = useMemo(() => {
@@ -92,12 +93,7 @@ export function MonthlyReportView({
         // Net Profit = Income - Materials - Rent
         const netProfit = totalPaid - materialCost - rentAmount;
 
-        const [year, month] = key.split("-");
-        const d = new Date(parseInt(year, 10), parseInt(month, 10) - 1, 1);
-        const label = d.toLocaleDateString("en-US", {
-          month: "long",
-          year: "numeric",
-        });
+        const label = formatMonthName(key, language);
 
         return {
           key,
@@ -113,7 +109,7 @@ export function MonthlyReportView({
           visitCount,
         };
       });
-  }, [patients, materials, rentMap]);
+  }, [patients, materials, rentMap, language]);
 
   const grandPaid = monthBuckets.reduce((s, b) => s + b.totalPaid, 0);
   const grandDebt = monthBuckets.reduce((s, b) => s + b.totalDebt, 0);
@@ -227,7 +223,7 @@ export function MonthlyReportView({
         <div className="flex items-center justify-between mb-3">
           <h2 className="flex items-center gap-2 text-sm font-bold text-slate-900 dark:text-slate-100">
             <Calendar className="w-4 h-4 text-indigo-500" />
-            {t.reports}
+            {t.monthlyReports}
           </h2>
           {onOpenRentModal && (
             <button
@@ -244,8 +240,8 @@ export function MonthlyReportView({
         {monthBuckets.length === 0 ? (
           <div className="p-12 text-center rounded-2xl border border-dashed border-slate-200 dark:border-slate-800">
             <Calendar className="w-8 h-8 text-slate-300 dark:text-slate-700 mx-auto mb-2" />
-            <p className="text-sm font-semibold text-slate-500">No data logged yet</p>
-            <p className="text-xs text-slate-400 mt-1">Add patients or expenses to view monthly reports.</p>
+            <p className="text-sm font-semibold text-slate-500">{t.noTreatmentHistory}</p>
+            <p className="text-xs text-slate-400 mt-1">{t.addPatientsOrExpensesToView}</p>
           </div>
         ) : (
           <div className="space-y-3">

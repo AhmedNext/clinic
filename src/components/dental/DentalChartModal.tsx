@@ -7,6 +7,7 @@ import { ToothRecord } from "@/types/dental";
 import { ClinicMaterial } from "@/types/material";
 import { DentalChart } from "./DentalChart";
 import { PatientAvatar } from "../PatientAvatar";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface DentalChartModalProps {
   isOpen: boolean;
@@ -23,6 +24,7 @@ export function DentalChartModal({
   onSaveTeeth,
   clinicMaterials = [],
 }: DentalChartModalProps) {
+  const { t } = useLanguage();
   const [localTeeth, setLocalTeeth] = useState<ToothRecord[]>([]);
   const [isSynced, setIsSynced] = useState<boolean>(false);
 
@@ -128,7 +130,7 @@ export function DentalChartModal({
                   {patient.name}
                 </h2>
                 <span className="text-[10px] sm:text-[11px] px-1.5 py-0.2 rounded-full font-bold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 flex-shrink-0">
-                  {localTeeth.length} Worked
+                  {localTeeth.length} {t.workedTeeth}
                 </span>
                 {totalChartPrice > 0 && (
                   <span className="text-[10px] sm:text-[11px] px-2 py-0.2 rounded-full font-mono font-bold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 flex-shrink-0">
@@ -139,9 +141,9 @@ export function DentalChartModal({
               <p className="text-[10px] text-slate-500 dark:text-slate-400 flex items-center gap-1 truncate">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse flex-shrink-0" />
                 <span className="text-emerald-600 dark:text-emerald-400 font-semibold truncate">
-                  Auto-saved
+                  {t.autoSaved}
                 </span>
-                <span>• FDI Odontogram</span>
+                <span>• {t.fdiOdontogram}</span>
               </p>
             </div>
           </div>
@@ -153,7 +155,7 @@ export function DentalChartModal({
                 onClick={handleClearAll}
                 className="text-xs text-rose-500 hover:text-rose-600 dark:hover:text-rose-400 font-semibold px-2 py-1 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/50 transition-colors cursor-pointer"
               >
-                Clear
+                {t.clear}
               </button>
             )}
             <button
@@ -183,7 +185,7 @@ export function DentalChartModal({
           {/* Left: Total fees & Sync to Bill Button */}
           <div className="flex items-center gap-2 flex-wrap">
             <div className="flex items-center gap-1.5">
-              <span className="text-xs text-slate-500 dark:text-slate-400 font-semibold">Total Dental Fee:</span>
+              <span className="text-xs text-slate-500 dark:text-slate-400 font-semibold">{t.totalDentalFee}:</span>
               <span className="text-xs sm:text-sm font-mono font-black text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/80 px-2 py-0.5 rounded-lg border border-emerald-300 dark:border-emerald-800">
                 {formatIQD(totalChartPrice)}
               </span>
@@ -201,7 +203,7 @@ export function DentalChartModal({
                 title="Sync this dental procedure fee directly into the patient's billing balance"
               >
                 <Zap className="w-3.5 h-3.5 fill-current" />
-                <span>{isSynced ? "✓ Synced to Bill!" : "Sync to Patient Bill"}</span>
+                <span>{isSynced ? `✓ ${t.syncedToBill}` : t.syncToBill}</span>
               </button>
             )}
           </div>
@@ -211,7 +213,7 @@ export function DentalChartModal({
             onClick={handleDone}
             className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2 rounded-xl text-xs sm:text-sm font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow-md shadow-indigo-600/20 active:scale-[0.98] transition-all cursor-pointer"
           >
-            <span>Done & Close</span>
+            <span>{t.doneAndClose}</span>
           </button>
         </div>
       </div>

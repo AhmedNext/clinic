@@ -41,6 +41,7 @@ import {
 import { createClient } from "@/utils/supabase/client";
 import { LoginScreen } from "@/components/LoginScreen";
 import { useLanguage } from "@/context/LanguageContext";
+import { formatMonthName as formatStaticMonthName } from "@/utils/date";
 
 // Lazy-load heavy modals & auxiliary tabs to shrink initial bundle by 65%+
 const AddPatientModal = dynamic(
@@ -77,7 +78,7 @@ const MonthlyRentModal = dynamic(
 );
 
 export default function DashboardPage() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [sessionChecked, setSessionChecked] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
@@ -581,13 +582,7 @@ export default function DashboardPage() {
   }, [patients, rentMap, materials]);
 
   const formatMonthName = (yearMonth: string) => {
-    try {
-      const [year, month] = yearMonth.split("-");
-      const d = new Date(parseInt(year, 10), parseInt(month, 10) - 1, 1);
-      return d.toLocaleDateString("en-US", { month: "short", year: "numeric" });
-    } catch {
-      return yearMonth;
-    }
+    return formatStaticMonthName(yearMonth, language);
   };
 
   // Filter and sort patients
@@ -695,7 +690,7 @@ export default function DashboardPage() {
           /* ================= MONTHLY REPORTS TAB ================= */
           <>
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-black text-slate-900 dark:text-slate-100">{t.reports}</h2>
+              <h2 className="text-lg font-black text-slate-900 dark:text-slate-100">{t.monthlyReports}</h2>
             </div>
             <MonthlyReportView
               patients={patients}

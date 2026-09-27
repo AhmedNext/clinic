@@ -18,6 +18,7 @@ import { Appointment, AppointmentStatus } from "@/types/appointment";
 import { Patient } from "@/types/patient";
 import { DayAppointmentsModal } from "./DayAppointmentsModal";
 import { useLanguage } from "@/context/LanguageContext";
+import { getMonthName, WEEKDAY_NAMES } from "@/utils/date";
 
 interface AppointmentsViewProps {
   appointments: Appointment[];
@@ -34,7 +35,7 @@ export function AppointmentsView({
   onToggleStatus,
   onDeleteAppointment,
 }: AppointmentsViewProps) {
-  const { t } = useLanguage();
+  const { language, t } = useLanguage();
   // Calendar month state (defaults to current date, or September 2026 if matching sample data)
   const today = new Date();
   const [currentYear, setCurrentYear] = useState(today.getFullYear());
@@ -43,22 +44,7 @@ export function AppointmentsView({
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
-  const monthNames = [
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December",
-  ];
-
-  const weekDayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const weekDayNames = WEEKDAY_NAMES[language] || WEEKDAY_NAMES.en;
 
   // Navigation handlers
   const handlePrevMonth = () => {
@@ -196,11 +182,11 @@ export function AppointmentsView({
           <div>
             <div className="flex items-center gap-2">
               <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tight">
-                {monthNames[currentMonth]} {currentYear}
+                {getMonthName(currentMonth, language)} {currentYear}
               </h2>
             </div>
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              Interactive Full Month Schedule • Click any day to book
+              {t.scheduleSubtitle}
             </p>
           </div>
         </div>
@@ -210,15 +196,15 @@ export function AppointmentsView({
           {/* Month Stats Badges */}
           <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-800 text-xs">
             <span className="font-semibold text-slate-700 dark:text-slate-300">
-              {currentMonthAppointments.length} Booked
+              {currentMonthAppointments.length} {t.booked}
             </span>
             <span className="text-slate-300 dark:text-slate-700">•</span>
             <span className="text-sky-600 dark:text-sky-400 font-medium">
-              {scheduledCount} Scheduled
+              {scheduledCount} {t.scheduled}
             </span>
             <span className="text-slate-300 dark:text-slate-700">•</span>
             <span className="text-emerald-600 dark:text-emerald-400 font-medium">
-              {completedCount} Done
+              {completedCount} {t.doneStatus}
             </span>
           </div>
 
@@ -235,7 +221,7 @@ export function AppointmentsView({
               onClick={handleGoToday}
               className="px-3 py-1 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-white dark:hover:bg-slate-800 rounded-lg transition-colors cursor-pointer"
             >
-              Today
+              {t.today}
             </button>
             <button
               onClick={handleNextMonth}
@@ -258,7 +244,7 @@ export function AppointmentsView({
             className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white shadow-sm shadow-indigo-600/25 cursor-pointer transition-all active:scale-[0.98]"
           >
             <Plus className="w-4 h-4 stroke-[2.5]" />
-            <span>Book Patient</span>
+            <span>{t.directBookToday}</span>
           </button>
         </div>
       </div>

@@ -11,6 +11,8 @@ import {
 } from "@/types/dental";
 import { ClinicMaterial } from "@/types/material";
 import { formatIQD } from "@/types/patient";
+import { useLanguage } from "@/context/LanguageContext";
+import { PROCEDURE_TRANSLATIONS, QUADRANT_TRANSLATIONS } from "@/i18n/translations";
 import {
   CROWN_POLYGONS,
   CrownPolygon,
@@ -95,6 +97,7 @@ export function DentalChart({
   clinicMaterials = [],
   readonly = false,
 }: DentalChartProps) {
+  const { language, t } = useLanguage();
   // Active procedure tool (default: "treated")
   const [activeTool, setActiveTool] = useState<ToothTreatment | "erase">("treated");
   // Multi-select toggle mode (default OFF)
@@ -139,15 +142,15 @@ export function DentalChart({
 
   // Quadrants & Anatomical groups
   const quadrantGroups = [
-    { label: "Upper (16)", teeth: upperTeethNumbers },
-    { label: "Lower (16)", teeth: lowerTeethNumbers },
-    { label: "Q1: Sup. Droit", teeth: [18, 17, 16, 15, 14, 13, 12, 11] },
-    { label: "Q2: Sup. Gauche", teeth: [21, 22, 23, 24, 25, 26, 27, 28] },
-    { label: "Q3: Inf. Gauche", teeth: [31, 32, 33, 34, 35, 36, 37, 38] },
-    { label: "Q4: Inf. Droit", teeth: [48, 47, 46, 45, 44, 43, 42, 41] },
-    { label: "Molars (12)", teeth: [18, 17, 16, 26, 27, 28, 48, 47, 46, 36, 37, 38] },
-    { label: "Premolars (8)", teeth: [15, 14, 24, 25, 45, 44, 34, 35] },
-    { label: "Anteriors (12)", teeth: [13, 12, 11, 21, 22, 23, 43, 42, 41, 31, 32, 33] },
+    { label: language === "ar" ? "العلوي (16)" : language === "ku" ? "سەرەوە (16)" : "Upper (16)", teeth: upperTeethNumbers },
+    { label: language === "ar" ? "السفلي (16)" : language === "ku" ? "خوارەوە (16)" : "Lower (16)", teeth: lowerTeethNumbers },
+    { label: QUADRANT_TRANSLATIONS["Upper Right (Q1)"]?.[language] || "Q1: Sup. Droit", teeth: [18, 17, 16, 15, 14, 13, 12, 11] },
+    { label: QUADRANT_TRANSLATIONS["Upper Left (Q2)"]?.[language] || "Q2: Sup. Gauche", teeth: [21, 22, 23, 24, 25, 26, 27, 28] },
+    { label: QUADRANT_TRANSLATIONS["Lower Left (Q3)"]?.[language] || "Q3: Inf. Gauche", teeth: [31, 32, 33, 34, 35, 36, 37, 38] },
+    { label: QUADRANT_TRANSLATIONS["Lower Right (Q4)"]?.[language] || "Q4: Inf. Droit", teeth: [48, 47, 46, 45, 44, 43, 42, 41] },
+    { label: `${QUADRANT_TRANSLATIONS["Molars"]?.[language] || "Molars"} (12)`, teeth: [18, 17, 16, 26, 27, 28, 48, 47, 46, 36, 37, 38] },
+    { label: `${QUADRANT_TRANSLATIONS["Premolars"]?.[language] || "Premolars"} (8)`, teeth: [15, 14, 24, 25, 45, 44, 34, 35] },
+    { label: `${QUADRANT_TRANSLATIONS["Anteriors"]?.[language] || (language === "ar" ? "الأسنان الأمامية" : language === "ku" ? "پێشەوە" : "Anteriors")} (12)`, teeth: [13, 12, 11, 21, 22, 23, 43, 42, 41, 31, 32, 33] },
   ];
 
   const NOTE_PRESETS = [
@@ -537,7 +540,7 @@ export function DentalChart({
               }`}
             >
               <MousePointer className="w-3.5 h-3.5" />
-              <span>Chart & Select</span>
+              <span>{t.chartAndSelect}</span>
             </button>
 
             <button
@@ -554,7 +557,7 @@ export function DentalChart({
               title="Erase mode"
             >
               <Eraser className="w-3.5 h-3.5" />
-              <span>Erase</span>
+              <span>{t.erase}</span>
             </button>
           </div>
 
@@ -566,17 +569,17 @@ export function DentalChart({
               className="px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700 flex items-center gap-1.5 cursor-pointer transition-colors"
             >
               <Layers className="w-3.5 h-3.5 text-indigo-500" />
-              <span>Quadrants</span>
+              <span>{t.quadrants}</span>
               <ChevronDown className="w-3 h-3 text-slate-400" />
             </button>
 
             {isQuadrantMenuOpen && (
               <div
-                className="absolute left-0 top-full mt-1 w-52 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl z-50 p-1.5 space-y-0.5 animate-in fade-in zoom-in-95"
+                className="absolute left-0 top-full mt-1 w-56 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl z-50 p-1.5 space-y-0.5 animate-in fade-in zoom-in-95"
                 onClick={() => setIsQuadrantMenuOpen(false)}
               >
                 <div className="text-[10px] font-bold text-slate-400 px-2 py-1 uppercase tracking-wider">
-                  Select Anatomical Group
+                  {t.selectAnatomicalGroup}
                 </div>
                 {quadrantGroups.map((g) => (
                   <button
@@ -586,7 +589,7 @@ export function DentalChart({
                     className="w-full text-left px-2 py-1 rounded-lg text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 hover:text-indigo-600 transition-colors flex items-center justify-between"
                   >
                     <span>{g.label}</span>
-                    <span className="text-[10px] font-mono text-slate-400">{g.teeth.length} teeth</span>
+                    <span className="text-[10px] font-mono text-slate-400">{g.teeth.length} {t.teethCount}</span>
                   </button>
                 ))}
                 <div className="border-t border-slate-100 dark:border-slate-800 pt-1 mt-1">
@@ -595,7 +598,7 @@ export function DentalChart({
                     onClick={handleSelectAll}
                     className="w-full text-left px-2 py-1.5 rounded-lg text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 transition-colors"
                   >
-                    Select All (32 Teeth)
+                    {t.selectAllTeeth}
                   </button>
                 </div>
               </div>
@@ -616,7 +619,7 @@ export function DentalChart({
             title="Toggle multi-select mode"
           >
             <CheckSquare className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Multi-Select</span>
+            <span className="hidden sm:inline">{t.multiSelect}</span>
             <span
               className={`text-[9px] px-1 py-0.2 rounded-full font-bold uppercase ${
                 isMultiSelectMode
@@ -636,7 +639,7 @@ export function DentalChart({
               title="Deselect all"
             >
               <X className="w-3.5 h-3.5" />
-              <span>Deselect ({selectedCount})</span>
+              <span>{t.deselect} ({selectedCount})</span>
             </button>
           )}
 
@@ -660,7 +663,7 @@ export function DentalChart({
               {selectedCount}
             </span>
             <span className="text-xs font-semibold text-indigo-200">
-              Teeth: <span className="font-mono text-white font-bold">{selectedTeethNumbers.map((n) => `#${n}`).join(", ")}</span>
+              {t.teethCount}: <span className="font-mono text-white font-bold">{selectedTeethNumbers.map((n) => `#${n}`).join(", ")}</span>
             </span>
           </div>
 
@@ -673,9 +676,9 @@ export function DentalChart({
               defaultValue=""
               className="px-2.5 py-1 rounded-xl bg-indigo-900/90 text-white text-xs font-semibold border border-indigo-700 focus:outline-none cursor-pointer"
             >
-              <option value="" disabled>Status...</option>
+              <option value="" disabled>{t.condition}...</option>
               {ALL_TREATMENTS.map((s) => (
-                <option key={s} value={s}>{TREATMENT_METADATA[s].label}</option>
+                <option key={s} value={s}>{PROCEDURE_TRANSLATIONS[s]?.[language] || TREATMENT_METADATA[s].label}</option>
               ))}
             </select>
 
@@ -689,7 +692,7 @@ export function DentalChart({
                 defaultValue=""
                 className="px-2.5 py-1 rounded-xl bg-indigo-900/90 text-white text-xs font-semibold border border-indigo-700 focus:outline-none cursor-pointer"
               >
-                <option value="" disabled>Apply Material...</option>
+                <option value="" disabled>{t.chooseMaterial}...</option>
                 {clinicMaterials.map((p) => (
                   <option key={p.id} value={p.name}>
                     {p.name} ({formatIQD(p.patientPrice)})
@@ -703,7 +706,7 @@ export function DentalChart({
               onClick={handleClearSelectedTreatments}
               className="px-2 py-1 rounded-xl bg-rose-600/80 hover:bg-rose-600 text-white text-xs font-semibold cursor-pointer"
             >
-              Clear
+              {t.clear}
             </button>
 
             <button
@@ -721,7 +724,7 @@ export function DentalChart({
       {/* ================= 3. PANORAMIC FDI ODONTOGRAM (RESPONSIVE PHONE & DESKTOP) ================= */}
       <div className="flex items-center justify-between mb-1 px-1">
         <span className="text-[10px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider">
-          FDI Chart • Click white crown
+          {t.fdiOdontogram} • {t.tapToothToMark}
         </span>
 
         {/* Mobile Zoom / Fit Toggle */}
@@ -732,7 +735,7 @@ export function DentalChart({
           title="Toggle between fitting to phone screen or zoomed 150% view"
         >
           {isZoomed ? <Minimize2 className="w-3 h-3" /> : <Maximize2 className="w-3 h-3" />}
-          <span>{isZoomed ? "Fit Screen" : "Zoom 150%"}</span>
+          <span>{isZoomed ? t.fitScreen : t.zoom150}</span>
         </button>
       </div>
 
@@ -1097,7 +1100,7 @@ export function DentalChart({
                 {activeChartedTeeth.length}
               </span>
               <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
-                Charted Treatments & Fees
+                {t.chartedTreatmentsAndFees}
               </span>
             </div>
 
@@ -1146,7 +1149,7 @@ export function DentalChart({
                         #{rec.toothNumber}
                       </span>
                       <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 truncate">
-                        {rec.material || meta.label}
+                        {rec.material || (PROCEDURE_TRANSLATIONS[rec.status]?.[language] || meta.label)}
                       </span>
                     </div>
 
@@ -1192,7 +1195,7 @@ export function DentalChart({
                 type="button"
                 onClick={() => handleClearSelection()}
                 className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
-                title="Close panel"
+                title={t.close}
               >
                 <X className="w-4 h-4" />
               </button>
@@ -1204,7 +1207,7 @@ export function DentalChart({
             {/* 1. Condition Selector */}
             <div>
               <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
-                Condition
+                {t.condition}
               </label>
               <select
                 value={recordsMap.get(activeTooth.number)?.status || "treated"}
@@ -1212,7 +1215,7 @@ export function DentalChart({
                 className="w-full px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-semibold text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
               >
                 {ALL_TREATMENTS.map((s) => (
-                  <option key={s} value={s}>{TREATMENT_METADATA[s].label}</option>
+                  <option key={s} value={s}>{PROCEDURE_TRANSLATIONS[s]?.[language] || TREATMENT_METADATA[s].label}</option>
                 ))}
               </select>
             </div>
@@ -1220,8 +1223,8 @@ export function DentalChart({
             {/* 2. Clinic Material Dropdown / Input */}
             <div>
               <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1 flex items-center justify-between">
-                <span>Material</span>
-                <span className="text-indigo-500 font-semibold text-[9px]">Procedure Pricing</span>
+                <span>{t.material}</span>
+                <span className="text-indigo-500 font-semibold text-[9px]">{t.procedurePricing}</span>
               </label>
               {clinicMaterials.length > 0 ? (
                 <select
@@ -1236,7 +1239,7 @@ export function DentalChart({
                   }}
                   className="w-full px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-semibold text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
                 >
-                  <option value="">Choose Material...</option>
+                  <option value="">{t.chooseMaterial}...</option>
                   {clinicMaterials.map((m) => (
                     <option key={m.id} value={m.name}>
                       {m.name} ({formatIQD(m.patientPrice)})
@@ -1260,7 +1263,7 @@ export function DentalChart({
             {/* 3. Fee Input with +/- 10k Quick Adjust */}
             <div>
               <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
-                Fee (IQD)
+                {t.feeIQD}
               </label>
               <div className="flex items-center gap-1">
                 <div className="relative flex-1">
@@ -1307,7 +1310,7 @@ export function DentalChart({
           <div className="mt-2.5 pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center gap-2 flex-wrap">
             <input
               type="text"
-              placeholder={`Clinical note / diagnosis for Tooth #${activeTooth.number}...`}
+              placeholder={`${t.clinicalNotesPlaceholder} (#${activeTooth.number})...`}
               value={treatmentNote}
               onChange={(e) => handleActiveToothNoteChange(e.target.value)}
               className="flex-1 min-w-[200px] px-2.5 py-1 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-indigo-500"
@@ -1317,14 +1320,14 @@ export function DentalChart({
               onClick={() => handleActiveToothStatusChange("erase")}
               className="px-2.5 py-1 rounded-lg text-xs font-semibold text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 cursor-pointer whitespace-nowrap"
             >
-              Remove
+              {t.remove}
             </button>
             <button
               type="button"
               onClick={() => handleClearSelection()}
               className="px-3.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold cursor-pointer transition-colors shadow-xs whitespace-nowrap"
             >
-              Done
+              {t.done}
             </button>
           </div>
         </div>
@@ -1336,20 +1339,20 @@ export function DentalChart({
           <div className="flex items-center gap-1.5">
             <Activity className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" />
             <span className="text-[11px] sm:text-xs">
-              Worked Teeth ({teethRecords.length}):{" "}
+              {t.workedTeeth} ({teethRecords.length}):{" "}
               {teethRecords.length > 0 ? (
                 <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
                   {teethRecords.map((r) => `#${r.toothNumber}`).join(", ")}
                 </span>
               ) : (
-                <em className="text-slate-400">Tap any tooth crown to mark</em>
+                <em className="text-slate-400">{t.tapToothToMark}</em>
               )}
             </span>
           </div>
 
           {totalChartPrice > 0 && (
             <div className="flex items-center gap-1 pl-2 border-l border-slate-300 dark:border-slate-700">
-              <span className="text-[10px] text-slate-400 font-semibold uppercase">Total Fee:</span>
+              <span className="text-[10px] text-slate-400 font-semibold uppercase">{t.totalDentalFee}:</span>
               <span className="text-xs font-mono font-black text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/80 px-2 py-0.5 rounded-md border border-emerald-200 dark:border-emerald-800">
                 {formatIQD(totalChartPrice)}
               </span>
@@ -1360,7 +1363,7 @@ export function DentalChart({
         <div className="flex items-center gap-1 text-[10px] sm:text-[11px]">
           <span className="text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1">
             <CheckCircle2 className="w-3 h-3" />
-            <span>Stored Instantly</span>
+            <span>{t.storedInstantly}</span>
           </span>
         </div>
       </div>

@@ -166,7 +166,7 @@ export function MaterialsView({
             </h2>
           </div>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-            Track clinic expenses with 3 simple details: Date, Supplier, and Total Money Spent.
+            {t.materialsSubtitle}
           </p>
         </div>
 
@@ -185,7 +185,7 @@ export function MaterialsView({
         <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-amber-200/80 dark:border-amber-900/50 shadow-2xs">
           <div className="flex items-center justify-between text-slate-400 mb-1.5">
             <span className="text-[11px] font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400">
-              Total Material Spend
+              {t.totalMaterialSpendCard}
             </span>
             <div className="w-7 h-7 rounded-xl bg-amber-100 dark:bg-amber-900/60 text-amber-700 dark:text-amber-300 flex items-center justify-center">
               <DollarSign className="w-3.5 h-3.5" />
@@ -195,7 +195,7 @@ export function MaterialsView({
             {formatIQD(totalSpend)}
           </div>
           <p className="text-[11px] text-slate-400 mt-1 font-medium">
-            Total money invested in clinic supplies
+            {t.totalSpendSubtitle}
           </p>
         </div>
 
@@ -203,17 +203,17 @@ export function MaterialsView({
         <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-2xs">
           <div className="flex items-center justify-between text-slate-400 mb-1.5">
             <span className="text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
-              Total Purchases
+              {t.totalPurchases}
             </span>
             <div className="w-7 h-7 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
               <Receipt className="w-3.5 h-3.5" />
             </div>
           </div>
           <div className="text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tight">
-            {materials.length} <span className="text-xs font-normal text-slate-400">records</span>
+            {materials.length} <span className="text-xs font-normal text-slate-400">{t.records}</span>
           </div>
           <p className="text-[11px] text-slate-400 mt-1 font-medium">
-            Supplier receipts logged
+            {t.supplierReceiptsLogged}
           </p>
         </div>
 
@@ -221,14 +221,14 @@ export function MaterialsView({
         <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-2xs">
           <div className="flex items-center justify-between text-slate-400 mb-1.5">
             <span className="text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
-              Clinic Net Worth Impact
+              {t.clinicNetWorthImpact}
             </span>
             <div className="w-7 h-7 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
               <Sparkles className="w-3.5 h-3.5" />
             </div>
           </div>
           <div className="text-xs text-slate-600 dark:text-slate-300 font-medium leading-relaxed">
-            Every material expense is automatically deducted from patient income to calculate your live <strong className="text-indigo-600 dark:text-indigo-400 font-bold">Net Worth</strong> on the Home Screen.
+            {t.netWorthImpactDesc}
           </div>
         </div>
       </div>
@@ -238,7 +238,7 @@ export function MaterialsView({
         <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
         <input
           type="text"
-          placeholder="Search by supplier or date..."
+          placeholder={t.searchMaterials}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs sm:text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500/20 shadow-2xs"
@@ -252,17 +252,17 @@ export function MaterialsView({
             <Boxes className="w-6 h-6" />
           </div>
           <h3 className="text-sm sm:text-base font-bold text-slate-800 dark:text-slate-200">
-            No material expenses recorded
+            {t.addPatientsOrExpensesToView}
           </h3>
           <p className="text-xs text-slate-400 max-w-sm mx-auto mt-1 mb-4">
-            Click &quot;Add Material Expense&quot; to log your supplier invoices with just Date, Supplier, and Total Money Spent.
+            {t.addMaterialDesc}
           </p>
           <button
             onClick={handleOpenAdd}
             className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold cursor-pointer transition-all shadow-xs"
           >
             <Plus className="w-4 h-4" />
-            <span>Add First Expense</span>
+            <span>{t.addMaterialExpense}</span>
           </button>
         </div>
       ) : (
@@ -271,10 +271,10 @@ export function MaterialsView({
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="border-b border-slate-100 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40 text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                  <th className="py-3 px-4">Date</th>
-                  <th className="py-3 px-4">Supplier / Material</th>
-                  <th className="py-3 px-4 text-right">Total Money Spent</th>
-                  <th className="py-3 px-4 text-right">Actions</th>
+                  <th className="py-3 px-4">{t.date}</th>
+                  <th className="py-3 px-4">{t.supplierMaterialCol}</th>
+                  <th className="py-3 px-4 text-right">{t.totalMoneySpentCol}</th>
+                  <th className="py-3 px-4 text-right">{t.actions}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 text-xs">
@@ -310,7 +310,7 @@ export function MaterialsView({
                         {onUpdateMaterial && (
                           <button
                             onClick={() => handleOpenEdit(item)}
-                            title="Edit expense record"
+                            title={t.edit}
                             className="p-1.5 rounded-lg text-slate-400 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/50 transition-colors cursor-pointer"
                           >
                             <Pencil className="w-4 h-4" />
@@ -318,7 +318,7 @@ export function MaterialsView({
                         )}
                         <button
                           onClick={() => onDeleteMaterial(item.id)}
-                          title="Delete expense record"
+                          title={t.delete}
                           className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/50 transition-colors cursor-pointer"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -350,16 +350,16 @@ export function MaterialsView({
                 </div>
                 <div>
                   <h3 className="font-black text-slate-900 dark:text-slate-100 text-sm">
-                    {editingItem ? "Edit Material Expense" : "Add Material Expense"}
+                    {editingItem ? t.editMaterialExpense : t.addMaterialExpense}
                   </h3>
                   <p className="text-[11px] text-slate-400">
-                    {editingItem ? "Update purchase details" : "Enter the 3 simple purchase details"}
+                    {editingItem ? t.editMaterialDesc : t.addMaterialDesc}
                   </p>
                 </div>
               </div>
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -370,7 +370,7 @@ export function MaterialsView({
               {/* Field 1: DATE */}
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">
-                  1. Purchase Date *
+                  1. {t.purchaseDate} *
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
@@ -389,7 +389,7 @@ export function MaterialsView({
               {/* Field 2: SUPPLIER */}
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">
-                  2. Supplier / Material Name *
+                  2. {t.supplierMaterialName} *
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
@@ -398,7 +398,7 @@ export function MaterialsView({
                   <input
                     type="text"
                     required
-                    placeholder="e.g. Dental Depot, Al-Razi Lab, Zirconia..."
+                    placeholder={t.supplierPlaceholder}
                     value={formSupplier}
                     onChange={(e) => setFormSupplier(e.target.value)}
                     className="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all font-medium"
@@ -410,7 +410,7 @@ export function MaterialsView({
               <div>
                 <div className="flex items-center justify-between mb-1.5">
                   <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">
-                    3. Total Money Spent (IQD) *
+                    3. {t.totalMoneySpent} (IQD) *
                   </label>
                   {formCostPrice && (
                     <span className="text-[11px] font-mono font-bold text-amber-600 dark:text-amber-400">
@@ -443,16 +443,16 @@ export function MaterialsView({
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                  className="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
                 >
-                  Cancel
+                  {t.cancel}
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
                   className="px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold shadow-sm shadow-amber-600/30 active:scale-95 transition-all cursor-pointer disabled:opacity-50"
                 >
-                  {isSubmitting ? "Saving..." : editingItem ? "Update Expense" : "Save Expense"}
+                  {isSubmitting ? t.saving : t.save}
                 </button>
               </div>
             </form>

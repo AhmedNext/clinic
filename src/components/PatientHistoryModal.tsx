@@ -19,6 +19,7 @@ import {
 import { Patient, PatientHistoryEntry, calculateDebt, formatIQD } from "@/types/patient";
 import { PatientAvatar } from "./PatientAvatar";
 import { formatStaticDate } from "@/utils/date";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface PatientHistoryModalProps {
   isOpen: boolean;
@@ -44,6 +45,7 @@ export function PatientHistoryModal({
   onUpdateHistoryEntry,
   onDeleteHistoryEntry,
 }: PatientHistoryModalProps) {
+  const { t, language } = useLanguage();
   const getTodayString = () => {
     const today = new Date();
     const y = today.getFullYear();
@@ -94,7 +96,7 @@ export function PatientHistoryModal({
 
   if (!isOpen || !patient) return null;
 
-  const formatDate = (dateString: string) => formatStaticDate(dateString);
+  const formatDate = (dateString: string) => formatStaticDate(dateString, language);
 
   // Start editing an entry
   const startEditing = (entry: PatientHistoryEntry) => {
@@ -193,7 +195,7 @@ export function PatientHistoryModal({
                       : "bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800"
                   }`}
                 >
-                  {patient.gender === "male" ? "♂ Male" : "♀ Female"}
+                  {patient.gender === "male" ? `♂ ${t.male}` : `♀ ${t.female}`}
                 </span>
                 {patient.age && (
                   <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
@@ -202,11 +204,11 @@ export function PatientHistoryModal({
                 )}
                 <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
                   <Activity className="w-2.5 h-2.5 text-indigo-500" />
-                  <span>{historyEntries.length} {historyEntries.length === 1 ? "Total Visit" : "Total Visits"}</span>
+                  <span>{historyEntries.length} {t.totalVisitsCount}</span>
                 </span>
                 <span className="inline-flex items-center gap-1 text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold bg-emerald-50 dark:bg-emerald-950/50 px-1.5 py-0.5 rounded-md border border-emerald-200 dark:border-emerald-900/60">
                   <span>☁️</span>
-                  <span>Supabase Live</span>
+                  <span>{t.supabaseLive}</span>
                 </span>
               </div>
             </div>
@@ -214,16 +216,16 @@ export function PatientHistoryModal({
 
           {/* Financial summary + close */}
           <div className="flex items-center gap-3 flex-shrink-0">
-            <div className="text-right text-xs hidden sm:block">
+            <div className="text-right rtl:text-left text-xs hidden sm:block">
               <div className="font-semibold text-slate-800 dark:text-slate-200">
                 {formatIQD(patient.paidAmount ?? 0)}
               </div>
               {totalDebt > 0 ? (
                 <div className="text-rose-600 dark:text-rose-400 font-bold">
-                  Owes {formatIQD(totalDebt)}
+                  {t.owesLabel} {formatIQD(totalDebt)}
                 </div>
               ) : (
-                <div className="text-emerald-600 dark:text-emerald-400 font-medium">✓ Settled</div>
+                <div className="text-emerald-600 dark:text-emerald-400 font-medium">{t.allSettled}</div>
               )}
             </div>
             <button
@@ -239,12 +241,12 @@ export function PatientHistoryModal({
         {/* Financial summary — mobile only */}
         <div className="sm:hidden flex items-center justify-between px-4 py-2.5 bg-slate-50 dark:bg-slate-800/40 border-b border-slate-100 dark:border-slate-800 text-xs">
           <span className="text-slate-500 dark:text-slate-400">
-            Total Paid: <strong className="text-slate-800 dark:text-slate-200">{formatIQD(patient.paidAmount ?? 0)}</strong>
+            {t.paidLabel}: <strong className="text-slate-800 dark:text-slate-200">{formatIQD(patient.paidAmount ?? 0)}</strong>
           </span>
           {totalDebt > 0 ? (
-            <span className="font-bold text-rose-600 dark:text-rose-400">Owes {formatIQD(totalDebt)}</span>
+            <span className="font-bold text-rose-600 dark:text-rose-400">{t.owesLabel} {formatIQD(totalDebt)}</span>
           ) : (
-            <span className="font-semibold text-emerald-600 dark:text-emerald-400">✓ Fully Settled</span>
+            <span className="font-semibold text-emerald-600 dark:text-emerald-400">{t.allSettled}</span>
           )}
         </div>
 
@@ -252,7 +254,7 @@ export function PatientHistoryModal({
         {patient.medicalHistory && (
           <div className="flex items-start gap-2.5 px-4 py-2.5 bg-amber-50 dark:bg-amber-950/30 border-b border-amber-200/60 dark:border-amber-900/40 text-xs text-amber-800 dark:text-amber-300">
             <AlertCircle className="w-4 h-4 flex-shrink-0 text-amber-500 mt-0.5" />
-            <span><strong>Medical Alert:</strong> {patient.medicalHistory}</span>
+            <span><strong>{t.medicalAlert}:</strong> {patient.medicalHistory}</span>
           </div>
         )}
 
@@ -264,9 +266,9 @@ export function PatientHistoryModal({
             <div className="flex items-center gap-2">
               <Activity className="w-4 h-4 text-indigo-500" />
               <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                Patient History & Treatments
-                <span className="ml-1.5 text-xs font-normal text-slate-400 dark:text-slate-500">
-                  ({historyEntries.length} {historyEntries.length === 1 ? "entry" : "entries"})
+                {t.patientHistoryAndTreatments}
+                <span className="ml-1.5 rtl:ml-0 rtl:mr-1.5 text-xs font-normal text-slate-400 dark:text-slate-500">
+                  ({historyEntries.length} {historyEntries.length === 1 ? t.entry : t.entries})
                 </span>
               </span>
             </div>
@@ -282,7 +284,7 @@ export function PatientHistoryModal({
               }`}
             >
               <Plus className="w-3.5 h-3.5" />
-              {showAddForm ? "Cancel" : "Add Entry"}
+              {showAddForm ? t.cancel : t.addEntry}
             </button>
           </div>
 
@@ -294,9 +296,9 @@ export function PatientHistoryModal({
             >
               <div className="flex items-center justify-between">
                 <p className="text-[11px] font-bold uppercase tracking-widest text-indigo-700 dark:text-indigo-300">
-                  New Visit / Treatment Record
+                  {t.newVisitRecord}
                 </p>
-                <span className="text-[10px] text-indigo-500 font-medium">Saves to Supabase</span>
+                <span className="text-[10px] text-indigo-500 font-medium">{t.savesToSupabase}</span>
               </div>
 
               {addError && (
@@ -309,7 +311,7 @@ export function PatientHistoryModal({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1">
-                    Visit Date *
+                    {t.visitDate}
                   </label>
                   <input
                     type="date"
@@ -321,12 +323,12 @@ export function PatientHistoryModal({
                 </div>
                 <div>
                   <label className="block text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1">
-                    Title / Procedure *
+                    {t.procedureTitle}
                   </label>
                   <input
                     type="text"
                     required
-                    placeholder="e.g. Root Canal, Filling, Scaling, Extraction"
+                    placeholder={t.procedurePlaceholder}
                     value={newTitle}
                     onChange={(e) => setNewTitle(e.target.value)}
                     className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400/30"
@@ -338,7 +340,7 @@ export function PatientHistoryModal({
               <div className="grid grid-cols-2 gap-2">
                 <div>
                   <label className="block text-[11px] font-medium text-emerald-600 dark:text-emerald-400 mb-1">
-                    Paid (IQD)
+                    {t.paidIQD}
                   </label>
                   <input
                     type="number"
@@ -352,7 +354,7 @@ export function PatientHistoryModal({
                 </div>
                 <div>
                   <label className="block text-[11px] font-medium text-rose-600 dark:text-rose-400 mb-1">
-                    Debt (IQD)
+                    {t.debtIQD}
                   </label>
                   <input
                     type="number"
@@ -369,11 +371,11 @@ export function PatientHistoryModal({
               {/* Notes */}
               <div>
                 <label className="block text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1">
-                  Clinical Notes / Prescription
+                  {t.clinicalNotesAndDetails}
                 </label>
                 <textarea
                   rows={3}
-                  placeholder="Symptoms, medication, procedure details, teeth involved..."
+                  placeholder={t.clinicalNotesPlaceholder}
                   value={newNotes}
                   onChange={(e) => setNewNotes(e.target.value)}
                   className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400/30 resize-none"
@@ -385,7 +387,7 @@ export function PatientHistoryModal({
                 className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold bg-indigo-600 hover:bg-indigo-500 text-white shadow-sm transition-all cursor-pointer"
               >
                 <CheckCircle2 className="w-4 h-4" />
-                Save Entry to Supabase
+                <span>{t.saveVisitRecord}</span>
               </button>
             </form>
           )}
@@ -394,10 +396,7 @@ export function PatientHistoryModal({
           {historyEntries.length === 0 ? (
             <div className="mx-4 mb-4 py-12 flex flex-col items-center text-center rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/20">
               <Stethoscope className="w-9 h-9 text-slate-300 dark:text-slate-700 mb-3" />
-              <p className="text-sm font-semibold text-slate-600 dark:text-slate-400">No visits or treatments logged yet</p>
-              <p className="text-xs text-slate-400 dark:text-slate-500 mt-1 max-w-[240px]">
-                Click "Add Entry" above to record procedures, payments, and notes for this patient.
-              </p>
+              <p className="text-sm font-semibold text-slate-600 dark:text-slate-400">{t.noTreatmentHistory}</p>
             </div>
           ) : (
             <div className="px-4 pb-4">
@@ -441,7 +440,7 @@ export function PatientHistoryModal({
                               <div className="flex items-center justify-between">
                                 <span className="text-xs font-bold text-indigo-700 dark:text-indigo-300 flex items-center gap-1.5">
                                   <Pencil className="w-3.5 h-3.5" />
-                                  Editing Entry
+                                  {t.editVisitRecord}
                                 </span>
                                 <button
                                   type="button"
@@ -461,7 +460,7 @@ export function PatientHistoryModal({
                               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                                 <div>
                                   <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">
-                                    Date *
+                                    {t.visitDate}
                                   </label>
                                   <input
                                     type="date"
@@ -473,7 +472,7 @@ export function PatientHistoryModal({
                                 </div>
                                 <div>
                                   <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">
-                                    Title / Procedure *
+                                    {t.procedureTitle}
                                   </label>
                                   <input
                                     type="text"
@@ -488,7 +487,7 @@ export function PatientHistoryModal({
                               <div className="grid grid-cols-2 gap-2.5">
                                 <div>
                                   <label className="block text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 mb-1">
-                                    Paid (IQD)
+                                    {t.paidIQD}
                                   </label>
                                   <input
                                     type="number"
@@ -501,7 +500,7 @@ export function PatientHistoryModal({
                                 </div>
                                 <div>
                                   <label className="block text-[11px] font-semibold text-rose-600 dark:text-rose-400 mb-1">
-                                    Debt (IQD)
+                                    {t.debtIQD}
                                   </label>
                                   <input
                                     type="number"
@@ -516,7 +515,7 @@ export function PatientHistoryModal({
 
                               <div>
                                 <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">
-                                  Clinical Notes
+                                  {t.clinicalNotesAndDetails}
                                 </label>
                                 <textarea
                                   rows={2}
@@ -531,14 +530,14 @@ export function PatientHistoryModal({
                                   type="submit"
                                   className="flex-1 py-2 px-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-xs cursor-pointer"
                                 >
-                                  Save Updates
+                                  {t.updateVisitRecord}
                                 </button>
                                 <button
                                   type="button"
                                   onClick={cancelEditing}
                                   className="py-2 px-3 rounded-xl bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold cursor-pointer"
                                 >
-                                  Cancel
+                                  {t.cancel}
                                 </button>
                               </div>
                             </form>
@@ -556,7 +555,7 @@ export function PatientHistoryModal({
                                     </span>
                                     {isFirst && (
                                       <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800">
-                                        Latest
+                                        {t.latest}
                                       </span>
                                     )}
                                   </div>
@@ -570,18 +569,18 @@ export function PatientHistoryModal({
                                 <div className="flex items-center gap-1 flex-shrink-0">
                                   <button
                                     onClick={() => startEditing(entry)}
-                                    title="Edit this entry"
+                                    title={t.edit}
                                     className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 transition-all cursor-pointer"
                                   >
                                     <Pencil className="w-3.5 h-3.5" />
                                   </button>
                                   <button
                                     onClick={() => {
-                                      if (confirm(`Delete visit record "${entry.title}"?`)) {
+                                      if (confirm(`${t.deleteVisitConfirm} "${entry.title}"?`)) {
                                         onDeleteHistoryEntry(patient.id, entry.id);
                                       }
                                     }}
-                                    title="Delete this record"
+                                    title={t.delete}
                                     className="p-1.5 rounded-lg text-slate-300 dark:text-slate-700 hover:text-rose-500 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-all cursor-pointer"
                                   >
                                     <Trash2 className="w-3.5 h-3.5" />
@@ -607,7 +606,7 @@ export function PatientHistoryModal({
                                   <div className="flex items-center gap-1.5">
                                     <Banknote className="w-3.5 h-3.5 text-slate-400" />
                                     <span className="text-xs text-slate-500 dark:text-slate-400">
-                                      Paid:{" "}
+                                      {t.paidLabel}:{" "}
                                       <strong className="text-slate-700 dark:text-slate-200 font-semibold">
                                         {formatIQD(entryPaid)}
                                       </strong>
@@ -615,11 +614,11 @@ export function PatientHistoryModal({
                                   </div>
                                   {entryDebt > 0 ? (
                                     <span className="text-xs font-bold text-rose-600 dark:text-rose-400">
-                                      Debt: {formatIQD(entryDebt)}
+                                      {t.owesLabel}: {formatIQD(entryDebt)}
                                     </span>
                                   ) : (
                                     <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">
-                                      ✓ Paid
+                                      ✓ {t.paid}
                                     </span>
                                   )}
                                 </div>
@@ -640,13 +639,13 @@ export function PatientHistoryModal({
         <div className="px-4 py-3 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 flex items-center justify-between">
           <div className="flex items-center gap-1.5 text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold">
             <span>☁️</span>
-            <span>Stored in Supabase Cloud Database</span>
+            <span>{t.storedInSupabase}</span>
           </div>
           <button
             onClick={onClose}
             className="px-5 py-2 rounded-xl text-xs font-semibold bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 transition-colors cursor-pointer"
           >
-            Close
+            {t.close}
           </button>
         </div>
       </div>
