@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { X, CheckCircle2, Zap, Coins } from "lucide-react";
 import { Patient, formatIQD } from "@/types/patient";
 import { ToothRecord } from "@/types/dental";
+import { ClinicMaterial } from "@/types/material";
 import { DentalChart } from "./DentalChart";
 import { PatientAvatar } from "../PatientAvatar";
 
@@ -12,6 +13,7 @@ interface DentalChartModalProps {
   patient: Patient | null;
   onClose: () => void;
   onSaveTeeth: (patientId: string, teeth: ToothRecord[], syncedTotalAmount?: number) => void;
+  clinicMaterials?: ClinicMaterial[];
 }
 
 export function DentalChartModal({
@@ -19,6 +21,7 @@ export function DentalChartModal({
   patient,
   onClose,
   onSaveTeeth,
+  clinicMaterials = [],
 }: DentalChartModalProps) {
   const [localTeeth, setLocalTeeth] = useState<ToothRecord[]>([]);
   const [isSynced, setIsSynced] = useState<boolean>(false);
@@ -171,6 +174,7 @@ export function DentalChartModal({
             onUpdateMultipleTeeth={handleUpdateMultipleTeeth}
             onRemoveTooth={handleRemoveTooth}
             onRemoveMultipleTeeth={handleRemoveMultipleTeeth}
+            clinicMaterials={clinicMaterials}
           />
         </div>
 

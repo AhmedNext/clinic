@@ -53,3 +53,31 @@ CREATE POLICY "Public access to appointments" ON public.appointments
   FOR ALL
   USING (true)
   WITH CHECK (true);
+
+-- ========================================================
+-- 4. CLINIC MATERIALS & INVENTORY TABLE
+-- ========================================================
+CREATE TABLE IF NOT EXISTS public.clinic_materials (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  category TEXT NOT NULL DEFAULT 'General',
+  unit TEXT DEFAULT 'pcs',
+  quantity NUMERIC DEFAULT 0,
+  min_quantity NUMERIC DEFAULT 1,
+  cost_price NUMERIC DEFAULT 0,
+  patient_price NUMERIC DEFAULT 0,
+  supplier TEXT,
+  purchase_date TEXT,
+  expiry_date TEXT,
+  notes TEXT,
+  created_at BIGINT,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+ALTER TABLE public.clinic_materials ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Public access to clinic_materials" ON public.clinic_materials;
+CREATE POLICY "Public access to clinic_materials" ON public.clinic_materials
+  FOR ALL
+  USING (true)
+  WITH CHECK (true);

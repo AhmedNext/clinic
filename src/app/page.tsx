@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { Patient, Gender, calculateDebt, formatIQD, PatientHistoryEntry } from "@/types/patient";
 import { ToothRecord } from "@/types/dental";
+import { ClinicMaterial } from "@/types/material";
 import { Appointment, AppointmentStatus } from "@/types/appointment";
 
 import { Header } from "@/components/Header";
@@ -15,6 +16,7 @@ import { PatientHistoryModal } from "@/components/PatientHistoryModal";
 import { DentalChartModal } from "@/components/dental/DentalChartModal";
 import { AppointmentsView } from "@/components/appointments/AppointmentsView";
 import { MonthlyReportView } from "@/components/MonthlyReportView";
+import { MaterialsView } from "@/components/materials/MaterialsView";
 import {
   Search,
   LayoutList,
@@ -32,6 +34,9 @@ import {
   fetchAppointmentsFromDB,
   upsertAppointmentToDB,
   deleteAppointmentFromDB,
+  fetchMaterialsFromDB,
+  upsertMaterialToDB,
+  deleteMaterialFromDB,
 } from "@/utils/supabase/db";
 import { createClient } from "@/utils/supabase/client";
 import { LoginScreen } from "@/components/LoginScreen";
@@ -42,9 +47,10 @@ export default function DashboardPage() {
   const [sessionChecked, setSessionChecked] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  const [activeTab, setActiveTab] = useState<"patients" | "appointments" | "reports">("patients");
+  const [activeTab, setActiveTab] = useState<"patients" | "appointments" | "materials" | "reports">("patients");
   const [patients, setPatients] = useState<Patient[]>([]);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [materials, setMaterials] = useState<ClinicMaterial[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   // Modals state
@@ -88,12 +94,14 @@ export default function DashboardPage() {
     async function loadData() {
       setIsLoading(true);
       try {
-        const [dbPatients, dbApts] = await Promise.all([
+        const [dbPatients, dbApts, dbMaterials] = await Promise.all([
           fetchPatientsFromDB(),
           fetchAppointmentsFromDB(),
+          fetchMaterialsFromDB(),
         ]);
         setPatients(dbPatients);
         setAppointments(dbApts);
+        setMaterials(dbMaterials);
       } catch (err) {
         console.error("Supabase fetch error:", err);
       } finally {
@@ -403,6 +411,46 @@ export default function DashboardPage() {
     }
   };
 
+  // Material & Inventory CRUD
+  const handleAddMaterial = async (data: Omit<ClinicMaterial, "id" | "createdAt">) => {
+    const newMat: ClinicMaterial = {
+      ...data,
+      id: `mat-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      createdAt: Date.now(),
+    };
+    setMaterials((prev) => [newMat, ...prev]);
+    showToast(`Added material "${newMat.name}"`);
+
+    try {
+      await upsertMaterialToDB(newMat);
+    } catch (e) {
+      console.error("Failed to save material to Supabase:", e);
+    }
+  };
+
+  const handleUpdateMaterial = async (updated: ClinicMaterial) => {
+    setMaterials((prev) => prev.map((m) => (m.id === updated.id ? updated : m)));
+    try {
+      await upsertMaterialToDB(updated);
+    } catch (e) {
+      console.error("Failed to update material in Supabase:", e);
+    }
+  };
+
+  const handleDeleteMaterial = async (id: string) => {
+    const target = materials.find((m) => m.id === id);
+    setMaterials((prev) => prev.filter((m) => m.id !== id));
+    if (target) {
+      showToast(`Deleted "${target.name}"`);
+    }
+
+    try {
+      await deleteMaterialFromDB(id);
+    } catch (e) {
+      console.error("Failed to delete material from Supabase:", e);
+    }
+  };
+
   // Extract available months from patient dates and history entries
   const availableMonths = useMemo(() => {
     const set = new Set<string>();
@@ -496,6 +544,7 @@ export default function DashboardPage() {
         onOpenAddModal={() => setIsModalOpen(true)}
         patientCount={patients.length}
         appointmentCount={appointments.length}
+        materialCount={materials.length}
         onSignOut={handleSignOut}
       />
 
@@ -509,6 +558,14 @@ export default function DashboardPage() {
             onAddAppointment={handleAddAppointment}
             onToggleStatus={handleToggleAppointmentStatus}
             onDeleteAppointment={handleDeleteAppointment}
+          />
+        ) : activeTab === "materials" ? (
+          /* ================= CLINIC MATERIALS & EXPENSES TAB ================= */
+          <MaterialsView
+            materials={materials}
+            onAddMaterial={handleAddMaterial}
+            onUpdateMaterial={handleUpdateMaterial}
+            onDeleteMaterial={handleDeleteMaterial}
           />
         ) : activeTab === "reports" ? (
           /* ================= MONTHLY REPORTS TAB ================= */
@@ -840,6 +897,7 @@ export default function DashboardPage() {
         patient={dentalPatient}
         onClose={() => setDentalPatient(null)}
         onSaveTeeth={handleSaveTeeth}
+        clinicMaterials={materials}
       />
 
       {/* Toast Notification */}

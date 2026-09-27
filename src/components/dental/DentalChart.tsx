@@ -4,12 +4,11 @@ import React, { useState } from "react";
 import {
   ALL_TEETH,
   TREATMENT_METADATA,
-  DENTAL_MATERIAL_PRESETS,
-  DentalMaterialPreset,
   ToothInfo,
   ToothRecord,
   ToothTreatment,
 } from "@/types/dental";
+import { ClinicMaterial } from "@/types/material";
 import { formatIQD } from "@/types/patient";
 import {
   CROWN_POLYGONS,
@@ -36,6 +35,8 @@ import {
   Minus,
   Zap,
   ChevronDown,
+  ChevronUp,
+  Package,
 } from "lucide-react";
 
 interface DentalChartProps {
@@ -44,6 +45,7 @@ interface DentalChartProps {
   onUpdateMultipleTeeth?: (records: ToothRecord[]) => void;
   onRemoveTooth: (toothNumber: number) => void;
   onRemoveMultipleTeeth?: (toothNumbers: number[]) => void;
+  clinicMaterials?: ClinicMaterial[];
   readonly?: boolean;
 }
 
@@ -89,6 +91,7 @@ export function DentalChart({
   onUpdateMultipleTeeth,
   onRemoveTooth,
   onRemoveMultipleTeeth,
+  clinicMaterials = [],
   readonly = false,
 }: DentalChartProps) {
   // Active procedure tool (default: "treated")
@@ -108,6 +111,9 @@ export function DentalChart({
   const [batchMaterial, setBatchMaterial] = useState<string>("");
   const [batchPrice, setBatchPrice] = useState<string>("");
   const [activeTooth, setActiveTooth] = useState<ToothInfo | null>(null);
+
+  const [isQuadrantMenuOpen, setIsQuadrantMenuOpen] = useState<boolean>(false);
+  const [isFeedExpanded, setIsFeedExpanded] = useState<boolean>(false);
 
   // Map tooth records by number for fast lookup
   const recordsMap = new Map<number, ToothRecord>(
@@ -262,24 +268,21 @@ export function DentalChart({
     onUpdateTooth(updatedRecord);
   };
 
-  // Select material preset (instantly populates material + auto-fills default fee!)
-  const handleSelectPresetMaterial = (preset: DentalMaterialPreset) => {
+  // Select clinic material (instantly populates material + auto-fills default procedure fee!)
+  const handleSelectClinicMaterial = (mat: ClinicMaterial) => {
     if (!activeTooth) return;
-    setTreatmentMaterial(preset.name);
-    setTreatmentPrice(String(preset.defaultPrice));
+    setTreatmentMaterial(mat.name);
+    setTreatmentPrice(String(mat.patientPrice));
 
     const existingRecord = recordsMap.get(activeTooth.number);
-    const nextStatus =
-      preset.category !== "all" && (!existingRecord || existingRecord.status === "treated")
-        ? preset.category
-        : (existingRecord?.status || (activeTool === "erase" ? "treated" : activeTool));
-
     const updatedRecord: ToothRecord = {
       toothNumber: activeTooth.number,
-      status: nextStatus,
-      procedure: TREATMENT_METADATA[nextStatus].label,
-      material: preset.name,
-      price: preset.defaultPrice,
+      status: existingRecord?.status || (activeTool === "erase" ? "treated" : activeTool),
+      procedure:
+        existingRecord?.procedure ||
+        TREATMENT_METADATA[activeTool === "erase" ? "treated" : activeTool].label,
+      material: mat.name,
+      price: mat.patientPrice,
       notes: treatmentNote.trim() || existingRecord?.notes || undefined,
       updatedAt: Date.now(),
     };
@@ -397,23 +400,20 @@ export function DentalChart({
     }
   };
 
-  // Apply material preset + default fee to all selected teeth
-  const handleApplyBatchPreset = (preset: DentalMaterialPreset) => {
+  // Apply clinic material + default fee to all selected teeth
+  const handleApplyBatchClinicMaterial = (mat: ClinicMaterial) => {
     if (selectedTeethNumbers.length === 0) return;
 
     const newRecords: ToothRecord[] = selectedTeethNumbers.map((num) => {
       const existing = recordsMap.get(num);
-      const nextStatus =
-        preset.category !== "all" && (!existing || existing.status === "treated")
-          ? preset.category
-          : (existing?.status || "treated");
-
       return {
         toothNumber: num,
-        status: nextStatus,
-        procedure: TREATMENT_METADATA[nextStatus].label,
-        material: preset.name,
-        price: preset.defaultPrice,
+        status: existing?.status || (activeTool === "erase" ? "treated" : activeTool),
+        procedure:
+          existing?.procedure ||
+          TREATMENT_METADATA[activeTool === "erase" ? "treated" : activeTool].label,
+        material: mat.name,
+        price: mat.patientPrice,
         notes: existing?.notes,
         updatedAt: Date.now(),
       };
@@ -506,335 +506,206 @@ export function DentalChart({
   const singleRecord =
     selectedCount === 1 ? recordsMap.get(selectedTeethNumbers[0]) : null;
 
-  // Active tooth recommended materials
+  // Active tooth status
   const activeToothStatus =
     (activeTooth && recordsMap.get(activeTooth.number)?.status) ||
     (activeTool === "erase" ? "treated" : activeTool);
 
-  const recommendedPresets = DENTAL_MATERIAL_PRESETS.filter(
-    (p) => p.category === activeToothStatus || p.category === "all"
-  );
-  const displayedPresets =
-    showAllMaterials || recommendedPresets.length === 0
-      ? DENTAL_MATERIAL_PRESETS
-      : recommendedPresets;
-
   return (
     <div className="w-full flex flex-col bg-slate-50/70 dark:bg-slate-900/70 border border-slate-200/80 dark:border-slate-800 rounded-xl sm:rounded-3xl p-1.5 sm:p-5 shadow-inner select-none backdrop-blur-xs">
-      {/* ================= 1. PROCEDURE & MULTI-SELECT TOOLBAR ================= */}
-      <div className="sticky top-0 z-30 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md p-2 sm:p-4 rounded-xl sm:rounded-2xl border border-indigo-200/80 dark:border-indigo-800/80 shadow-md mb-2.5 sm:mb-3.5 space-y-2 sm:space-y-3">
-        {/* Row 1: Mode Switcher & Tools */}
-        <div className="flex items-center justify-between gap-1.5 flex-wrap">
-          {/* Multi-Select Mode Toggle */}
-          <div className="flex items-center gap-1.5">
+      {/* ================= 1. SLEEK MINIMAL HEADER TOOLBAR ================= */}
+      <div className="sticky top-0 z-30 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md px-3 py-2 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs mb-3 flex items-center justify-between gap-2 flex-wrap">
+        {/* Left: Mode / Active Tool Switcher & Quadrant Selector */}
+        <div className="flex items-center gap-1.5 flex-wrap">
+          {/* Chart vs Erase Segmented Control */}
+          <div className="inline-flex p-0.5 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700">
             <button
               type="button"
-              onClick={() => setIsMultiSelectMode(!isMultiSelectMode)}
-              className={`
-                px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-bold flex items-center gap-1.5 border transition-all cursor-pointer shadow-xs active:scale-95
-                ${
-                  isMultiSelectMode
-                    ? "bg-indigo-600 text-white border-indigo-700 ring-2 ring-indigo-500/50 shadow-indigo-500/20"
-                    : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-indigo-400"
-                }
-              `}
-              title="Toggle multi-select mode"
+              onClick={() => setActiveTool("treated")}
+              className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                activeTool !== "erase"
+                  ? "bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-xs"
+                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
+              }`}
             >
-              <CheckSquare className="w-3.5 h-3.5" />
-              <span>Multi-Select</span>
-              <span
-                className={`text-[9px] px-1 py-0.2 rounded-full font-bold uppercase ${
-                  isMultiSelectMode
-                    ? "bg-white/25 text-white"
-                    : "bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300"
-                }`}
-              >
-                {isMultiSelectMode ? "ON" : "OFF"}
-              </span>
+              <MousePointer className="w-3.5 h-3.5" />
+              <span>Chart & Select</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setActiveTool("erase");
+                if (selectedCount > 0) handleClearSelectedTreatments();
+              }}
+              className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                activeTool === "erase"
+                  ? "bg-rose-500 text-white shadow-xs"
+                  : "text-slate-600 dark:text-slate-400 hover:text-rose-600"
+              }`}
+              title="Erase mode"
+            >
+              <Eraser className="w-3.5 h-3.5" />
+              <span>Erase</span>
             </button>
           </div>
 
-          {/* Instant Auto-Save status badge */}
-          <div className="flex items-center gap-1.5">
-            <span className="text-[10px] sm:text-[11px] px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full font-bold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 flex items-center gap-1 shadow-xs">
-              <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="hidden sm:inline">Changes Stored Instantly</span>
-              <span className="sm:hidden">Auto-Saved</span>
-            </span>
+          {/* Quadrants Popover Dropdown */}
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setIsQuadrantMenuOpen(!isQuadrantMenuOpen)}
+              className="px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700 flex items-center gap-1.5 cursor-pointer transition-colors"
+            >
+              <Layers className="w-3.5 h-3.5 text-indigo-500" />
+              <span>Quadrants</span>
+              <ChevronDown className="w-3 h-3 text-slate-400" />
+            </button>
+
+            {isQuadrantMenuOpen && (
+              <div
+                className="absolute left-0 top-full mt-1 w-52 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl z-50 p-1.5 space-y-0.5 animate-in fade-in zoom-in-95"
+                onClick={() => setIsQuadrantMenuOpen(false)}
+              >
+                <div className="text-[10px] font-bold text-slate-400 px-2 py-1 uppercase tracking-wider">
+                  Select Anatomical Group
+                </div>
+                {quadrantGroups.map((g) => (
+                  <button
+                    key={g.label}
+                    type="button"
+                    onClick={() => handleSelectGroup(g.teeth)}
+                    className="w-full text-left px-2 py-1 rounded-lg text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 hover:text-indigo-600 transition-colors flex items-center justify-between"
+                  >
+                    <span>{g.label}</span>
+                    <span className="text-[10px] font-mono text-slate-400">{g.teeth.length} teeth</span>
+                  </button>
+                ))}
+                <div className="border-t border-slate-100 dark:border-slate-800 pt-1 mt-1">
+                  <button
+                    type="button"
+                    onClick={handleSelectAll}
+                    className="w-full text-left px-2 py-1.5 rounded-lg text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 transition-colors"
+                  >
+                    Select All (32 Teeth)
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Row 2: Procedure Tools Strip (smooth horizontal scroll on phone) */}
-        <div className="flex items-center gap-1 sm:gap-1.5 overflow-x-auto no-scrollbar py-0.5">
-          <span className="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-wider whitespace-nowrap mr-0.5 flex items-center gap-1">
-            <MousePointer className="w-3 h-3 text-indigo-500" />
-            <span className="hidden sm:inline">Apply:</span>
-          </span>
-
-          {(
-            [
-              "treated",
-              "filling",
-              "root_canal",
-              "crown",
-              "extraction",
-              "decay",
-            ] as ToothTreatment[]
-          ).map((statusKey) => {
-            const meta = TREATMENT_METADATA[statusKey];
-            const isActive = activeTool === statusKey;
-
-            return (
-              <button
-                key={statusKey}
-                type="button"
-                onClick={() => {
-                  setActiveTool(statusKey);
-                  if (selectedCount > 0) {
-                    handleApplyStatusToSelected(statusKey);
-                  }
-                }}
-                className={`
-                  px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-bold flex items-center gap-1 border transition-all cursor-pointer whitespace-nowrap flex-shrink-0 active:scale-95
-                  ${
-                    isActive
-                      ? "ring-2 ring-indigo-500 scale-105 shadow-xs"
-                      : "opacity-85 hover:opacity-100"
-                  }
-                  ${meta.badgeBg} ${meta.badgeBorder} ${meta.badgeText}
-                `}
-              >
-                <span
-                  className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full flex-shrink-0 shadow-xs"
-                  style={{ backgroundColor: meta.color }}
-                />
-                <span>{meta.label}</span>
-                {isActive && <Check className="w-3 h-3 ml-0.5" />}
-              </button>
-            );
-          })}
-
-          {/* Erase Tool */}
+        {/* Right: Multi-Select Toggle & Deselect & Mobile Zoom */}
+        <div className="flex items-center gap-1.5">
           <button
             type="button"
-            onClick={() => {
-              setActiveTool("erase");
-              if (selectedCount > 0) {
-                handleClearSelectedTreatments();
-              }
-            }}
-            className={`
-              px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-bold flex items-center gap-1 border transition-all cursor-pointer whitespace-nowrap flex-shrink-0 active:scale-95
-              ${
-                activeTool === "erase"
-                  ? "ring-2 ring-rose-500 bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300 border-rose-300 dark:border-rose-800 shadow-xs"
-                  : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:bg-rose-50 hover:text-rose-600"
-              }
-            `}
+            onClick={() => setIsMultiSelectMode(!isMultiSelectMode)}
+            className={`px-2.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 border transition-all cursor-pointer shadow-2xs ${
+              isMultiSelectMode
+                ? "bg-indigo-600 text-white border-indigo-700 shadow-indigo-600/20"
+                : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200/80 dark:border-slate-700 hover:border-slate-300"
+            }`}
+            title="Toggle multi-select mode"
           >
-            <Eraser className="w-3 h-3 text-rose-500" />
-            <span>Erase</span>
-          </button>
-        </div>
-
-        {/* Row 3: Quick Select Strip (horizontally scrollable on mobile) */}
-        <div className="pt-1.5 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between gap-1.5 overflow-x-auto no-scrollbar">
-          <div className="flex items-center gap-1 flex-nowrap text-xs flex-shrink-0">
-            <span className="text-[10px] sm:text-[11px] text-slate-400 font-bold mr-0.5 flex items-center gap-0.5">
-              <Layers className="w-3 h-3 text-indigo-500" />
-              <span>Select:</span>
-            </span>
-
-            {quadrantGroups.map((group) => (
-              <button
-                key={group.label}
-                type="button"
-                onClick={() => handleSelectGroup(group.teeth)}
-                className="px-2 py-0.5 rounded-md sm:rounded-lg text-[10px] sm:text-[11px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 transition-colors cursor-pointer whitespace-nowrap"
-              >
-                {group.label}
-              </button>
-            ))}
-
-            <button
-              type="button"
-              onClick={handleSelectAll}
-              className="px-2 py-0.5 rounded-md sm:rounded-lg text-[10px] sm:text-[11px] font-bold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 transition-colors cursor-pointer whitespace-nowrap"
+            <CheckSquare className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Multi-Select</span>
+            <span
+              className={`text-[9px] px-1 py-0.2 rounded-full font-bold uppercase ${
+                isMultiSelectMode
+                  ? "bg-white/25 text-white"
+                  : "bg-slate-200 dark:bg-slate-700 text-slate-500"
+              }`}
             >
-              All (32)
-            </button>
-          </div>
+              {isMultiSelectMode ? "ON" : "OFF"}
+            </span>
+          </button>
 
           {selectedCount > 0 && (
             <button
               type="button"
               onClick={handleClearSelection}
-              className="text-[10px] sm:text-[11px] font-bold text-rose-600 dark:text-rose-400 hover:underline cursor-pointer flex items-center gap-0.5 ml-auto flex-shrink-0 whitespace-nowrap"
+              className="px-2.5 py-1.5 rounded-xl text-xs font-bold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/50 transition-colors flex items-center gap-1 cursor-pointer"
+              title="Deselect all"
             >
-              <RotateCcw className="w-2.5 h-2.5" />
+              <X className="w-3.5 h-3.5" />
               <span>Deselect ({selectedCount})</span>
             </button>
           )}
+
+          {/* Mobile Zoom Button */}
+          <button
+            type="button"
+            onClick={() => setIsZoomed(!isZoomed)}
+            className="sm:hidden p-1.5 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700 cursor-pointer"
+            title="Zoom toggle"
+          >
+            {isZoomed ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
+          </button>
         </div>
       </div>
 
-      {/* ================= 2. BATCH ACTION BAR (WHEN MULTIPLE TEETH ARE SELECTED) ================= */}
+      {/* ================= 2. SLEEK BATCH ACTION PILL (WHEN MULTIPLE TEETH SELECTED) ================= */}
       {isMultipleSelected && (
-        <div className="mb-2.5 sm:mb-3.5 p-2.5 sm:p-4 rounded-xl sm:rounded-2xl bg-gradient-to-r from-indigo-50 via-white to-indigo-50 dark:from-indigo-950/80 dark:via-slate-900/90 dark:to-indigo-950/80 border-2 border-indigo-400/80 dark:border-indigo-600/80 shadow-md animate-in slide-in-from-top-2 duration-200">
-          <div className="flex flex-col gap-2">
-            {/* Header: Count & Selected Teeth List */}
-            <div className="flex items-center justify-between gap-1.5 flex-wrap">
-              <div className="flex items-center gap-1.5">
-                <span className="w-5 h-5 rounded-full bg-indigo-600 text-white font-black text-xs flex items-center justify-center shadow-xs">
-                  {selectedCount}
-                </span>
-                <span className="font-extrabold text-xs sm:text-sm text-slate-900 dark:text-slate-100">
-                  Selected Teeth:
-                </span>
-              </div>
+        <div className="mb-3 px-3 py-2 rounded-2xl bg-indigo-950/90 text-white shadow-lg border border-indigo-800/80 backdrop-blur-md flex items-center justify-between gap-2 flex-wrap animate-in slide-in-from-top-2">
+          <div className="flex items-center gap-2">
+            <span className="w-6 h-6 rounded-full bg-indigo-500 text-white font-black text-xs flex items-center justify-center shadow-xs">
+              {selectedCount}
+            </span>
+            <span className="text-xs font-semibold text-indigo-200">
+              Teeth: <span className="font-mono text-white font-bold">{selectedTeethNumbers.map((n) => `#${n}`).join(", ")}</span>
+            </span>
+          </div>
 
-              <div className="flex items-center gap-1 flex-wrap max-w-xl">
-                {selectedTeethNumbers.map((num) => (
-                  <span
-                    key={num}
-                    className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded-md text-[11px] font-mono font-bold bg-white dark:bg-slate-800 border border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 shadow-2xs"
-                  >
-                    #{num}
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setSelectedTeethNumbers((prev) => prev.filter((n) => n !== num))
-                      }
-                      className="hover:text-rose-600 cursor-pointer ml-0.5"
-                    >
-                      ×
-                    </button>
-                  </span>
-                ))}
-              </div>
-            </div>
+          <div className="flex items-center gap-1.5 flex-wrap">
+            {/* Quick Status Dropdown */}
+            <select
+              onChange={(e) => {
+                if (e.target.value) handleApplyStatusToSelected(e.target.value as ToothTreatment);
+              }}
+              defaultValue=""
+              className="px-2.5 py-1 rounded-xl bg-indigo-900/90 text-white text-xs font-semibold border border-indigo-700 focus:outline-none cursor-pointer"
+            >
+              <option value="" disabled>Status...</option>
+              {(["treated", "filling", "root_canal", "crown", "extraction", "decay"] as ToothTreatment[]).map((s) => (
+                <option key={s} value={s}>{TREATMENT_METADATA[s].label}</option>
+              ))}
+            </select>
 
-            {/* Batch Procedure Quick Buttons */}
-            <div className="flex items-center gap-1 sm:gap-1.5 flex-wrap pt-1.5 border-t border-indigo-100 dark:border-indigo-900/60">
-              <span className="text-[10px] sm:text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                Status:
-              </span>
-              {(
-                [
-                  "treated",
-                  "filling",
-                  "root_canal",
-                  "crown",
-                  "extraction",
-                  "decay",
-                ] as ToothTreatment[]
-              ).map((statusKey) => {
-                const meta = TREATMENT_METADATA[statusKey];
-                return (
-                  <button
-                    key={statusKey}
-                    type="button"
-                    onClick={() => handleApplyStatusToSelected(statusKey)}
-                    className={`px-2 py-0.5 rounded-lg text-[11px] font-bold border transition-all cursor-pointer shadow-xs active:scale-95 ${meta.badgeBg} ${meta.badgeBorder} ${meta.badgeText}`}
-                  >
-                    + {meta.label}
-                  </button>
-                );
-              })}
-
-              <button
-                type="button"
-                onClick={handleClearSelectedTreatments}
-                className="px-2 py-0.5 rounded-lg text-[11px] font-semibold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 hover:bg-rose-100 cursor-pointer flex items-center gap-1 shadow-xs"
-              >
-                <Eraser className="w-3 h-3" />
-                <span>Clear</span>
-              </button>
-            </div>
-
-            {/* Batch Material & Fee Quick Presets */}
-            <div className="pt-1.5 border-t border-indigo-100 dark:border-indigo-900/60">
-              <div className="flex items-center justify-between gap-1 mb-1">
-                <span className="text-[10px] sm:text-[11px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
-                  <Sparkles className="w-3 h-3 text-amber-500" />
-                  <span>Apply Material & Fee to all {selectedCount} teeth:</span>
-                </span>
-                {batchPrice && (
-                  <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400">
-                    Total: {formatIQD((Number(batchPrice) || 0) * selectedCount)}
-                  </span>
-                )}
-              </div>
-
-              <div className="flex items-center gap-1 sm:gap-1.5 flex-wrap">
-                {DENTAL_MATERIAL_PRESETS.slice(0, 7).map((preset) => (
-                  <button
-                    key={preset.id}
-                    type="button"
-                    onClick={() => handleApplyBatchPreset(preset)}
-                    className="px-2 py-0.5 sm:py-1 rounded-lg text-[10px] sm:text-[11px] font-semibold bg-white dark:bg-slate-800 border border-indigo-200 dark:border-indigo-800 text-slate-700 dark:text-slate-300 hover:border-indigo-400 hover:text-indigo-600 shadow-2xs cursor-pointer flex items-center gap-1 active:scale-95 transition-all"
-                  >
-                    <span>{preset.name}</span>
-                    <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400 text-[10px]">
-                      ({formatIQD(preset.defaultPrice)})
-                    </span>
-                  </button>
-                ))}
-              </div>
-
-              {/* Custom Material & Fee for Batch */}
-              <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
-                <input
-                  type="text"
-                  placeholder="Custom Material (e.g. Zirconia)..."
-                  value={batchMaterial}
-                  onChange={(e) => setBatchMaterial(e.target.value)}
-                  className="flex-1 min-w-[120px] px-2 py-1 rounded-lg border border-indigo-200 dark:border-indigo-800 bg-white dark:bg-slate-900 text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-indigo-500 shadow-xs"
-                />
-                <div className="relative w-28">
-                  <input
-                    type="number"
-                    placeholder="Fee / tooth"
-                    value={batchPrice}
-                    onChange={(e) => setBatchPrice(e.target.value)}
-                    className="w-full pl-2 pr-7 py-1 rounded-lg border border-indigo-200 dark:border-indigo-800 bg-white dark:bg-slate-900 text-xs font-mono font-bold text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-indigo-500 shadow-xs"
-                  />
-                  <span className="absolute right-1.5 top-1/2 -translate-y-1/2 text-[9px] font-bold text-slate-400">
-                    IQD
-                  </span>
-                </div>
-                <button
-                  type="button"
-                  onClick={handleApplyBatchCustomMaterialAndPrice}
-                  disabled={!batchMaterial.trim() && !batchPrice.trim()}
-                  className="px-2.5 py-1 rounded-lg bg-emerald-600 disabled:opacity-50 hover:bg-emerald-500 text-white text-xs font-bold cursor-pointer transition-colors shadow-xs"
-                >
-                  Set All
-                </button>
-              </div>
-            </div>
-
-            {/* Batch Note Input */}
-            <div className="flex items-center gap-1.5 pt-1.5 border-t border-indigo-100 dark:border-indigo-900/60">
-              <input
-                type="text"
-                placeholder={`Note for all ${selectedCount} selected teeth...`}
-                value={batchNote}
-                onChange={(e) => setBatchNote(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") handleApplyBatchNote();
+            {/* Material & Fee Dropdown (from doctor's clinic materials) */}
+            {clinicMaterials.length > 0 && (
+              <select
+                onChange={(e) => {
+                  const found = clinicMaterials.find((p) => p.name === e.target.value);
+                  if (found) handleApplyBatchClinicMaterial(found);
                 }}
-                className="flex-1 px-2.5 py-1 rounded-lg border border-indigo-200 dark:border-indigo-800 bg-white dark:bg-slate-900 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-xs"
-              />
-              <button
-                type="button"
-                onClick={handleApplyBatchNote}
-                disabled={!batchNote.trim()}
-                className="px-3 py-1 rounded-lg bg-indigo-600 disabled:opacity-50 hover:bg-indigo-500 text-white text-xs font-bold cursor-pointer transition-colors shadow-xs"
+                defaultValue=""
+                className="px-2.5 py-1 rounded-xl bg-indigo-900/90 text-white text-xs font-semibold border border-indigo-700 focus:outline-none cursor-pointer"
               >
-                Apply
-              </button>
-            </div>
+                <option value="" disabled>Apply Material...</option>
+                {clinicMaterials.map((p) => (
+                  <option key={p.id} value={p.name}>
+                    {p.name} ({formatIQD(p.patientPrice)})
+                  </option>
+                ))}
+              </select>
+            )}
+
+            <button
+              type="button"
+              onClick={handleClearSelectedTreatments}
+              className="px-2 py-1 rounded-xl bg-rose-600/80 hover:bg-rose-600 text-white text-xs font-semibold cursor-pointer"
+            >
+              Clear
+            </button>
+
+            <button
+              type="button"
+              onClick={handleClearSelection}
+              className="p-1 rounded-lg text-indigo-300 hover:text-white cursor-pointer"
+              title="Deselect"
+            >
+              <X className="w-4 h-4" />
+            </button>
           </div>
         </div>
       )}
@@ -1046,270 +917,183 @@ export function DentalChart({
         </div>
       </div>
 
-      {/* ================= 4. PERMANENT CLINICAL RECORDS & TREATMENTS DIRECT FEED ================= */}
+      {/* ================= 4. COLLAPSIBLE CHARTED TREATMENTS DRAWER ================= */}
       {activeChartedTeeth.length > 0 && (
-        <div className="mt-2.5 sm:mt-3.5 p-2.5 sm:p-4 rounded-xl sm:rounded-2xl bg-amber-50/80 dark:bg-amber-950/40 border border-amber-200/80 dark:border-amber-800/80 shadow-xs animate-in slide-in-from-top-2 duration-150">
-          <div className="flex items-center justify-between gap-2 mb-2 pb-1.5 border-b border-amber-200/70 dark:border-amber-900/70">
-            <div className="flex items-center gap-1.5 text-xs font-bold text-amber-900 dark:text-amber-200">
-              <FileText className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-              <span>Charted Teeth & Treatments ({activeChartedTeeth.length}):</span>
-            </div>
+        <div className="mt-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs overflow-hidden">
+          <button
+            type="button"
+            onClick={() => setIsFeedExpanded(!isFeedExpanded)}
+            className="w-full px-3 sm:px-4 py-2 flex items-center justify-between gap-2 text-left hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer"
+          >
             <div className="flex items-center gap-2">
-              <span className="text-[11px] font-mono font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-100/80 dark:bg-emerald-950/80 px-2 py-0.5 rounded-md border border-emerald-300 dark:border-emerald-800">
-                Sum: {formatIQD(totalChartPrice)}
+              <span className="w-5 h-5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 font-bold text-xs flex items-center justify-center">
+                {activeChartedTeeth.length}
               </span>
-              <span className="text-[10px] text-amber-700 dark:text-amber-300 font-semibold hidden sm:inline">
-                Tap card to edit
+              <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                Charted Treatments & Fees
               </span>
             </div>
-          </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-            {activeChartedTeeth.map((rec) => {
-              const tooth = ALL_TEETH.find((t) => t.number === rec.toothNumber);
-              const meta = TREATMENT_METADATA[rec.status];
-              const isCurrentlyActive = activeTooth?.number === rec.toothNumber;
+            <div className="flex items-center gap-2">
+              <span className="font-mono font-bold text-xs text-emerald-600 dark:text-emerald-400">
+                {formatIQD(totalChartPrice)}
+              </span>
+              {isFeedExpanded ? (
+                <ChevronUp className="w-4 h-4 text-slate-400" />
+              ) : (
+                <ChevronDown className="w-4 h-4 text-slate-400" />
+              )}
+            </div>
+          </button>
 
-              return (
-                <div
-                  key={rec.toothNumber}
-                  onClick={() => {
-                    if (tooth) {
-                      setActiveTooth(tooth);
-                      setSelectedTeethNumbers([tooth.number]);
-                      setTreatmentNote(rec.notes || "");
-                      setTreatmentMaterial(rec.material || "");
-                      setTreatmentPrice(rec.price !== undefined ? String(rec.price) : "");
-                    }
-                  }}
-                  className={`
-                    group flex flex-col p-2.5 rounded-xl bg-white dark:bg-slate-900 border transition-all cursor-pointer shadow-2xs
-                    ${
-                      isCurrentlyActive
-                        ? "border-indigo-500 ring-2 ring-indigo-500/40 shadow-xs"
-                        : "border-amber-200/80 dark:border-amber-900/80 hover:border-indigo-400 hover:shadow-xs"
-                    }
-                  `}
-                >
-                  <div className="flex items-center justify-between gap-1.5 mb-1.5">
+          {isFeedExpanded && (
+            <div className="p-2 sm:p-3 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/30 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-1.5 animate-in fade-in duration-150">
+              {activeChartedTeeth.map((rec) => {
+                const tooth = ALL_TEETH.find((t) => t.number === rec.toothNumber);
+                const meta = TREATMENT_METADATA[rec.status];
+                const isCurrentlyActive = activeTooth?.number === rec.toothNumber;
+
+                return (
+                  <div
+                    key={rec.toothNumber}
+                    onClick={() => {
+                      if (tooth) {
+                        setActiveTooth(tooth);
+                        setSelectedTeethNumbers([tooth.number]);
+                        setTreatmentNote(rec.notes || "");
+                        setTreatmentMaterial(rec.material || "");
+                        setTreatmentPrice(rec.price !== undefined ? String(rec.price) : "");
+                      }
+                    }}
+                    className={`
+                      p-2 rounded-xl bg-white dark:bg-slate-900 border transition-all cursor-pointer shadow-2xs flex items-center justify-between gap-1.5
+                      ${
+                        isCurrentlyActive
+                          ? "border-indigo-500 ring-2 ring-indigo-500/30 shadow-xs"
+                          : "border-slate-200 dark:border-slate-800 hover:border-indigo-400"
+                      }
+                    `}
+                  >
                     <div className="flex items-center gap-1.5 min-w-0">
-                      <span className="px-1.5 py-0.2 rounded-md text-xs font-mono font-black bg-indigo-50 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 flex-shrink-0">
+                      <span className="px-1.5 py-0.2 rounded font-mono font-black text-[11px] bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 flex-shrink-0">
                         #{rec.toothNumber}
                       </span>
-                      <span className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">
-                        {tooth?.name}
+                      <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 truncate">
+                        {rec.material || meta.label}
                       </span>
                     </div>
 
                     <div className="flex items-center gap-1 flex-shrink-0">
-                      <span
-                        className={`text-[9px] px-1.5 py-0.2 rounded-full font-bold border ${meta.badgeBg} ${meta.badgeBorder} ${meta.badgeText}`}
-                      >
-                        {meta.label}
-                      </span>
-                      <Edit3 className="w-3 h-3 text-slate-400 group-hover:text-indigo-600 transition-colors" />
+                      {rec.price !== undefined && (
+                        <span className="font-mono font-bold text-[11px] text-emerald-600 dark:text-emerald-400">
+                          {formatIQD(rec.price)}
+                        </span>
+                      )}
+                      <Edit3 className="w-3 h-3 text-slate-400" />
                     </div>
                   </div>
-
-                  {/* Material & Price Badges */}
-                  {(rec.material || rec.price !== undefined) && (
-                    <div className="flex items-center gap-1 flex-wrap mb-1 text-[10px]">
-                      {rec.material && (
-                        <span className="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded-md font-semibold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
-                          <Tag className="w-2.5 h-2.5 text-indigo-500" />
-                          <span>{rec.material}</span>
-                        </span>
-                      )}
-                      {rec.price !== undefined && (
-                        <span className="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded-md font-mono font-bold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
-                          <Coins className="w-2.5 h-2.5 text-emerald-500" />
-                          <span>{formatIQD(rec.price)}</span>
-                        </span>
-                      )}
-                    </div>
-                  )}
-
-                  {rec.notes && (
-                    <p className="text-xs text-slate-700 dark:text-slate-300 whitespace-pre-wrap font-medium pl-2 border-l-2 border-amber-400 dark:border-amber-500">
-                      {rec.notes}
-                    </p>
-                  )}
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       )}
 
-      {/* ================= 5. SINGLE SELECTED TOOTH CLINICAL DETAIL PANEL ================= */}
+      {/* ================= 5. SLEEK MINIMAL SELECTED TOOTH INSPECTOR ================= */}
       {selectedCount === 1 && activeTooth && (
-        <div className="mt-2.5 sm:mt-3.5 p-2.5 sm:p-5 rounded-xl sm:rounded-3xl bg-indigo-50/90 dark:bg-indigo-950/60 border-2 border-indigo-500/50 shadow-lg animate-in slide-in-from-top-2 duration-200 space-y-3">
+        <div className="mt-3 p-3 sm:p-4 rounded-2xl bg-white dark:bg-slate-900 border border-indigo-200 dark:border-indigo-800/80 shadow-md animate-in slide-in-from-top-2">
           {/* Header */}
-          <div className="flex items-center justify-between gap-2 pb-2 sm:pb-3 border-b border-indigo-200/70 dark:border-indigo-800/70">
+          <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800 mb-2.5">
             <div className="flex items-center gap-2 min-w-0">
-              <span className="text-xl sm:text-2xl flex-shrink-0">🦷</span>
+              <span className="w-6 h-6 rounded-lg bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 font-mono font-black text-xs flex items-center justify-center border border-indigo-200 dark:border-indigo-800 flex-shrink-0">
+                #{activeTooth.number}
+              </span>
               <div className="min-w-0">
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  <span className="font-black text-xs sm:text-base text-slate-900 dark:text-slate-100">
-                    Tooth #{activeTooth.number} — {activeTooth.name}
-                  </span>
-                  <span className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400">
-                    ({activeTooth.arabicName})
-                  </span>
-                </div>
-                <div className="flex items-center gap-1.5 mt-0.5 text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400">
-                  <span className="font-semibold text-indigo-700 dark:text-indigo-300 truncate">
-                    {activeTooth.jaw === "upper"
-                      ? "Upper (العلوي)"
-                      : "Lower (السفلي)"}
-                  </span>
-                  <span>•</span>
-                  <span className="capitalize font-semibold text-slate-600 dark:text-slate-300">
-                    {getFdiCategory(activeTooth.number).label}
-                  </span>
-                </div>
+                <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100 truncate block">
+                  {activeTooth.name} <span className="text-slate-400 font-normal text-xs">({activeTooth.arabicName})</span>
+                </span>
               </div>
             </div>
 
-            <button
-              type="button"
-              onClick={() => handleClearSelection()}
-              className="p-1 sm:p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-white dark:hover:bg-slate-800 transition-colors cursor-pointer flex-shrink-0"
-              title="Close panel"
-            >
-              <X className="w-4 h-4 sm:w-5 sm:h-5" />
-            </button>
-          </div>
-
-          {/* Section 1: Condition / Procedure Selector */}
-          <div>
-            <label className="block text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
-              1. Tooth Condition / Status:
-            </label>
-            <div className="flex items-center gap-1 sm:gap-1.5 flex-wrap">
-              {(
-                [
-                  "treated",
-                  "filling",
-                  "root_canal",
-                  "crown",
-                  "extraction",
-                  "decay",
-                ] as ToothTreatment[]
-              ).map((statusKey) => {
-                const meta = TREATMENT_METADATA[statusKey];
-                const isCurrentStatus =
-                  recordsMap.get(activeTooth.number)?.status === statusKey;
-                return (
-                  <button
-                    key={statusKey}
-                    type="button"
-                    onClick={() => handleActiveToothStatusChange(statusKey)}
-                    className={`px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-bold flex items-center gap-1 border transition-all cursor-pointer ${
-                      isCurrentStatus
-                        ? "ring-2 ring-indigo-500 scale-105 shadow-xs"
-                        : "opacity-75 hover:opacity-100"
-                    } ${meta.badgeBg} ${meta.badgeBorder} ${meta.badgeText}`}
-                  >
-                    <span
-                      className="w-2 h-2 rounded-full"
-                      style={{ backgroundColor: meta.color }}
-                    />
-                    <span>{meta.label}</span>
-                    {isCurrentStatus && <Check className="w-3 h-3 ml-0.5" />}
-                  </button>
-                );
-              })}
-
+            <div className="flex items-center gap-1.5">
+              {treatmentPrice && (
+                <span className="px-2 py-0.5 rounded-lg text-xs font-mono font-bold bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                  {formatIQD(Number(treatmentPrice))}
+                </span>
+              )}
               <button
                 type="button"
-                onClick={() => handleActiveToothStatusChange("erase")}
-                className="px-2 py-0.5 sm:py-1 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-semibold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 hover:bg-rose-100 cursor-pointer flex items-center gap-1"
+                onClick={() => handleClearSelection()}
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+                title="Close panel"
               >
-                <Eraser className="w-3 h-3" />
-                <span>Remove</span>
+                <X className="w-4 h-4" />
               </button>
             </div>
           </div>
 
-          {/* Section 2: Material & Fee Catalog Presets (Auto-Pricing) */}
-          <div className="pt-2 border-t border-indigo-200/50 dark:border-indigo-900/50">
-            <div className="flex items-center justify-between gap-1 mb-1.5">
-              <label className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1">
-                <Sparkles className="w-3 h-3 text-amber-500" />
-                <span>2. Material & Fee Preset (1-Tap Auto-Pricing):</span>
-              </label>
-              <button
-                type="button"
-                onClick={() => setShowAllMaterials(!showAllMaterials)}
-                className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer"
-              >
-                {showAllMaterials ? "Show Recommended" : `Browse All (${DENTAL_MATERIAL_PRESETS.length})`}
-              </button>
-            </div>
-
-            <div className="flex items-center gap-1.5 flex-wrap">
-              {displayedPresets.map((preset) => {
-                const isSelected = treatmentMaterial === preset.name;
-                return (
-                  <button
-                    key={preset.id}
-                    type="button"
-                    onClick={() => handleSelectPresetMaterial(preset)}
-                    className={`px-2.5 py-1 rounded-xl text-xs font-semibold flex items-center gap-1.5 border transition-all cursor-pointer shadow-2xs ${
-                      isSelected
-                        ? "bg-indigo-600 text-white border-indigo-700 ring-2 ring-indigo-400 shadow-xs"
-                        : "bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-indigo-200 dark:border-indigo-800 hover:border-indigo-400 hover:bg-indigo-50/50"
-                    }`}
-                  >
-                    <span className="font-bold">{preset.name}</span>
-                    <span className="text-[10px] opacity-75">({preset.arabicName})</span>
-                    <span
-                      className={`px-1.5 py-0.2 rounded-md font-mono font-bold text-[10px] ${
-                        isSelected
-                          ? "bg-white/25 text-white"
-                          : "bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800"
-                      }`}
-                    >
-                      {formatIQD(preset.defaultPrice)}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Section 3: Custom Material & Price (Editable Override) */}
-          <div className="pt-2 border-t border-indigo-200/50 dark:border-indigo-900/50 grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          {/* Controls Grid (Compact 3-Column on desktop, 1-col on phone) */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+            {/* 1. Condition Selector */}
             <div>
-              <label className="block text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1 flex items-center gap-1">
-                <Tag className="w-3 h-3 text-indigo-500" />
-                <span>Material Name:</span>
+              <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
+                Condition
               </label>
-              <div className="relative">
+              <select
+                value={recordsMap.get(activeTooth.number)?.status || "treated"}
+                onChange={(e) => handleActiveToothStatusChange(e.target.value as ToothTreatment)}
+                className="w-full px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-semibold text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+              >
+                {(["treated", "filling", "root_canal", "crown", "extraction", "decay"] as ToothTreatment[]).map((s) => (
+                  <option key={s} value={s}>{TREATMENT_METADATA[s].label}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* 2. Clinic Material Dropdown / Input */}
+            <div>
+              <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1 flex items-center justify-between">
+                <span>Material</span>
+                <span className="text-indigo-500 font-semibold text-[9px]">Procedure Pricing</span>
+              </label>
+              {clinicMaterials.length > 0 ? (
+                <select
+                  value={treatmentMaterial}
+                  onChange={(e) => {
+                    const found = clinicMaterials.find((m) => m.name === e.target.value);
+                    if (found) {
+                      handleSelectClinicMaterial(found);
+                    } else {
+                      handleActiveToothMaterialChange(e.target.value);
+                    }
+                  }}
+                  className="w-full px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-semibold text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+                >
+                  <option value="">Choose Material...</option>
+                  {clinicMaterials.map((m) => (
+                    <option key={m.id} value={m.name}>
+                      {m.name} ({formatIQD(m.patientPrice)})
+                    </option>
+                  ))}
+                  {treatmentMaterial && !clinicMaterials.some((m) => m.name === treatmentMaterial) && (
+                    <option value={treatmentMaterial}>{treatmentMaterial} (Custom)</option>
+                  )}
+                </select>
+              ) : (
                 <input
                   type="text"
-                  placeholder="e.g. Composite, Zirconia, 3M Filtek..."
+                  placeholder="e.g. Composite, Zirconia..."
                   value={treatmentMaterial}
                   onChange={(e) => handleActiveToothMaterialChange(e.target.value)}
-                  className="w-full px-3 py-1.5 rounded-xl border border-indigo-200 dark:border-indigo-800 bg-white dark:bg-slate-900 text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-xs"
+                  className="w-full px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-semibold text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
-                {treatmentMaterial && (
-                  <button
-                    type="button"
-                    onClick={() => handleActiveToothMaterialChange("")}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs cursor-pointer"
-                  >
-                    ×
-                  </button>
-                )}
-              </div>
+              )}
             </div>
 
+            {/* 3. Fee Input with +/- 10k Quick Adjust */}
             <div>
-              <label className="block text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1 flex items-center gap-1">
-                <Coins className="w-3 h-3 text-emerald-500" />
-                <span>Tooth Fee (IQD):</span>
+              <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
+                Fee (IQD)
               </label>
               <div className="flex items-center gap-1">
                 <div className="relative flex-1">
@@ -1318,18 +1102,16 @@ export function DentalChart({
                     placeholder="0"
                     value={treatmentPrice}
                     onChange={(e) => handleActiveToothPriceChange(e.target.value)}
-                    className="w-full pl-3 pr-10 py-1.5 rounded-xl border border-indigo-200 dark:border-indigo-800 bg-white dark:bg-slate-900 text-xs font-mono font-bold text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-xs"
+                    className="w-full pl-2.5 pr-8 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-mono font-bold text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   />
                   <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400">
                     IQD
                   </span>
                 </div>
-
-                {/* Quick Adjust Buttons */}
                 <button
                   type="button"
                   onClick={() => handleAdjustPrice(10000)}
-                  className="px-2 py-1.5 rounded-lg text-[10px] font-bold bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-indigo-400 cursor-pointer shadow-2xs whitespace-nowrap"
+                  className="px-1.5 py-1.5 rounded-lg text-[10px] font-bold bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-indigo-400 cursor-pointer"
                   title="Add 10,000 IQD"
                 >
                   +10k
@@ -1337,7 +1119,7 @@ export function DentalChart({
                 <button
                   type="button"
                   onClick={() => handleAdjustPrice(-10000)}
-                  className="px-2 py-1.5 rounded-lg text-[10px] font-bold bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-indigo-400 cursor-pointer shadow-2xs whitespace-nowrap"
+                  className="px-1.5 py-1.5 rounded-lg text-[10px] font-bold bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-indigo-400 cursor-pointer"
                   title="Subtract 10,000 IQD"
                 >
                   -10k
@@ -1345,72 +1127,38 @@ export function DentalChart({
                 <button
                   type="button"
                   onClick={() => handleActiveToothPriceChange("0")}
-                  className="px-2 py-1.5 rounded-lg text-[10px] font-bold bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-rose-600 hover:border-rose-400 cursor-pointer shadow-2xs whitespace-nowrap"
-                  title="Free / 0 IQD"
+                  className="px-1.5 py-1.5 rounded-lg text-[10px] font-bold bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-rose-500 hover:border-rose-400 cursor-pointer"
+                  title="Free (0 IQD)"
                 >
-                  Free
+                  0
                 </button>
               </div>
             </div>
           </div>
 
-          {/* Section 4: Clinical Note Input Box */}
-          <div className="pt-2 border-t border-indigo-200/50 dark:border-indigo-900/50">
-            <div className="flex items-center justify-between mb-1">
-              <label className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1">
-                <FileText className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
-                <span>Clinical Diagnosis / Note for Tooth #{activeTooth.number}:</span>
-              </label>
-              <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-0.5">
-                <CheckCircle2 className="w-3 h-3" />
-                <span>Auto-saved</span>
-              </span>
-            </div>
-
-            <textarea
-              rows={2}
-              placeholder={`Diagnosis or clinical note for Tooth #${activeTooth.number}...`}
+          {/* Clinical Note Row (Clean single-line with presets & actions) */}
+          <div className="mt-2.5 pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center gap-2 flex-wrap">
+            <input
+              type="text"
+              placeholder={`Clinical note / diagnosis for Tooth #${activeTooth.number}...`}
               value={treatmentNote}
               onChange={(e) => handleActiveToothNoteChange(e.target.value)}
-              className="w-full px-3 py-2 rounded-xl border border-indigo-200 dark:border-indigo-800 bg-white dark:bg-slate-900 text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-xs resize-none"
+              className="flex-1 min-w-[200px] px-2.5 py-1 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-indigo-500"
             />
-
-            {/* Quick Note Suggestions */}
-            <div className="flex items-center gap-1 flex-wrap mt-1.5">
-              <span className="text-[10px] text-slate-400 font-semibold flex items-center gap-0.5">
-                <Sparkles className="w-3 h-3 text-amber-500" />
-                <span>Quick:</span>
-              </span>
-              {NOTE_PRESETS.slice(0, 5).map((preset) => (
-                <button
-                  key={preset}
-                  type="button"
-                  onClick={() => handleAppendPreset(preset)}
-                  className="px-1.5 py-0.2 rounded-md text-[10px] font-medium bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-indigo-400 hover:text-indigo-600 transition-colors cursor-pointer"
-                >
-                  + {preset}
-                </button>
-              ))}
-            </div>
-
-            <div className="flex items-center justify-end gap-1.5 mt-2 pt-2 border-t border-indigo-200/50 dark:border-indigo-900/50">
-              {treatmentNote && (
-                <button
-                  type="button"
-                  onClick={() => handleActiveToothNoteChange("")}
-                  className="px-2.5 py-1 rounded-lg text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 transition-colors cursor-pointer"
-                >
-                  Clear Note
-                </button>
-              )}
-              <button
-                type="button"
-                onClick={() => handleClearSelection()}
-                className="px-3.5 py-1 rounded-lg text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow-sm cursor-pointer transition-colors"
-              >
-                Done
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={() => handleActiveToothStatusChange("erase")}
+              className="px-2.5 py-1 rounded-lg text-xs font-semibold text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 cursor-pointer whitespace-nowrap"
+            >
+              Remove
+            </button>
+            <button
+              type="button"
+              onClick={() => handleClearSelection()}
+              className="px-3.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold cursor-pointer transition-colors shadow-xs whitespace-nowrap"
+            >
+              Done
+            </button>
           </div>
         </div>
       )}

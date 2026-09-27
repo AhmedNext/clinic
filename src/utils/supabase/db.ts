@@ -1,6 +1,7 @@
 import { createClient } from "@/utils/supabase/client";
 import { Patient } from "@/types/patient";
 import { Appointment } from "@/types/appointment";
+import { ClinicMaterial, DEFAULT_CLINIC_MATERIALS } from "@/types/material";
 
 // Always get a fresh client so the auth session (JWT) is current.
 // A module-level singleton would be created before login, missing the user token.
@@ -139,5 +140,126 @@ export async function deleteAppointmentFromDB(id: string): Promise<void> {
   if (error) {
     console.error("Error deleting appointment from Supabase:", error);
     throw error;
+  }
+}
+
+// ================= MATERIAL & EXPENSES API =================
+export function mapRowToMaterial(row: any): ClinicMaterial {
+  return {
+    id: row.id,
+    name: row.name,
+    category: row.category || "General",
+    unit: row.unit || "pcs",
+    quantity: row.quantity !== null && row.quantity !== undefined ? Number(row.quantity) : 0,
+    minQuantity: row.min_quantity !== null && row.min_quantity !== undefined ? Number(row.min_quantity) : 1,
+    costPrice: row.cost_price !== null && row.cost_price !== undefined ? Number(row.cost_price) : 0,
+    patientPrice: row.patient_price !== null && row.patient_price !== undefined ? Number(row.patient_price) : 0,
+    supplier: row.supplier ?? undefined,
+    purchaseDate: row.purchase_date ?? undefined,
+    expiryDate: row.expiry_date ?? undefined,
+    notes: row.notes ?? undefined,
+    createdAt: row.created_at ? Number(row.created_at) : Date.now(),
+    updatedAt: row.updated_at ? new Date(row.updated_at).getTime() : undefined,
+  };
+}
+
+export function mapMaterialToRow(mat: ClinicMaterial): any {
+  return {
+    id: mat.id,
+    name: mat.name,
+    category: mat.category,
+    unit: mat.unit,
+    quantity: mat.quantity,
+    min_quantity: mat.minQuantity,
+    cost_price: mat.costPrice,
+    patient_price: mat.patientPrice,
+    supplier: mat.supplier ?? null,
+    purchase_date: mat.purchaseDate ?? null,
+    expiry_date: mat.expiryDate ?? null,
+    notes: mat.notes ?? null,
+    created_at: mat.createdAt ?? Date.now(),
+    updated_at: new Date().toISOString(),
+  };
+}
+
+const LOCAL_STORAGE_MATERIALS_KEY = "dr_qayssar_materials_cache";
+
+export async function fetchMaterialsFromDB(): Promise<ClinicMaterial[]> {
+  try {
+    const { data, error } = await getSupabase()
+      .from("clinic_materials")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (!error && data && data.length > 0) {
+      const parsed = data.map(mapRowToMaterial);
+      if (typeof window !== "undefined") {
+        localStorage.setItem(LOCAL_STORAGE_MATERIALS_KEY, JSON.stringify(parsed));
+      }
+      return parsed;
+    }
+  } catch (err) {
+    console.warn("Supabase clinic_materials not available or empty, using fallback:", err);
+  }
+
+  // Fallback to localStorage or default seed
+  if (typeof window !== "undefined") {
+    const cached = localStorage.getItem(LOCAL_STORAGE_MATERIALS_KEY);
+    if (cached) {
+      try {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed;
+        }
+      } catch (e) {
+        // ignore
+      }
+    }
+    localStorage.setItem(LOCAL_STORAGE_MATERIALS_KEY, JSON.stringify(DEFAULT_CLINIC_MATERIALS));
+  }
+  return DEFAULT_CLINIC_MATERIALS;
+}
+
+export async function upsertMaterialToDB(mat: ClinicMaterial): Promise<void> {
+  if (typeof window !== "undefined") {
+    const cached = localStorage.getItem(LOCAL_STORAGE_MATERIALS_KEY);
+    let list: ClinicMaterial[] = cached ? JSON.parse(cached) : [...DEFAULT_CLINIC_MATERIALS];
+    const idx = list.findIndex((m) => m.id === mat.id);
+    if (idx >= 0) {
+      list[idx] = mat;
+    } else {
+      list.unshift(mat);
+    }
+    localStorage.setItem(LOCAL_STORAGE_MATERIALS_KEY, JSON.stringify(list));
+  }
+
+  try {
+    const row = mapMaterialToRow(mat);
+    await getSupabase().from("clinic_materials").upsert(row);
+  } catch (e) {
+    console.warn("Could not sync material to Supabase (using local cache):", e);
+  }
+}
+
+export async function deleteMaterialFromDB(id: string): Promise<void> {
+  if (typeof window !== "undefined") {
+    const cached = localStorage.getItem(LOCAL_STORAGE_MATERIALS_KEY);
+    if (cached) {
+      try {
+        const list: ClinicMaterial[] = JSON.parse(cached);
+        localStorage.setItem(
+          LOCAL_STORAGE_MATERIALS_KEY,
+          JSON.stringify(list.filter((m) => m.id !== id))
+        );
+      } catch (e) {
+        // ignore
+      }
+    }
+  }
+
+  try {
+    await getSupabase().from("clinic_materials").delete().eq("id", id);
+  } catch (e) {
+    console.warn("Could not delete material from Supabase:", e);
   }
 }

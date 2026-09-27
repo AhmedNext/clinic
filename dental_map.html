@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Numérotation dentaire Interactive</title>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      text-align: center;
+      background: #f8fafc;
+      padding: 20px;
+    }
+    .wrapper {
+      position: relative;
+      display: inline-block;
+      max-width: 1100px;
+    }
+    img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+    area {
+      cursor: pointer;
+    }
+    #info-box {
+      margin-top: 16px;
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #0f172a;
+    }
+  </style>
+</head>
+<body>
+  <h1>Numérotation dentaire interactive</h1>
+  
+  <div class="wrapper">
+    <img src="teeth.png" usemap="#dental-map" alt="Numérotation dentaire">
+    <map name="dental-map">
+  <area shape="poly" coords="0,0,0,1022,1536,1022,1536,0" href="#18" alt="Dent 18" title="Dent 18" data-id="18">
+    </map>
+  </div>
+
+  <div id="info-box">Cliquez sur une dent pour l'identifier</div>
+
+  <script>
+    document.querySelectorAll('area').forEach(area => {
+      area.addEventListener('click', (e) => {
+        e.preventDefault();
+        const id = area.dataset.id;
+        document.getElementById('info-box').textContent = "Dent sélectionnée : N° " + id;
+      });
+      area.addEventListener('mouseenter', () => {
+        document.getElementById('info-box').textContent = "Survol : N° " + area.dataset.id;
+      });
+    });
+  </script>
+</body>
+</html>
