@@ -8,6 +8,7 @@ import { DentalChart } from "./dental/DentalChart";
 import { PatientAvatar } from "./PatientAvatar";
 import { CircleClockPickerModal } from "./ui/CircleClockPickerModal";
 import { BetterDatePickerModal } from "./ui/BetterDatePickerModal";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface AddPatientModalProps {
   isOpen: boolean;
@@ -20,6 +21,7 @@ export function AddPatientModal({
   onClose,
   onAddPatient,
 }: AddPatientModalProps) {
+  const { t } = useLanguage();
   const getTodayString = () => {
     const today = new Date();
     const year = today.getFullYear();
@@ -159,7 +161,7 @@ export function AddPatientModal({
               id="modal-title"
               className="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100"
             >
-              Add New Patient Case
+              {t.addPatient}
             </h2>
             <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 mt-0.5">
               Record paid amount & outstanding debt
@@ -185,13 +187,13 @@ export function AddPatientModal({
           {/* Gender Selector with distinct SVG previews */}
           <div>
             <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
-              Gender Identification *
+              {t.gender} *
             </label>
             <div className="grid grid-cols-2 gap-3">
               <button
                 type="button"
                 onClick={() => setGender("male")}
-                className={`flex items-center gap-3 p-3 rounded-xl border transition-all cursor-pointer text-left ${
+                className={`flex items-center gap-3 p-3 rounded-xl border transition-all cursor-pointer text-left rtl:text-right ${
                   gender === "male"
                     ? "border-sky-500 bg-sky-50/80 dark:bg-sky-950/40 ring-2 ring-sky-500/20 text-slate-900 dark:text-slate-100"
                     : "border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 bg-white dark:bg-slate-800/40 text-slate-600 dark:text-slate-400"
@@ -200,7 +202,7 @@ export function AddPatientModal({
                 <PatientAvatar gender="male" size="md" showBadge={false} />
                 <div className="flex-1">
                   <div className="text-sm font-semibold flex items-center justify-between">
-                    <span>Male</span>
+                    <span>{t.male}</span>
                     <span className="text-sky-600 dark:text-sky-400 text-xs font-bold">♂</span>
                   </div>
                   <p className="text-[11px] text-slate-500 dark:text-slate-400">Patient case</p>
@@ -210,7 +212,7 @@ export function AddPatientModal({
               <button
                 type="button"
                 onClick={() => setGender("female")}
-                className={`flex items-center gap-3 p-3 rounded-xl border transition-all cursor-pointer text-left ${
+                className={`flex items-center gap-3 p-3 rounded-xl border transition-all cursor-pointer text-left rtl:text-right ${
                   gender === "female"
                     ? "border-rose-500 bg-rose-50/80 dark:bg-rose-950/40 ring-2 ring-rose-500/20 text-slate-900 dark:text-slate-100"
                     : "border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 bg-white dark:bg-slate-800/40 text-slate-600 dark:text-slate-400"
@@ -219,7 +221,7 @@ export function AddPatientModal({
                 <PatientAvatar gender="female" size="md" showBadge={false} />
                 <div className="flex-1">
                   <div className="text-sm font-semibold flex items-center justify-between">
-                    <span>Female</span>
+                    <span>{t.female}</span>
                     <span className="text-rose-500 dark:text-rose-400 text-xs font-bold">♀</span>
                   </div>
                   <p className="text-[11px] text-slate-500 dark:text-slate-400">Patient case</p>
@@ -234,10 +236,10 @@ export function AddPatientModal({
               htmlFor="patient-name"
               className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1"
             >
-              Patient Name *
+              {t.name} *
             </label>
             <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+              <div className="absolute inset-y-0 left-0 rtl:left-auto rtl:right-0 pl-3.5 rtl:pl-0 rtl:pr-3.5 flex items-center pointer-events-none text-slate-400">
                 <User className="w-4 h-4" />
               </div>
               <input
@@ -263,7 +265,7 @@ export function AddPatientModal({
                 htmlFor="patient-age"
                 className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1"
               >
-                Age (Years)
+                {t.age}
               </label>
               <input
                 id="patient-age"
@@ -282,10 +284,10 @@ export function AddPatientModal({
                 htmlFor="patient-phone"
                 className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1"
               >
-                Phone (WhatsApp / Call)
+                {t.phone}
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                <div className="absolute inset-y-0 left-0 rtl:left-auto rtl:right-0 pl-3 rtl:pl-0 rtl:pr-3 flex items-center pointer-events-none text-slate-400">
                   <Phone className="w-3.5 h-3.5" />
                 </div>
                 <input
@@ -294,7 +296,7 @@ export function AddPatientModal({
                   placeholder="e.g. 0770 123 4567"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  className="w-full pl-9 pr-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 text-sm transition-all"
+                  className="w-full pl-9 rtl:pl-3.5 rtl:pr-9 pr-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 text-sm transition-all"
                 />
               </div>
             </div>
@@ -309,7 +311,7 @@ export function AddPatientModal({
                   htmlFor="patient-date"
                   className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400"
                 >
-                  Case / Visit Date *
+                  {t.date} *
                 </label>
                 <button
                   type="button"
@@ -320,7 +322,7 @@ export function AddPatientModal({
                 </button>
               </div>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                <div className="absolute inset-y-0 left-0 rtl:left-auto rtl:right-0 pl-3.5 rtl:pl-0 rtl:pr-3.5 flex items-center pointer-events-none text-slate-400">
                   <Calendar className="w-4 h-4" />
                 </div>
                 <input
@@ -329,7 +331,7 @@ export function AddPatientModal({
                   required
                   value={date}
                   onChange={(e) => setDate(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 dark:focus:border-indigo-400 text-sm transition-all"
+                  className="w-full pl-10 rtl:pl-4 rtl:pr-10 pr-4 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 dark:focus:border-indigo-400 text-sm transition-all"
                 />
               </div>
             </div>
@@ -341,7 +343,7 @@ export function AddPatientModal({
                   htmlFor="patient-time"
                   className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400"
                 >
-                  Visit Time
+                  {t.time}
                 </label>
                 <button
                   type="button"
@@ -352,7 +354,7 @@ export function AddPatientModal({
                 </button>
               </div>
               <div className="relative flex items-center">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                <div className="absolute inset-y-0 left-0 rtl:left-auto rtl:right-0 pl-3.5 rtl:pl-0 rtl:pr-3.5 flex items-center pointer-events-none text-slate-400">
                   <Clock className="w-4 h-4" />
                 </div>
                 <input
@@ -361,12 +363,12 @@ export function AddPatientModal({
                   placeholder="e.g. 10:30 AM"
                   value={time}
                   onChange={(e) => setTime(e.target.value)}
-                  className="w-full pl-10 pr-20 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 text-sm transition-all"
+                  className="w-full pl-10 rtl:pl-20 rtl:pr-10 pr-20 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 text-sm transition-all"
                 />
                 <button
                   type="button"
                   onClick={() => setIsClockPickerOpen(true)}
-                  className="absolute right-1.5 px-2.5 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 hover:bg-indigo-100 text-xs font-bold cursor-pointer"
+                  className="absolute right-1.5 rtl:right-auto rtl:left-1.5 px-2.5 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 hover:bg-indigo-100 text-xs font-bold cursor-pointer"
                 >
                   Clock
                 </button>
@@ -378,7 +380,7 @@ export function AddPatientModal({
           <div className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/50 space-y-3">
             <span className="text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300 flex items-center gap-1.5">
               <Banknote className="w-3.5 h-3.5 text-indigo-500" />
-              <span>Payment (IQD)</span>
+              <span>{t.paidLabel} & {t.owesLabel} (IQD)</span>
             </span>
 
             <div className="grid grid-cols-2 gap-2.5">
@@ -388,7 +390,7 @@ export function AddPatientModal({
                   htmlFor="patient-paid"
                   className="block text-[11px] font-medium text-emerald-600 dark:text-emerald-400 mb-1"
                 >
-                  Paid (IQD)
+                  {t.paidAmount} (IQD)
                 </label>
                 <input
                   id="patient-paid"
@@ -408,7 +410,7 @@ export function AddPatientModal({
                   htmlFor="patient-debt"
                   className="block text-[11px] font-medium text-rose-600 dark:text-rose-400 mb-1"
                 >
-                  Debt (IQD)
+                  {t.owesLabel} (IQD)
                 </label>
                 <input
                   id="patient-debt"
@@ -430,10 +432,10 @@ export function AddPatientModal({
               htmlFor="patient-notes"
               className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1"
             >
-              Current Case Notes / Symptoms <span className="text-slate-400 font-normal lowercase">(optional)</span>
+              {t.notes}
             </label>
             <div className="relative">
-              <div className="absolute top-2.5 left-3 pointer-events-none text-slate-400">
+              <div className="absolute top-2.5 left-3 rtl:left-auto rtl:right-3 pointer-events-none text-slate-400">
                 <FileText className="w-4 h-4" />
               </div>
               <textarea
@@ -442,7 +444,7 @@ export function AddPatientModal({
                 placeholder="e.g. Routine checkup, ECG normal, prescribed amoxicillin..."
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                className="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 dark:focus:border-indigo-400 text-sm transition-all resize-none"
+                className="w-full pl-9 rtl:pl-3 rtl:pr-9 pr-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 dark:focus:border-indigo-400 text-sm transition-all resize-none"
               />
             </div>
           </div>
@@ -473,10 +475,10 @@ export function AddPatientModal({
                 <div className="min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100">
-                      Teeth Chart / FDI Odontogram
+                      {t.fdiOdontogram}
                     </h3>
                     <span className="text-[10px] sm:text-[11px] px-2 py-0.5 rounded-full font-bold bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
-                      {teeth.length} Worked
+                      {teeth.length} {t.workedTeeth}
                     </span>
                   </div>
                   <p className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 truncate">
@@ -518,14 +520,14 @@ export function AddPatientModal({
               onClick={onClose}
               className="px-4 py-2 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
             >
-              Cancel
+              {t.cancel}
             </button>
             <button
               type="submit"
               className="inline-flex items-center gap-2 px-5 py-2 rounded-xl text-sm font-semibold bg-indigo-600 hover:bg-indigo-500 text-white shadow-md shadow-indigo-600/20 active:scale-[0.98] transition-all cursor-pointer"
             >
               <CheckCircle2 className="w-4 h-4" />
-              <span>Save Patient</span>
+              <span>{t.save}</span>
             </button>
           </div>
         </form>

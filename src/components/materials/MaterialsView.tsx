@@ -3,6 +3,7 @@
 import React, { useState, useMemo, useRef } from "react";
 import { ClinicMaterial, NewClinicMaterial } from "@/types/material";
 import { formatIQD } from "@/types/patient";
+import { useLanguage } from "@/context/LanguageContext";
 import {
   Boxes,
   Plus,
@@ -46,6 +47,7 @@ export function MaterialsView({
   onUpdateMaterial,
   onDeleteMaterial,
 }: MaterialsViewProps) {
+  const { t } = useLanguage();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<ClinicMaterial | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -160,7 +162,7 @@ export function MaterialsView({
               <Boxes className="w-4 h-4" />
             </div>
             <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tight">
-              Materials & Supplier Expenses
+              {t.materials}
             </h2>
           </div>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
@@ -173,7 +175,7 @@ export function MaterialsView({
           className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-2xl bg-amber-600 hover:bg-amber-500 text-white text-xs sm:text-sm font-bold shadow-sm shadow-amber-600/25 active:scale-95 transition-all cursor-pointer"
         >
           <Plus className="w-4 h-4" />
-          <span>Add Material Expense</span>
+          <span>+ {t.materials}</span>
         </button>
       </div>
 

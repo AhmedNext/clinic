@@ -17,6 +17,7 @@ import {
 import { Appointment, AppointmentStatus } from "@/types/appointment";
 import { Patient } from "@/types/patient";
 import { DayAppointmentsModal } from "./DayAppointmentsModal";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface AppointmentsViewProps {
   appointments: Appointment[];
@@ -33,6 +34,7 @@ export function AppointmentsView({
   onToggleStatus,
   onDeleteAppointment,
 }: AppointmentsViewProps) {
+  const { t } = useLanguage();
   // Calendar month state (defaults to current date, or September 2026 if matching sample data)
   const today = new Date();
   const [currentYear, setCurrentYear] = useState(today.getFullYear());
@@ -227,7 +229,7 @@ export function AppointmentsView({
               aria-label="Previous Month"
               className="p-2 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-800 transition-colors cursor-pointer"
             >
-              <ChevronLeft className="w-4 h-4" />
+              <ChevronLeft className="w-4 h-4 rtl:rotate-180" />
             </button>
             <button
               onClick={handleGoToday}
@@ -240,7 +242,7 @@ export function AppointmentsView({
               aria-label="Next Month"
               className="p-2 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-800 transition-colors cursor-pointer"
             >
-              <ChevronRight className="w-4 h-4" />
+              <ChevronRight className="w-4 h-4 rtl:rotate-180" />
             </button>
           </div>
 

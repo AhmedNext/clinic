@@ -4,12 +4,15 @@ import React, { useState } from "react";
 import Image from "next/image";
 import { Lock, Mail, ShieldCheck, ArrowRight, Eye, EyeOff, AlertCircle } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
+import { useLanguage } from "@/context/LanguageContext";
+import { LanguageToggle } from "./LanguageToggle";
 
 interface LoginModalProps {
   onSuccess: () => void;
 }
 
 export function LoginScreen({ onSuccess }: LoginModalProps) {
+  const { t } = useLanguage();
   const [email, setEmail] = useState("qaissarsalah3@gmail.com");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -45,6 +48,11 @@ export function LoginScreen({ onSuccess }: LoginModalProps) {
 
   return (
     <div className="min-h-screen w-full relative flex items-center justify-center p-4 bg-slate-950 text-slate-100 overflow-hidden selection:bg-indigo-500 selection:text-white">
+      {/* Top Language Toggle */}
+      <div className="absolute top-4 right-4 rtl:right-auto rtl:left-4 z-20">
+        <LanguageToggle />
+      </div>
+
       {/* Ambient Radial Lights */}
       <div className="absolute top-1/4 -left-20 w-96 h-96 bg-indigo-600/25 rounded-full blur-[128px] pointer-events-none" />
       <div className="absolute bottom-1/4 -right-20 w-96 h-96 bg-violet-600/20 rounded-full blur-[128px] pointer-events-none" />
@@ -76,21 +84,21 @@ export function LoginScreen({ onSuccess }: LoginModalProps) {
             </div>
 
             {/* Online / Active Clinic Badge */}
-            <div className="absolute -bottom-1 -right-1 px-2 py-0.5 rounded-full bg-emerald-500 text-white text-[10px] font-black shadow-lg border-2 border-slate-900 flex items-center gap-1">
+            <div className="absolute -bottom-1 -right-1 rtl:-right-auto rtl:-left-1 px-2 py-0.5 rounded-full bg-emerald-500 text-white text-[10px] font-black shadow-lg border-2 border-slate-900 flex items-center gap-1">
               <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
               <span>LIVE</span>
             </div>
           </div>
 
           <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white flex items-center justify-center gap-2">
-            <span>Dr. Qayssar Dental</span>
+            <span>{t.clinicPortalTitle}</span>
             <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-indigo-500/25 text-indigo-300 border border-indigo-400/30 shadow-xs">
               <ShieldCheck className="w-3.5 h-3.5 text-indigo-400" />
               Pro
             </span>
           </h1>
           <p className="text-xs sm:text-sm text-slate-300/80 font-medium mt-1">
-            Private Clinical Management & Odontogram Suite
+            {t.clinicPortalSubtitle}
           </p>
         </div>
 
@@ -106,39 +114,39 @@ export function LoginScreen({ onSuccess }: LoginModalProps) {
         <form onSubmit={handleLogin} className="space-y-4">
           <div>
             <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-              Doctor Email
+              {t.doctorEmail}
             </label>
             <div className="relative">
-              <Mail className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+              <Mail className="w-4 h-4 absolute left-3.5 rtl:left-auto rtl:right-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
               <input
                 type="email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="doctor@example.com"
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-black/30 border border-white/10 text-white placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all"
+                className="w-full pl-10 rtl:pl-4 rtl:pr-10 pr-4 py-2.5 rounded-xl bg-black/30 border border-white/10 text-white placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all"
               />
             </div>
           </div>
 
           <div>
             <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-              Password
+              {t.password}
             </label>
             <div className="relative">
-              <Lock className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+              <Lock className="w-4 h-4 absolute left-3.5 rtl:left-auto rtl:right-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
               <input
                 type={showPassword ? "text" : "password"}
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••••••"
-                className="w-full pl-10 pr-10 py-2.5 rounded-xl bg-black/30 border border-white/10 text-white placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all"
+                className="w-full pl-10 rtl:pl-10 rtl:pr-10 pr-10 py-2.5 rounded-xl bg-black/30 border border-white/10 text-white placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors cursor-pointer"
+                className="absolute right-3 rtl:right-auto rtl:left-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors cursor-pointer"
               >
                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
@@ -155,8 +163,8 @@ export function LoginScreen({ onSuccess }: LoginModalProps) {
                 <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
               ) : (
                 <>
-                  <span>Unlock Clinic Dashboard</span>
-                  <ArrowRight className="w-4 h-4" />
+                  <span>{t.unlockDashboard}</span>
+                  <ArrowRight className="w-4 h-4 rtl:rotate-180" />
                 </>
               )}
             </button>
@@ -170,11 +178,11 @@ export function LoginScreen({ onSuccess }: LoginModalProps) {
             onClick={onSuccess}
             className="w-full py-2 px-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-indigo-300 hover:text-white text-xs font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer group"
           >
-            <span>Enter Clinic Workspace (Offline Cache)</span>
-            <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+            <span>{t.offlineCacheAccess}</span>
+            <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 rtl:group-hover:-translate-x-0.5 rtl:rotate-180 transition-transform" />
           </button>
           <p className="text-[11px] text-slate-400">
-            🔒 Protected by Row-Level Security • Dr. Qayssar salah Clinic
+            🔒 {t.offlineCacheDesc}
           </p>
         </div>
       </div>

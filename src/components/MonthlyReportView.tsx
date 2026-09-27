@@ -16,6 +16,7 @@ import {
   Settings,
 } from "lucide-react";
 import { PatientAvatar } from "./PatientAvatar";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface MonthlyReportViewProps {
   patients: Patient[];
@@ -46,6 +47,7 @@ export function MonthlyReportView({
   onViewHistory,
   onOpenRentModal,
 }: MonthlyReportViewProps) {
+  const { t } = useLanguage();
   const [expandedMonth, setExpandedMonth] = useState<string | null>(null);
 
   const monthBuckets: MonthBucket[] = useMemo(() => {
@@ -132,17 +134,17 @@ export function MonthlyReportView({
         <div className="p-4 sm:p-5 rounded-2xl border border-emerald-200/70 dark:border-emerald-900/50 bg-gradient-to-br from-emerald-50 to-emerald-100/50 dark:from-emerald-950/30 dark:to-emerald-900/10 shadow-xs">
           <div className="flex items-center justify-between mb-2">
             <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-300">
-              Total Income
+              {t.totalIncome}
             </span>
             <div className="p-1.5 rounded-lg bg-emerald-200/60 dark:bg-emerald-800/40 text-emerald-700 dark:text-emerald-300">
               <CheckCircle className="w-4 h-4" />
             </div>
           </div>
-          <div className="text-xl sm:text-2xl font-black text-emerald-700 dark:text-emerald-400 tracking-tight">
+          <div className="text-xl sm:text-2xl font-black text-emerald-700 dark:text-emerald-400 tracking-tight font-mono">
             {formatIQD(grandPaid)}
           </div>
           <p className="text-[10px] sm:text-xs text-emerald-600/70 dark:text-emerald-400/60 mt-1">
-            Across {monthBuckets.length} {monthBuckets.length === 1 ? "month" : "months"}
+            {t.paidByPatients}
           </p>
         </div>
 
@@ -150,17 +152,17 @@ export function MonthlyReportView({
         <div className="p-4 sm:p-5 rounded-2xl border border-amber-200/70 dark:border-amber-900/50 bg-gradient-to-br from-amber-50 to-amber-100/50 dark:from-amber-950/30 dark:to-amber-900/10 shadow-xs">
           <div className="flex items-center justify-between mb-2">
             <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-amber-700 dark:text-amber-300">
-              Material Spend
+              {t.materialSpend}
             </span>
             <div className="p-1.5 rounded-lg bg-amber-200/60 dark:bg-amber-800/40 text-amber-700 dark:text-amber-300">
               <Boxes className="w-4 h-4" />
             </div>
           </div>
-          <div className="text-xl sm:text-2xl font-black text-amber-700 dark:text-amber-400 tracking-tight">
+          <div className="text-xl sm:text-2xl font-black text-amber-700 dark:text-amber-400 tracking-tight font-mono">
             {formatIQD(grandMaterials)}
           </div>
           <p className="text-[10px] sm:text-xs text-amber-600/70 dark:text-amber-400/60 mt-1">
-            Dental supplies & materials
+            {t.expensesLogged}
           </p>
         </div>
 
@@ -168,18 +170,18 @@ export function MonthlyReportView({
         <div className="p-4 sm:p-5 rounded-2xl border border-blue-200/70 dark:border-blue-900/50 bg-gradient-to-br from-blue-50 to-blue-100/50 dark:from-blue-950/30 dark:to-blue-900/10 shadow-xs">
           <div className="flex items-center justify-between mb-2">
             <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-blue-700 dark:text-blue-300">
-              Clinic Rent
+              {t.clinicRent}
             </span>
             <div className="flex items-center gap-1">
               {onOpenRentModal && (
                 <button
                   type="button"
                   onClick={onOpenRentModal}
-                  title="Adjust monthly rent"
+                  title={t.adjustMonthRent}
                   className="px-2 py-0.5 rounded-md bg-blue-200/70 hover:bg-blue-300 dark:bg-blue-800/50 dark:hover:bg-blue-700/60 text-blue-800 dark:text-blue-200 text-[10px] font-bold inline-flex items-center gap-1 cursor-pointer transition-colors"
                 >
                   <Settings className="w-3 h-3" />
-                  <span>Adjust</span>
+                  <span>{t.adjust}</span>
                 </button>
               )}
               <div className="p-1.5 rounded-lg bg-blue-200/60 dark:bg-blue-800/40 text-blue-700 dark:text-blue-300">
@@ -187,11 +189,11 @@ export function MonthlyReportView({
               </div>
             </div>
           </div>
-          <div className="text-xl sm:text-2xl font-black text-blue-700 dark:text-blue-400 tracking-tight">
+          <div className="text-xl sm:text-2xl font-black text-blue-700 dark:text-blue-400 tracking-tight font-mono">
             {formatIQD(grandRent)}
           </div>
           <p className="text-[10px] sm:text-xs text-blue-600/70 dark:text-blue-400/60 mt-1">
-            Variable monthly rent
+            {t.clinicRent}
           </p>
         </div>
 
@@ -199,14 +201,14 @@ export function MonthlyReportView({
         <div className="p-4 sm:p-5 rounded-2xl border border-indigo-200/70 dark:border-indigo-900/50 bg-gradient-to-br from-indigo-50 to-indigo-100/50 dark:from-indigo-950/30 dark:to-indigo-900/10 shadow-xs">
           <div className="flex items-center justify-between mb-2">
             <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-indigo-700 dark:text-indigo-300">
-              Net Clinic Profit
+              {t.netWorth}
             </span>
             <div className="p-1.5 rounded-lg bg-indigo-200/60 dark:bg-indigo-800/40 text-indigo-700 dark:text-indigo-300">
               <Sparkles className="w-4 h-4" />
             </div>
           </div>
           <div
-            className={`text-xl sm:text-2xl font-black tracking-tight ${
+            className={`text-xl sm:text-2xl font-black tracking-tight font-mono ${
               grandNetProfit >= 0
                 ? "text-indigo-700 dark:text-indigo-300"
                 : "text-rose-600 dark:text-rose-400"
@@ -215,7 +217,7 @@ export function MonthlyReportView({
             {formatIQD(grandNetProfit)}
           </div>
           <p className="text-[10px] sm:text-xs text-indigo-600/70 dark:text-indigo-400/60 mt-1">
-            Income − Materials − Rent
+            {t.incomeMinusExpenses}
           </p>
         </div>
       </div>
@@ -225,7 +227,7 @@ export function MonthlyReportView({
         <div className="flex items-center justify-between mb-3">
           <h2 className="flex items-center gap-2 text-sm font-bold text-slate-900 dark:text-slate-100">
             <Calendar className="w-4 h-4 text-indigo-500" />
-            Monthly Financial Ledger
+            {t.reports}
           </h2>
           {onOpenRentModal && (
             <button
@@ -234,7 +236,7 @@ export function MonthlyReportView({
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-300 shadow-xs transition-colors cursor-pointer"
             >
               <Building2 className="w-3.5 h-3.5 text-blue-500" />
-              <span>Adjust Month Rent</span>
+              <span>{t.adjustMonthRent}</span>
             </button>
           )}
         </div>
@@ -266,13 +268,13 @@ export function MonthlyReportView({
                         <button
                           type="button"
                           onClick={() => toggleMonth(bucket.key)}
-                          className="flex items-center gap-2 text-left cursor-pointer group"
+                          className="flex items-center gap-2 text-left rtl:text-right cursor-pointer group"
                         >
                           <div className="text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-200">
                             {isExpanded ? (
                               <ChevronDown className="w-4 h-4" />
                             ) : (
-                              <ChevronRight className="w-4 h-4" />
+                              <ChevronRight className="w-4 h-4 rtl:rotate-180" />
                             )}
                           </div>
                           <span className="text-sm font-bold text-slate-900 dark:text-slate-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400">
@@ -280,18 +282,18 @@ export function MonthlyReportView({
                           </span>
                         </button>
                         <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800">
-                          {bucket.caseCount} {bucket.caseCount === 1 ? "patient" : "patients"}
+                          {bucket.caseCount} {t.patients}
                         </span>
                         <span className="hidden sm:inline px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400">
-                          {bucket.visitCount} {bucket.visitCount === 1 ? "visit" : "visits"}
+                          {bucket.visitCount} {bucket.visitCount === 1 ? t.visit : t.visits}
                         </span>
                       </div>
 
                       {/* Net Profit Pill */}
                       <div className="flex items-center gap-2">
-                        <span className="text-xs text-slate-400 font-medium">Net Profit:</span>
+                        <span className="text-xs text-slate-400 font-medium">{t.netWorth}:</span>
                         <span
-                          className={`text-sm font-black px-2.5 py-1 rounded-xl ${
+                          className={`text-sm font-black px-2.5 py-1 rounded-xl font-mono ${
                             bucket.netProfit >= 0
                               ? "bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800"
                               : "bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800"
@@ -305,7 +307,7 @@ export function MonthlyReportView({
                     {/* Progress Bar of Income */}
                     <div className="relative h-2.5 w-full rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden mb-3">
                       <div
-                        className="absolute inset-y-0 left-0 rounded-full bg-emerald-500 transition-all duration-500"
+                        className="absolute inset-y-0 left-0 rtl:left-auto rtl:right-0 rounded-full bg-emerald-500 transition-all duration-500"
                         style={{ width: `${barWidth}%` }}
                       />
                     </div>
@@ -315,9 +317,9 @@ export function MonthlyReportView({
                       {/* Income */}
                       <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800/60">
                         <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 block mb-0.5">
-                          Income
+                          {t.totalIncome}
                         </span>
-                        <span className="font-bold text-slate-800 dark:text-slate-200">
+                        <span className="font-bold text-slate-800 dark:text-slate-200 font-mono">
                           {formatIQD(bucket.totalPaid)}
                         </span>
                       </div>
@@ -325,9 +327,9 @@ export function MonthlyReportView({
                       {/* Materials */}
                       <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800/60">
                         <span className="text-[10px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 block mb-0.5">
-                          Materials
+                          {t.materialSpend}
                         </span>
-                        <span className="font-bold text-slate-800 dark:text-slate-200">
+                        <span className="font-bold text-slate-800 dark:text-slate-200 font-mono">
                           {formatIQD(bucket.materialCost)}
                         </span>
                       </div>
@@ -335,9 +337,9 @@ export function MonthlyReportView({
                       {/* Rent */}
                       <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800/60">
                         <span className="text-[10px] font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400 block mb-0.5">
-                          Rent
+                          {t.clinicRent}
                         </span>
-                        <span className="font-bold text-slate-800 dark:text-slate-200">
+                        <span className="font-bold text-slate-800 dark:text-slate-200 font-mono">
                           {formatIQD(bucket.rentAmount)}
                         </span>
                       </div>
@@ -345,9 +347,9 @@ export function MonthlyReportView({
                       {/* Debts */}
                       <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800/60">
                         <span className="text-[10px] font-bold uppercase tracking-wider text-rose-600 dark:text-rose-400 block mb-0.5">
-                          Debts Owed
+                          {t.unpaidDebts}
                         </span>
-                        <span className="font-bold text-slate-800 dark:text-slate-200">
+                        <span className="font-bold text-slate-800 dark:text-slate-200 font-mono">
                           {formatIQD(bucket.totalDebt)}
                         </span>
                       </div>

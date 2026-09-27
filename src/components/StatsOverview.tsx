@@ -3,6 +3,7 @@
 import React from "react";
 import { Patient, calculateDebt, formatIQD } from "@/types/patient";
 import { ClinicMaterial } from "@/types/material";
+import { useLanguage } from "@/context/LanguageContext";
 import {
   Users,
   AlertCircle,
@@ -30,6 +31,7 @@ export function StatsOverview({
   monthSubtitle,
   onOpenRentModal,
 }: StatsOverviewProps) {
+  const { t } = useLanguage();
   const total = patients.length;
 
   // Total money collected from patients
@@ -79,7 +81,7 @@ export function StatsOverview({
       <div className="p-3 sm:p-3.5 rounded-2xl border border-indigo-100 dark:border-indigo-900/40 bg-gradient-to-br from-indigo-50/40 via-white to-white dark:from-indigo-950/20 dark:via-slate-900 dark:to-slate-900 shadow-2xs hover:-translate-y-0.5 hover:shadow-md transition-all duration-200 group">
         <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-1">
           <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400 truncate">
-            Patients {monthSubtitle && <span className="text-indigo-500 lowercase font-medium">({monthSubtitle})</span>}
+            {t.totalPatients} {monthSubtitle && <span className="text-indigo-500 lowercase font-medium">({monthSubtitle})</span>}
           </span>
           <div className="p-1.5 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex-shrink-0 group-hover:bg-indigo-600 group-hover:text-white transition-colors">
             <Users className="w-3.5 h-3.5" />
@@ -97,7 +99,7 @@ export function StatsOverview({
       <div className="p-3 sm:p-3.5 rounded-2xl border border-emerald-200/80 dark:border-emerald-900/40 bg-gradient-to-br from-emerald-50/60 via-white to-white dark:from-emerald-950/25 dark:via-slate-900 dark:to-slate-900 shadow-2xs hover:-translate-y-0.5 hover:shadow-md transition-all duration-200 group">
         <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-1">
           <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400 truncate">
-            Total Income
+            {t.totalIncome}
           </span>
           <div className="p-1.5 rounded-lg bg-emerald-100/80 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 flex-shrink-0 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
             <CheckCircle className="w-3.5 h-3.5" />
@@ -107,7 +109,7 @@ export function StatsOverview({
           {formatIQD(totalPaid)}
         </div>
         <p className="text-[10px] text-emerald-600/90 dark:text-emerald-400/80 mt-0.5 truncate font-medium">
-          Paid by patients
+          {t.paidByPatients}
         </p>
       </div>
 
@@ -115,7 +117,7 @@ export function StatsOverview({
       <div className="p-3 sm:p-3.5 rounded-2xl border border-amber-200/80 dark:border-amber-900/40 bg-gradient-to-br from-amber-50/60 via-white to-white dark:from-amber-950/25 dark:via-slate-900 dark:to-slate-900 shadow-2xs hover:-translate-y-0.5 hover:shadow-md transition-all duration-200 group">
         <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-1">
           <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400 truncate">
-            Material Spend
+            {t.materialSpend}
           </span>
           <div className="p-1.5 rounded-lg bg-amber-100/80 dark:bg-amber-900/60 text-amber-700 dark:text-amber-300 flex-shrink-0 group-hover:bg-amber-600 group-hover:text-white transition-colors">
             <Boxes className="w-3.5 h-3.5" />
@@ -125,7 +127,7 @@ export function StatsOverview({
           {formatIQD(totalMaterialCost)}
         </div>
         <p className="text-[10px] text-amber-600/90 dark:text-amber-400/80 mt-0.5 truncate font-medium">
-          {filteredMaterials.length} {filteredMaterials.length === 1 ? "expense" : "expenses"} logged
+          {filteredMaterials.length} {t.expensesLogged}
         </p>
       </div>
 
@@ -133,13 +135,13 @@ export function StatsOverview({
       <div className="p-3 sm:p-3.5 rounded-2xl border border-violet-200/80 dark:border-violet-900/40 bg-gradient-to-br from-violet-50/60 via-white to-white dark:from-violet-950/25 dark:via-slate-900 dark:to-slate-900 shadow-2xs hover:-translate-y-0.5 hover:shadow-md transition-all duration-200 group">
         <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-1">
           <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-violet-700 dark:text-violet-400 truncate">
-            Clinic Rent
+            {t.clinicRent}
           </span>
           <button
             type="button"
             onClick={onOpenRentModal}
             className="p-1.5 rounded-lg bg-violet-100/80 dark:bg-violet-900/60 hover:bg-violet-600 hover:text-white dark:hover:bg-violet-600 text-violet-700 dark:text-violet-300 flex-shrink-0 transition-colors cursor-pointer"
-            title="Adjust monthly rent"
+            title={t.adjustMonthRent}
           >
             <Settings className="w-3.5 h-3.5" />
           </button>
@@ -149,14 +151,14 @@ export function StatsOverview({
         </div>
         <div className="flex items-center justify-between mt-0.5">
           <p className="text-[10px] text-violet-600/90 dark:text-violet-400/80 truncate font-medium">
-            {isMonthFiltered ? `${monthSubtitle} rent` : `${recordedRentCount} months rent`}
+            {isMonthFiltered ? `${monthSubtitle} ${t.clinicRent}` : `${recordedRentCount} ${t.clinicRent}`}
           </p>
           <button
             type="button"
             onClick={onOpenRentModal}
             className="text-[10px] text-indigo-600 dark:text-indigo-400 font-bold hover:underline cursor-pointer"
           >
-            Adjust
+            {t.adjust}
           </button>
         </div>
       </div>
@@ -165,7 +167,7 @@ export function StatsOverview({
       <div className="p-3 sm:p-3.5 rounded-2xl border border-indigo-200/90 dark:border-indigo-800/60 bg-gradient-to-br from-indigo-100/40 via-white to-indigo-50/20 dark:from-indigo-950/40 dark:via-slate-900 dark:to-indigo-950/20 shadow-2xs hover:-translate-y-0.5 hover:shadow-md transition-all duration-200 ring-1 ring-indigo-500/10 group">
         <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-1">
           <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-indigo-700 dark:text-indigo-400 truncate">
-            Net Worth
+            {t.netWorth}
           </span>
           <div className="p-1.5 rounded-lg bg-indigo-100/80 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 flex-shrink-0 group-hover:bg-indigo-600 group-hover:text-white transition-colors">
             <TrendingUp className="w-3.5 h-3.5" />
@@ -175,7 +177,7 @@ export function StatsOverview({
           {formatIQD(netWorth)}
         </div>
         <p className="text-[10px] text-indigo-600/90 dark:text-indigo-400/80 mt-0.5 truncate font-medium">
-          Income - Expenses - Rent
+          {t.incomeMinusExpenses}
         </p>
       </div>
 
@@ -189,7 +191,7 @@ export function StatsOverview({
           <span className={`text-[10px] sm:text-[11px] font-bold uppercase tracking-wider truncate ${
             totalDebt > 0 ? "text-rose-700 dark:text-rose-400" : "text-slate-600 dark:text-slate-400"
           }`}>
-            Unpaid Debts
+            {t.unpaidDebts}
           </span>
           <div className={`p-1.5 rounded-lg flex-shrink-0 group-hover:scale-105 transition-transform ${
             totalDebt > 0
@@ -208,8 +210,8 @@ export function StatsOverview({
           totalDebt > 0 ? "text-rose-600/90 dark:text-rose-400/80" : "text-slate-400 dark:text-slate-500"
         }`}>
           {totalDebt > 0
-            ? `${debtCasesCount} ${debtCasesCount === 1 ? "patient owes" : "patients owe"}`
-            : "All settled ✓"}
+            ? `${debtCasesCount} ${debtCasesCount === 1 ? t.patientOwes : t.patientsOwe}`
+            : t.allSettled}
         </p>
       </div>
     </div>

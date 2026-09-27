@@ -16,6 +16,7 @@ import {
 import { formatStaticDate } from "@/utils/date";
 import { CircleClockPickerModal } from "./ui/CircleClockPickerModal";
 import { BetterDatePickerModal } from "./ui/BetterDatePickerModal";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface PatientCardProps {
   patient: Patient;
@@ -36,6 +37,7 @@ export const PatientCard = React.memo(function PatientCard({
   onSettleDebt,
   onUpdatePatient,
 }: PatientCardProps) {
+  const { t } = useLanguage();
   const [isClockPickerOpen, setIsClockPickerOpen] = useState(false);
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
 
@@ -100,7 +102,7 @@ export const PatientCard = React.memo(function PatientCard({
                   }`}
                 >
                   <span>{isMale ? "♂" : "♀"}</span>
-                  <span className="capitalize">{patient.gender}</span>
+                  <span className="capitalize">{isMale ? t.male : t.female}</span>
                 </span>
 
                 {patient.age && (
@@ -120,7 +122,7 @@ export const PatientCard = React.memo(function PatientCard({
                 >
                   <History className="w-3 h-3 text-indigo-500" />
                   <span>
-                    {visitsCount} {visitsCount === 1 ? "visit" : "visits"}
+                    {visitsCount} {visitsCount === 1 ? t.visit : t.visits}
                   </span>
                 </span>
 
@@ -169,14 +171,14 @@ export const PatientCard = React.memo(function PatientCard({
             type="button"
             onClick={() => setIsDatePickerOpen(true)}
             title="Tap to change visit date"
-            className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-white dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800/80 hover:border-indigo-400 dark:hover:border-indigo-500 hover:bg-indigo-50/50 dark:hover:bg-indigo-950/30 text-left transition-all cursor-pointer active:scale-95 shadow-2xs group/date"
+            className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-white dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800/80 hover:border-indigo-400 dark:hover:border-indigo-500 hover:bg-indigo-50/50 dark:hover:bg-indigo-950/30 text-left rtl:text-right transition-all cursor-pointer active:scale-95 shadow-2xs group/date"
           >
             <div className="p-1 rounded-md bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 group-hover/date:bg-indigo-600 group-hover/date:text-white transition-colors">
               <Calendar className="w-3.5 h-3.5" />
             </div>
             <div className="min-w-0 flex-1">
               <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400 block leading-none">
-                Date
+                {t.date}
               </span>
               <span className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate block mt-0.5">
                 {formatStaticDate(patient.date)}
@@ -189,14 +191,14 @@ export const PatientCard = React.memo(function PatientCard({
             type="button"
             onClick={() => setIsClockPickerOpen(true)}
             title="Tap to choose time with circle clock"
-            className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-white dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800/80 hover:border-indigo-400 dark:hover:border-indigo-500 hover:bg-indigo-50/50 dark:hover:bg-indigo-950/30 text-left transition-all cursor-pointer active:scale-95 shadow-2xs group/time"
+            className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-white dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800/80 hover:border-indigo-400 dark:hover:border-indigo-500 hover:bg-indigo-50/50 dark:hover:bg-indigo-950/30 text-left rtl:text-right transition-all cursor-pointer active:scale-95 shadow-2xs group/time"
           >
             <div className="p-1 rounded-md bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 group-hover/time:bg-indigo-600 group-hover/time:text-white transition-colors">
               <Clock className="w-3.5 h-3.5" />
             </div>
             <div className="min-w-0 flex-1">
               <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400 block leading-none">
-                Time (Clock)
+                {t.time}
               </span>
               <span
                 className={`text-xs font-bold truncate block mt-0.5 ${
@@ -205,7 +207,7 @@ export const PatientCard = React.memo(function PatientCard({
                     : "text-slate-400 italic font-medium"
                 }`}
               >
-                {patient.time || "Set Time 🕒"}
+                {patient.time || t.setTime}
               </span>
             </div>
           </button>
@@ -220,7 +222,7 @@ export const PatientCard = React.memo(function PatientCard({
           }`}
         >
           <span className="text-slate-500 dark:text-slate-400">
-            Paid:{" "}
+            {t.paidLabel}:{" "}
             <strong className="text-slate-800 dark:text-slate-200 font-semibold">
               {formatIQD(paid)}
             </strong>
@@ -228,7 +230,7 @@ export const PatientCard = React.memo(function PatientCard({
           {debt > 0 ? (
             <div className="flex items-center gap-2">
               <span className="font-bold text-rose-600 dark:text-rose-400">
-                Owes {formatIQD(debt)}
+                {t.owesLabel} {formatIQD(debt)}
               </span>
               <button
                 type="button"
@@ -240,13 +242,13 @@ export const PatientCard = React.memo(function PatientCard({
                 title="Click to mark debt as paid"
               >
                 <Check className="w-3.5 h-3.5" />
-                <span>Paid ✓</span>
+                <span>{t.markDebtPaid}</span>
               </button>
             </div>
           ) : (
             <span className="inline-flex items-center gap-1 font-semibold text-emerald-700 dark:text-emerald-400">
               <span>✓</span>
-              <span>Fully Paid</span>
+              <span>{t.fullyPaid}</span>
             </span>
           )}
         </div>
@@ -256,7 +258,7 @@ export const PatientCard = React.memo(function PatientCard({
           <div className="grid grid-cols-2 gap-2">
             <a
               href={`tel:${patient.phone}`}
-              title={`Call ${patient.phone}`}
+              title={`${t.call} ${patient.phone}`}
               className="flex items-center justify-center gap-1.5 py-2 rounded-xl border border-slate-200/90 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/80 text-slate-700 dark:text-slate-200 hover:bg-sky-50 hover:border-sky-300 hover:text-sky-700 dark:hover:bg-sky-950/40 dark:hover:text-sky-300 active:scale-95 transition-all text-xs font-semibold"
             >
               <Phone className="w-3.5 h-3.5 flex-shrink-0 text-slate-500 dark:text-slate-400" />
@@ -266,11 +268,11 @@ export const PatientCard = React.memo(function PatientCard({
               href={getWhatsAppUrl(patient.phone, patient.name)}
               target="_blank"
               rel="noopener noreferrer"
-              title={`WhatsApp ${patient.name}`}
+              title={`${t.whatsApp} ${patient.name}`}
               className="flex items-center justify-center gap-1.5 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white shadow-xs hover:shadow-md hover:shadow-emerald-500/20 active:scale-95 transition-all text-xs font-bold cursor-pointer"
             >
               <span className="text-sm leading-none">💬</span>
-              <span>WhatsApp</span>
+              <span>{t.whatsApp}</span>
             </a>
           </div>
         )}
@@ -285,7 +287,7 @@ export const PatientCard = React.memo(function PatientCard({
             <span className="text-base group-hover/dent:scale-110 transition-transform inline-block">
               🦷
             </span>
-            <span className="tracking-tight">3D Dental Chart</span>
+            <span className="tracking-tight">{t.dentalChartBtn}</span>
           </span>
           <span
             className={`text-[11px] px-2 py-0.5 rounded-full font-bold border transition-colors ${
@@ -294,7 +296,7 @@ export const PatientCard = React.memo(function PatientCard({
                 : "bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 border-indigo-200 dark:border-indigo-800"
             }`}
           >
-            {patient.teeth?.length ?? 0} teeth
+            {patient.teeth?.length ?? 0} {t.teethCount}
           </span>
         </button>
 
@@ -303,15 +305,15 @@ export const PatientCard = React.memo(function PatientCard({
           <button
             type="button"
             onClick={() => onViewHistory(patient)}
-            className="w-full text-left p-2.5 rounded-xl bg-indigo-50/50 dark:bg-indigo-950/30 border border-indigo-100 dark:border-indigo-900/50 hover:border-indigo-300 dark:hover:border-indigo-700 transition-all cursor-pointer group/hist"
+            className="w-full text-left rtl:text-right p-2.5 rounded-xl bg-indigo-50/50 dark:bg-indigo-950/30 border border-indigo-100 dark:border-indigo-900/50 hover:border-indigo-300 dark:hover:border-indigo-700 transition-all cursor-pointer group/hist"
           >
             <div className="flex items-center justify-between text-[11px] mb-1">
               <span className="font-bold text-indigo-700 dark:text-indigo-300 flex items-center gap-1.5 truncate">
                 <History className="w-3.5 h-3.5 text-indigo-500 flex-shrink-0" />
-                <span className="truncate">Latest: {sortedHistory[0].title}</span>
+                <span className="truncate">{t.latest}: {sortedHistory[0].title}</span>
               </span>
-              <span className="text-[10px] text-indigo-600 dark:text-indigo-400 font-bold flex-shrink-0 ml-1">
-                {visitsCount} {visitsCount === 1 ? "visit" : "visits"} →
+              <span className="text-[10px] text-indigo-600 dark:text-indigo-400 font-bold flex-shrink-0 ml-1 rtl:ml-0 rtl:mr-1">
+                {visitsCount} {visitsCount === 1 ? t.visit : t.visits} →
               </span>
             </div>
             {sortedHistory[0].notes ? (

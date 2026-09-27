@@ -40,6 +40,7 @@ import {
 } from "@/utils/supabase/db";
 import { createClient } from "@/utils/supabase/client";
 import { LoginScreen } from "@/components/LoginScreen";
+import { useLanguage } from "@/context/LanguageContext";
 
 // Lazy-load heavy modals & auxiliary tabs to shrink initial bundle by 65%+
 const AddPatientModal = dynamic(
@@ -76,6 +77,7 @@ const MonthlyRentModal = dynamic(
 );
 
 export default function DashboardPage() {
+  const { t } = useLanguage();
   const [sessionChecked, setSessionChecked] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
@@ -647,7 +649,7 @@ export default function DashboardPage() {
           </div>
         </div>
         <h2 className="text-base font-bold text-white tracking-tight">Dr.Qayssar Dental Clinic</h2>
-        <p className="text-xs text-slate-400 font-medium mt-1">Verifying clinic session...</p>
+        <p className="text-xs text-slate-400 font-medium mt-1">{t.verifyingSession}</p>
       </div>
     );
   }
@@ -693,7 +695,7 @@ export default function DashboardPage() {
           /* ================= MONTHLY REPORTS TAB ================= */
           <>
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-black text-slate-900 dark:text-slate-100">Monthly Financial Reports</h2>
+              <h2 className="text-lg font-black text-slate-900 dark:text-slate-100">{t.reports}</h2>
             </div>
             <MonthlyReportView
               patients={patients}
@@ -720,20 +722,20 @@ export default function DashboardPage() {
             <div className="mb-4 sm:mb-6 flex flex-col md:flex-row gap-2.5 sm:gap-3 md:items-center md:justify-between">
               {/* Left: Search input */}
               <div className="relative flex-1 max-w-full md:max-w-md">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                <div className="absolute inset-y-0 left-0 rtl:left-auto rtl:right-0 pl-3.5 rtl:pl-0 rtl:pr-3.5 flex items-center pointer-events-none text-slate-400">
                   <Search className="w-4 h-4" />
                 </div>
                 <input
                   type="text"
-                  placeholder="Search patient name, procedure, tooth, phone..."
+                  placeholder={t.searchPlaceholder}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-9 py-2.5 rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/25 focus:border-indigo-500 shadow-2xs transition-all"
+                  className="w-full pl-10 pr-9 rtl:pl-9 rtl:pr-10 py-2.5 rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/25 focus:border-indigo-500 shadow-2xs transition-all"
                 />
                 {searchQuery && (
                   <button
                     onClick={() => setSearchQuery("")}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs w-5 h-5 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 transition-colors cursor-pointer"
+                    className="absolute right-3 rtl:right-auto rtl:left-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs w-5 h-5 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 transition-colors cursor-pointer"
                   >
                     ×
                   </button>
@@ -752,7 +754,7 @@ export default function DashboardPage() {
                         : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
                     }`}
                   >
-                    All
+                    {t.all}
                   </button>
                   <button
                     onClick={() => setGenderFilter("male")}
@@ -763,7 +765,7 @@ export default function DashboardPage() {
                     }`}
                   >
                     <span>♂</span>
-                    <span>Male</span>
+                    <span>{t.male}</span>
                   </button>
                   <button
                     onClick={() => setGenderFilter("female")}
@@ -774,7 +776,7 @@ export default function DashboardPage() {
                     }`}
                   >
                     <span>♀</span>
-                    <span>Female</span>
+                    <span>{t.female}</span>
                   </button>
                 </div>
 
@@ -788,7 +790,7 @@ export default function DashboardPage() {
                         : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
                     }`}
                   >
-                    All Fees
+                    {t.allFees}
                   </button>
                   <button
                     onClick={() => setPaymentFilter("paid")}
@@ -799,7 +801,7 @@ export default function DashboardPage() {
                     }`}
                   >
                     <span>✓</span>
-                    <span>Paid</span>
+                    <span>{t.paid}</span>
                   </button>
                   <button
                     onClick={() => setPaymentFilter("debt")}
@@ -809,7 +811,7 @@ export default function DashboardPage() {
                         : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
                     }`}
                   >
-                    <span>Debts</span>
+                    <span>{t.debts}</span>
                     <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-rose-200/80 dark:bg-rose-900/80 text-rose-800 dark:text-rose-200 font-black">
                       {
                         patients.filter(
@@ -835,7 +837,7 @@ export default function DashboardPage() {
                     onChange={(e) => setMonthFilter(e.target.value)}
                     className="bg-transparent text-xs font-bold text-slate-700 dark:text-slate-300 focus:outline-none cursor-pointer pr-1"
                   >
-                    <option value="all">All Months</option>
+                    <option value="all">{t.allMonths}</option>
                     {availableMonths.map((ym) => (
                       <option key={ym} value={ym} className="text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-900">
                         {formatMonthName(ym)}
@@ -859,13 +861,13 @@ export default function DashboardPage() {
                     setSortOrder((curr) => (curr === "desc" ? "asc" : "desc"))
                   }
                   title={`Sorted: ${
-                    sortOrder === "desc" ? "Newest First" : "Oldest First"
+                    sortOrder === "desc" ? t.newest : t.oldest
                   }`}
                   className="inline-flex items-center gap-1.5 px-3 py-2 rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md hover:bg-slate-50 dark:hover:bg-slate-800/60 text-xs font-bold text-slate-700 dark:text-slate-300 shadow-2xs transition-all cursor-pointer whitespace-nowrap flex-shrink-0"
                 >
                   <ArrowUpDown className="w-3.5 h-3.5 text-indigo-500" />
                   <span>
-                    {sortOrder === "desc" ? "Newest" : "Oldest"}
+                    {sortOrder === "desc" ? t.newest : t.oldest}
                   </span>
                 </button>
 
@@ -873,8 +875,8 @@ export default function DashboardPage() {
                 <div className="hidden sm:inline-flex rounded-2xl border border-slate-200/90 dark:border-slate-800 p-0.5 bg-slate-100/70 dark:bg-slate-900/80 backdrop-blur-md shadow-2xs flex-shrink-0">
                   <button
                     onClick={() => setViewMode("table")}
-                    aria-label="Table view"
-                    title="Table view"
+                    aria-label={t.tableView}
+                    title={t.tableView}
                     className={`p-1.5 rounded-xl transition-all cursor-pointer ${
                       viewMode === "table"
                         ? "bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 shadow-xs"
@@ -885,8 +887,8 @@ export default function DashboardPage() {
                   </button>
                   <button
                     onClick={() => setViewMode("grid")}
-                    aria-label="Grid view"
-                    title="Card grid view"
+                    aria-label={t.gridView}
+                    title={t.gridView}
                     className={`p-1.5 rounded-xl transition-all cursor-pointer ${
                       viewMode === "grid"
                         ? "bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 shadow-xs"
@@ -932,7 +934,7 @@ export default function DashboardPage() {
                       className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white shadow-xs cursor-pointer"
                     >
                       <UserPlus className="w-4 h-4" />
-                      <span>Add Patient</span>
+                      <span>{t.addPatient}</span>
                     </button>
                   )}
                 </div>
