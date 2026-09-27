@@ -14,9 +14,48 @@ export interface ToothRecord {
   toothNumber: number; // 11-18, 21-28, 31-38, 41-48 (FDI notation)
   status: ToothTreatment;
   procedure?: string;
+  material?: string;
+  price?: number; // In Iraqi Dinar (IQD)
   notes?: string;
   updatedAt?: number;
 }
+
+export interface DentalMaterialPreset {
+  id: string;
+  name: string;
+  arabicName: string;
+  defaultPrice: number; // in IQD
+  category: ToothTreatment | "all";
+}
+
+export const DENTAL_MATERIAL_PRESETS: DentalMaterialPreset[] = [
+  // Fillings
+  { id: "composite", name: "Composite Resin", arabicName: "حشوة ضوئية كومبوزيت", defaultPrice: 35000, category: "filling" },
+  { id: "glass_ionomer", name: "Glass Ionomer (GIC)", arabicName: "حشوة زجاجية GIC", defaultPrice: 25000, category: "filling" },
+  { id: "temp_filling", name: "Temporary Filling", arabicName: "حشوة مؤقتة", defaultPrice: 10000, category: "filling" },
+  { id: "amalgam", name: "Amalgam", arabicName: "حشوة فضة / أملغم", defaultPrice: 25000, category: "filling" },
+
+  // Crowns & Bridges
+  { id: "zirconia", name: "Zirconia Crown", arabicName: "تاج زركونيا كامل", defaultPrice: 150000, category: "crown" },
+  { id: "emax", name: "E-Max / Porcelain", arabicName: "إيماكس / فينير بورسلان", defaultPrice: 180000, category: "crown" },
+  { id: "pfm", name: "PFM (Porcelain Metal)", arabicName: "خزف ميتال PFM", defaultPrice: 100000, category: "crown" },
+  { id: "pmma", name: "PMMA Temp Crown", arabicName: "تاج مؤقت PMMA", defaultPrice: 30000, category: "crown" },
+
+  // Root Canal (Endodontics)
+  { id: "rct_full", name: "Root Canal Treatment", arabicName: "سحب عصب جلسات كاملة", defaultPrice: 75000, category: "root_canal" },
+  { id: "rct_post", name: "Fiber Post & Core", arabicName: "فايبر بوست وبناء سن", defaultPrice: 40000, category: "root_canal" },
+  { id: "rct_retreatment", name: "Endo Retreatment", arabicName: "إعادة علاج عصب", defaultPrice: 100000, category: "root_canal" },
+
+  // Extractions
+  { id: "simple_ext", name: "Simple Extraction", arabicName: "قلع سن بسيط", defaultPrice: 25000, category: "extraction" },
+  { id: "surgical_ext", name: "Surgical Extraction", arabicName: "قلع جراحي / سن مطمور", defaultPrice: 60000, category: "extraction" },
+  { id: "wisdom_ext", name: "Wisdom Tooth Extraction", arabicName: "قلع ضرس العقل", defaultPrice: 80000, category: "extraction" },
+
+  // General & Treated
+  { id: "scaling", name: "Scaling & Polishing", arabicName: "تنظيف وتلميع أسنان", defaultPrice: 30000, category: "treated" },
+  { id: "bleaching", name: "In-Office Whitening", arabicName: "تبييض أسنان عيادة", defaultPrice: 100000, category: "treated" },
+  { id: "decay_eval", name: "Caries Treatment Plan", arabicName: "علاج تسوس أولي", defaultPrice: 20000, category: "decay" },
+];
 
 export interface ToothInfo {
   number: number;

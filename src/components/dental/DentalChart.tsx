@@ -4,10 +4,13 @@ import React, { useState } from "react";
 import {
   ALL_TEETH,
   TREATMENT_METADATA,
+  DENTAL_MATERIAL_PRESETS,
+  DentalMaterialPreset,
   ToothInfo,
   ToothRecord,
   ToothTreatment,
 } from "@/types/dental";
+import { formatIQD } from "@/types/patient";
 import {
   CROWN_POLYGONS,
   CrownPolygon,
@@ -27,6 +30,12 @@ import {
   Maximize2,
   Minimize2,
   Edit3,
+  Coins,
+  Tag,
+  Plus,
+  Minus,
+  Zap,
+  ChevronDown,
 } from "lucide-react";
 
 interface DentalChartProps {
@@ -91,7 +100,13 @@ export function DentalChart({
 
   const [selectedTeethNumbers, setSelectedTeethNumbers] = useState<number[]>([]);
   const [treatmentNote, setTreatmentNote] = useState("");
+  const [treatmentMaterial, setTreatmentMaterial] = useState<string>("");
+  const [treatmentPrice, setTreatmentPrice] = useState<string>("");
+  const [showAllMaterials, setShowAllMaterials] = useState<boolean>(false);
+
   const [batchNote, setBatchNote] = useState("");
+  const [batchMaterial, setBatchMaterial] = useState<string>("");
+  const [batchPrice, setBatchPrice] = useState<string>("");
   const [activeTooth, setActiveTooth] = useState<ToothInfo | null>(null);
 
   // Map tooth records by number for fast lookup
@@ -99,13 +114,20 @@ export function DentalChart({
     teethRecords.map((r) => [r.toothNumber, r])
   );
 
+  // Total fees across all charted teeth
+  const totalChartPrice = teethRecords.reduce((sum, r) => sum + (r.price || 0), 0);
+
   const upperTeethNumbers = [18, 17, 16, 15, 14, 13, 12, 11, 21, 22, 23, 24, 25, 26, 27, 28];
   const lowerTeethNumbers = [48, 47, 46, 45, 44, 43, 42, 41, 31, 32, 33, 34, 35, 36, 37, 38];
   const allTeethNumbers = [...upperTeethNumbers, ...lowerTeethNumbers];
 
-  // All teeth that have clinical notes
-  const teethWithNotes = teethRecords.filter(
-    (r) => r.notes && r.notes.trim().length > 0
+  // All teeth that have clinical notes or materials or prices or non-default status
+  const activeChartedTeeth = teethRecords.filter(
+    (r) =>
+      (r.notes && r.notes.trim().length > 0) ||
+      (r.material && r.material.trim().length > 0) ||
+      (typeof r.price === "number" && r.price > 0) ||
+      r.status !== "treated"
   );
 
   // Quadrants & Anatomical groups
@@ -161,10 +183,15 @@ export function DentalChart({
         if (updated.length === 1) {
           const single = ALL_TEETH.find((t) => t.number === updated[0]);
           setActiveTooth(single || null);
-          setTreatmentNote(recordsMap.get(updated[0])?.notes || "");
+          const r = recordsMap.get(updated[0]);
+          setTreatmentNote(r?.notes || "");
+          setTreatmentMaterial(r?.material || "");
+          setTreatmentPrice(r?.price !== undefined ? String(r.price) : "");
         } else if (updated.length === 0) {
           setActiveTooth(null);
           setTreatmentNote("");
+          setTreatmentMaterial("");
+          setTreatmentPrice("");
         } else {
           setActiveTooth(tooth);
         }
@@ -178,11 +205,15 @@ export function DentalChart({
         setSelectedTeethNumbers([]);
         setActiveTooth(null);
         setTreatmentNote("");
+        setTreatmentMaterial("");
+        setTreatmentPrice("");
       } else {
         setSelectedTeethNumbers([toothNum]);
         setActiveTooth(tooth);
         const existingRecord = recordsMap.get(toothNum);
         setTreatmentNote(existingRecord?.notes || "");
+        setTreatmentMaterial(existingRecord?.material || "");
+        setTreatmentPrice(existingRecord?.price !== undefined ? String(existingRecord.price) : "");
       }
     }
   };
@@ -193,12 +224,15 @@ export function DentalChart({
     if (!activeTooth) return;
 
     const existingRecord = recordsMap.get(activeTooth.number);
+    const parsedPrice = treatmentPrice.trim() !== "" ? Number(treatmentPrice) : undefined;
     const updatedRecord: ToothRecord = {
       toothNumber: activeTooth.number,
       status: existingRecord?.status || (activeTool === "erase" ? "treated" : activeTool),
       procedure:
         existingRecord?.procedure ||
         TREATMENT_METADATA[activeTool === "erase" ? "treated" : activeTool].label,
+      material: treatmentMaterial.trim() || existingRecord?.material || undefined,
+      price: typeof parsedPrice === "number" && !isNaN(parsedPrice) ? parsedPrice : existingRecord?.price,
       notes: text.trim() || undefined,
       updatedAt: Date.now(),
     };
@@ -215,14 +249,92 @@ export function DentalChart({
     }
 
     const existingRecord = recordsMap.get(activeTooth.number);
+    const parsedPrice = treatmentPrice.trim() !== "" ? Number(treatmentPrice) : undefined;
     const updatedRecord: ToothRecord = {
       toothNumber: activeTooth.number,
       status,
       procedure: TREATMENT_METADATA[status].label,
+      material: treatmentMaterial.trim() || existingRecord?.material || undefined,
+      price: typeof parsedPrice === "number" && !isNaN(parsedPrice) ? parsedPrice : existingRecord?.price,
       notes: treatmentNote.trim() || existingRecord?.notes || undefined,
       updatedAt: Date.now(),
     };
     onUpdateTooth(updatedRecord);
+  };
+
+  // Select material preset (instantly populates material + auto-fills default fee!)
+  const handleSelectPresetMaterial = (preset: DentalMaterialPreset) => {
+    if (!activeTooth) return;
+    setTreatmentMaterial(preset.name);
+    setTreatmentPrice(String(preset.defaultPrice));
+
+    const existingRecord = recordsMap.get(activeTooth.number);
+    const nextStatus =
+      preset.category !== "all" && (!existingRecord || existingRecord.status === "treated")
+        ? preset.category
+        : (existingRecord?.status || (activeTool === "erase" ? "treated" : activeTool));
+
+    const updatedRecord: ToothRecord = {
+      toothNumber: activeTooth.number,
+      status: nextStatus,
+      procedure: TREATMENT_METADATA[nextStatus].label,
+      material: preset.name,
+      price: preset.defaultPrice,
+      notes: treatmentNote.trim() || existingRecord?.notes || undefined,
+      updatedAt: Date.now(),
+    };
+    onUpdateTooth(updatedRecord);
+  };
+
+  // Immediate material name edit for active single tooth
+  const handleActiveToothMaterialChange = (text: string) => {
+    setTreatmentMaterial(text);
+    if (!activeTooth) return;
+
+    const existingRecord = recordsMap.get(activeTooth.number);
+    const parsedPrice = treatmentPrice.trim() !== "" ? Number(treatmentPrice) : undefined;
+    const updatedRecord: ToothRecord = {
+      toothNumber: activeTooth.number,
+      status: existingRecord?.status || (activeTool === "erase" ? "treated" : activeTool),
+      procedure:
+        existingRecord?.procedure ||
+        TREATMENT_METADATA[activeTool === "erase" ? "treated" : activeTool].label,
+      material: text.trim() || undefined,
+      price: typeof parsedPrice === "number" && !isNaN(parsedPrice) ? parsedPrice : existingRecord?.price,
+      notes: treatmentNote.trim() || existingRecord?.notes || undefined,
+      updatedAt: Date.now(),
+    };
+    onUpdateTooth(updatedRecord);
+  };
+
+  // Immediate fee/price change for active single tooth
+  const handleActiveToothPriceChange = (valStr: string) => {
+    setTreatmentPrice(valStr);
+    if (!activeTooth) return;
+
+    const existingRecord = recordsMap.get(activeTooth.number);
+    const parsed = valStr.trim() === "" ? undefined : Number(valStr);
+    const numPrice = typeof parsed === "number" && !isNaN(parsed) ? parsed : undefined;
+
+    const updatedRecord: ToothRecord = {
+      toothNumber: activeTooth.number,
+      status: existingRecord?.status || (activeTool === "erase" ? "treated" : activeTool),
+      procedure:
+        existingRecord?.procedure ||
+        TREATMENT_METADATA[activeTool === "erase" ? "treated" : activeTool].label,
+      material: treatmentMaterial.trim() || existingRecord?.material || undefined,
+      price: numPrice,
+      notes: treatmentNote.trim() || existingRecord?.notes || undefined,
+      updatedAt: Date.now(),
+    };
+    onUpdateTooth(updatedRecord);
+  };
+
+  // Quick price adjuster (+10k, -10k, etc.)
+  const handleAdjustPrice = (delta: number) => {
+    const current = treatmentPrice.trim() !== "" ? Number(treatmentPrice) : 0;
+    const nextVal = Math.max(0, (isNaN(current) ? 0 : current) + delta);
+    handleActiveToothPriceChange(String(nextVal));
   };
 
   const handleAppendPreset = (preset: string) => {
@@ -236,7 +348,10 @@ export function DentalChart({
     if (teeth.length === 1) {
       const t = ALL_TEETH.find((x) => x.number === teeth[0]);
       setActiveTooth(t || null);
-      setTreatmentNote(recordsMap.get(teeth[0])?.notes || "");
+      const r = recordsMap.get(teeth[0]);
+      setTreatmentNote(r?.notes || "");
+      setTreatmentMaterial(r?.material || "");
+      setTreatmentPrice(r?.price !== undefined ? String(r.price) : "");
     } else {
       setActiveTooth(null);
     }
@@ -251,7 +366,11 @@ export function DentalChart({
     setSelectedTeethNumbers([]);
     setActiveTooth(null);
     setTreatmentNote("");
+    setTreatmentMaterial("");
+    setTreatmentPrice("");
     setBatchNote("");
+    setBatchMaterial("");
+    setBatchPrice("");
   };
 
   // Apply a status to all currently selected teeth
@@ -264,6 +383,8 @@ export function DentalChart({
         toothNumber: num,
         status,
         procedure: TREATMENT_METADATA[status].label,
+        material: existing?.material,
+        price: existing?.price,
         notes: existing?.notes,
         updatedAt: Date.now(),
       };
@@ -274,6 +395,63 @@ export function DentalChart({
     } else {
       newRecords.forEach((rec) => onUpdateTooth(rec));
     }
+  };
+
+  // Apply material preset + default fee to all selected teeth
+  const handleApplyBatchPreset = (preset: DentalMaterialPreset) => {
+    if (selectedTeethNumbers.length === 0) return;
+
+    const newRecords: ToothRecord[] = selectedTeethNumbers.map((num) => {
+      const existing = recordsMap.get(num);
+      const nextStatus =
+        preset.category !== "all" && (!existing || existing.status === "treated")
+          ? preset.category
+          : (existing?.status || "treated");
+
+      return {
+        toothNumber: num,
+        status: nextStatus,
+        procedure: TREATMENT_METADATA[nextStatus].label,
+        material: preset.name,
+        price: preset.defaultPrice,
+        notes: existing?.notes,
+        updatedAt: Date.now(),
+      };
+    });
+
+    if (onUpdateMultipleTeeth) {
+      onUpdateMultipleTeeth(newRecords);
+    } else {
+      newRecords.forEach((rec) => onUpdateTooth(rec));
+    }
+  };
+
+  // Apply custom batch material and price
+  const handleApplyBatchCustomMaterialAndPrice = () => {
+    if (selectedTeethNumbers.length === 0) return;
+    const parsedPrice = batchPrice.trim() !== "" ? Number(batchPrice) : undefined;
+    const numPrice = typeof parsedPrice === "number" && !isNaN(parsedPrice) ? parsedPrice : undefined;
+
+    const newRecords: ToothRecord[] = selectedTeethNumbers.map((num) => {
+      const existing = recordsMap.get(num);
+      return {
+        toothNumber: num,
+        status: existing?.status || (activeTool === "erase" ? "treated" : activeTool),
+        procedure: existing?.procedure || TREATMENT_METADATA[activeTool === "erase" ? "treated" : activeTool].label,
+        material: batchMaterial.trim() || existing?.material,
+        price: numPrice !== undefined ? numPrice : existing?.price,
+        notes: existing?.notes,
+        updatedAt: Date.now(),
+      };
+    });
+
+    if (onUpdateMultipleTeeth) {
+      onUpdateMultipleTeeth(newRecords);
+    } else {
+      newRecords.forEach((rec) => onUpdateTooth(rec));
+    }
+    setBatchMaterial("");
+    setBatchPrice("");
   };
 
   // Erase status from selected teeth
@@ -303,6 +481,8 @@ export function DentalChart({
         procedure:
           existing?.procedure ||
           TREATMENT_METADATA[activeTool === "erase" ? "treated" : activeTool].label,
+        material: existing?.material,
+        price: existing?.price,
         notes: combinedNote,
         updatedAt: Date.now(),
       };
@@ -325,6 +505,19 @@ export function DentalChart({
       : null;
   const singleRecord =
     selectedCount === 1 ? recordsMap.get(selectedTeethNumbers[0]) : null;
+
+  // Active tooth recommended materials
+  const activeToothStatus =
+    (activeTooth && recordsMap.get(activeTooth.number)?.status) ||
+    (activeTool === "erase" ? "treated" : activeTool);
+
+  const recommendedPresets = DENTAL_MATERIAL_PRESETS.filter(
+    (p) => p.category === activeToothStatus || p.category === "all"
+  );
+  const displayedPresets =
+    showAllMaterials || recommendedPresets.length === 0
+      ? DENTAL_MATERIAL_PRESETS
+      : recommendedPresets;
 
   return (
     <div className="w-full flex flex-col bg-slate-50/70 dark:bg-slate-900/70 border border-slate-200/80 dark:border-slate-800 rounded-xl sm:rounded-3xl p-1.5 sm:p-5 shadow-inner select-none backdrop-blur-xs">
@@ -524,7 +717,7 @@ export function DentalChart({
             {/* Batch Procedure Quick Buttons */}
             <div className="flex items-center gap-1 sm:gap-1.5 flex-wrap pt-1.5 border-t border-indigo-100 dark:border-indigo-900/60">
               <span className="text-[10px] sm:text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                Apply to all:
+                Status:
               </span>
               {(
                 [
@@ -557,6 +750,68 @@ export function DentalChart({
                 <Eraser className="w-3 h-3" />
                 <span>Clear</span>
               </button>
+            </div>
+
+            {/* Batch Material & Fee Quick Presets */}
+            <div className="pt-1.5 border-t border-indigo-100 dark:border-indigo-900/60">
+              <div className="flex items-center justify-between gap-1 mb-1">
+                <span className="text-[10px] sm:text-[11px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
+                  <Sparkles className="w-3 h-3 text-amber-500" />
+                  <span>Apply Material & Fee to all {selectedCount} teeth:</span>
+                </span>
+                {batchPrice && (
+                  <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400">
+                    Total: {formatIQD((Number(batchPrice) || 0) * selectedCount)}
+                  </span>
+                )}
+              </div>
+
+              <div className="flex items-center gap-1 sm:gap-1.5 flex-wrap">
+                {DENTAL_MATERIAL_PRESETS.slice(0, 7).map((preset) => (
+                  <button
+                    key={preset.id}
+                    type="button"
+                    onClick={() => handleApplyBatchPreset(preset)}
+                    className="px-2 py-0.5 sm:py-1 rounded-lg text-[10px] sm:text-[11px] font-semibold bg-white dark:bg-slate-800 border border-indigo-200 dark:border-indigo-800 text-slate-700 dark:text-slate-300 hover:border-indigo-400 hover:text-indigo-600 shadow-2xs cursor-pointer flex items-center gap-1 active:scale-95 transition-all"
+                  >
+                    <span>{preset.name}</span>
+                    <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400 text-[10px]">
+                      ({formatIQD(preset.defaultPrice)})
+                    </span>
+                  </button>
+                ))}
+              </div>
+
+              {/* Custom Material & Fee for Batch */}
+              <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+                <input
+                  type="text"
+                  placeholder="Custom Material (e.g. Zirconia)..."
+                  value={batchMaterial}
+                  onChange={(e) => setBatchMaterial(e.target.value)}
+                  className="flex-1 min-w-[120px] px-2 py-1 rounded-lg border border-indigo-200 dark:border-indigo-800 bg-white dark:bg-slate-900 text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-indigo-500 shadow-xs"
+                />
+                <div className="relative w-28">
+                  <input
+                    type="number"
+                    placeholder="Fee / tooth"
+                    value={batchPrice}
+                    onChange={(e) => setBatchPrice(e.target.value)}
+                    className="w-full pl-2 pr-7 py-1 rounded-lg border border-indigo-200 dark:border-indigo-800 bg-white dark:bg-slate-900 text-xs font-mono font-bold text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-indigo-500 shadow-xs"
+                  />
+                  <span className="absolute right-1.5 top-1/2 -translate-y-1/2 text-[9px] font-bold text-slate-400">
+                    IQD
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleApplyBatchCustomMaterialAndPrice}
+                  disabled={!batchMaterial.trim() && !batchPrice.trim()}
+                  className="px-2.5 py-1 rounded-lg bg-emerald-600 disabled:opacity-50 hover:bg-emerald-500 text-white text-xs font-bold cursor-pointer transition-colors shadow-xs"
+                >
+                  Set All
+                </button>
+              </div>
             </div>
 
             {/* Batch Note Input */}
@@ -791,21 +1046,26 @@ export function DentalChart({
         </div>
       </div>
 
-      {/* ================= 4. PERMANENT CLINICAL NOTES DIRECT FEED (ALWAYS VISIBLE WITHOUT CLICKING) ================= */}
-      {teethWithNotes.length > 0 && (
+      {/* ================= 4. PERMANENT CLINICAL RECORDS & TREATMENTS DIRECT FEED ================= */}
+      {activeChartedTeeth.length > 0 && (
         <div className="mt-2.5 sm:mt-3.5 p-2.5 sm:p-4 rounded-xl sm:rounded-2xl bg-amber-50/80 dark:bg-amber-950/40 border border-amber-200/80 dark:border-amber-800/80 shadow-xs animate-in slide-in-from-top-2 duration-150">
           <div className="flex items-center justify-between gap-2 mb-2 pb-1.5 border-b border-amber-200/70 dark:border-amber-900/70">
             <div className="flex items-center gap-1.5 text-xs font-bold text-amber-900 dark:text-amber-200">
               <FileText className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-              <span>Tooth Notes & Diagnoses ({teethWithNotes.length}):</span>
+              <span>Charted Teeth & Treatments ({activeChartedTeeth.length}):</span>
             </div>
-            <span className="text-[10px] text-amber-700 dark:text-amber-300 font-semibold">
-              Directly visible • Tap note to edit
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] font-mono font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-100/80 dark:bg-emerald-950/80 px-2 py-0.5 rounded-md border border-emerald-300 dark:border-emerald-800">
+                Sum: {formatIQD(totalChartPrice)}
+              </span>
+              <span className="text-[10px] text-amber-700 dark:text-amber-300 font-semibold hidden sm:inline">
+                Tap card to edit
+              </span>
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            {teethWithNotes.map((rec) => {
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+            {activeChartedTeeth.map((rec) => {
               const tooth = ALL_TEETH.find((t) => t.number === rec.toothNumber);
               const meta = TREATMENT_METADATA[rec.status];
               const isCurrentlyActive = activeTooth?.number === rec.toothNumber;
@@ -818,6 +1078,8 @@ export function DentalChart({
                       setActiveTooth(tooth);
                       setSelectedTeethNumbers([tooth.number]);
                       setTreatmentNote(rec.notes || "");
+                      setTreatmentMaterial(rec.material || "");
+                      setTreatmentPrice(rec.price !== undefined ? String(rec.price) : "");
                     }
                   }}
                   className={`
@@ -837,9 +1099,6 @@ export function DentalChart({
                       <span className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">
                         {tooth?.name}
                       </span>
-                      <span className="text-[10px] text-slate-400 hidden xs:inline truncate">
-                        ({tooth?.arabicName})
-                      </span>
                     </div>
 
                     <div className="flex items-center gap-1 flex-shrink-0">
@@ -852,9 +1111,29 @@ export function DentalChart({
                     </div>
                   </div>
 
-                  <p className="text-xs text-slate-700 dark:text-slate-300 whitespace-pre-wrap font-medium pl-2 border-l-2 border-amber-400 dark:border-amber-500">
-                    {rec.notes}
-                  </p>
+                  {/* Material & Price Badges */}
+                  {(rec.material || rec.price !== undefined) && (
+                    <div className="flex items-center gap-1 flex-wrap mb-1 text-[10px]">
+                      {rec.material && (
+                        <span className="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded-md font-semibold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
+                          <Tag className="w-2.5 h-2.5 text-indigo-500" />
+                          <span>{rec.material}</span>
+                        </span>
+                      )}
+                      {rec.price !== undefined && (
+                        <span className="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded-md font-mono font-bold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                          <Coins className="w-2.5 h-2.5 text-emerald-500" />
+                          <span>{formatIQD(rec.price)}</span>
+                        </span>
+                      )}
+                    </div>
+                  )}
+
+                  {rec.notes && (
+                    <p className="text-xs text-slate-700 dark:text-slate-300 whitespace-pre-wrap font-medium pl-2 border-l-2 border-amber-400 dark:border-amber-500">
+                      {rec.notes}
+                    </p>
+                  )}
                 </div>
               );
             })}
@@ -862,9 +1141,10 @@ export function DentalChart({
         </div>
       )}
 
-      {/* ================= 5. SINGLE SELECTED TOOTH CLINICAL NOTE & DETAIL PANEL ================= */}
+      {/* ================= 5. SINGLE SELECTED TOOTH CLINICAL DETAIL PANEL ================= */}
       {selectedCount === 1 && activeTooth && (
-        <div className="mt-2.5 sm:mt-3.5 p-2.5 sm:p-5 rounded-xl sm:rounded-3xl bg-indigo-50/90 dark:bg-indigo-950/60 border-2 border-indigo-500/50 shadow-lg animate-in slide-in-from-top-2 duration-200">
+        <div className="mt-2.5 sm:mt-3.5 p-2.5 sm:p-5 rounded-xl sm:rounded-3xl bg-indigo-50/90 dark:bg-indigo-950/60 border-2 border-indigo-500/50 shadow-lg animate-in slide-in-from-top-2 duration-200 space-y-3">
+          {/* Header */}
           <div className="flex items-center justify-between gap-2 pb-2 sm:pb-3 border-b border-indigo-200/70 dark:border-indigo-800/70">
             <div className="flex items-center gap-2 min-w-0">
               <span className="text-xl sm:text-2xl flex-shrink-0">🦷</span>
@@ -901,10 +1181,10 @@ export function DentalChart({
             </button>
           </div>
 
-          {/* Condition / Procedure Selector */}
-          <div className="py-2 sm:py-3">
+          {/* Section 1: Condition / Procedure Selector */}
+          <div>
             <label className="block text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
-              Tooth Condition / Status:
+              1. Tooth Condition / Status:
             </label>
             <div className="flex items-center gap-1 sm:gap-1.5 flex-wrap">
               {(
@@ -952,12 +1232,134 @@ export function DentalChart({
             </div>
           </div>
 
-          {/* Clinical Note Input Box */}
-          <div className="pt-1">
+          {/* Section 2: Material & Fee Catalog Presets (Auto-Pricing) */}
+          <div className="pt-2 border-t border-indigo-200/50 dark:border-indigo-900/50">
+            <div className="flex items-center justify-between gap-1 mb-1.5">
+              <label className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                <Sparkles className="w-3 h-3 text-amber-500" />
+                <span>2. Material & Fee Preset (1-Tap Auto-Pricing):</span>
+              </label>
+              <button
+                type="button"
+                onClick={() => setShowAllMaterials(!showAllMaterials)}
+                className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer"
+              >
+                {showAllMaterials ? "Show Recommended" : `Browse All (${DENTAL_MATERIAL_PRESETS.length})`}
+              </button>
+            </div>
+
+            <div className="flex items-center gap-1.5 flex-wrap">
+              {displayedPresets.map((preset) => {
+                const isSelected = treatmentMaterial === preset.name;
+                return (
+                  <button
+                    key={preset.id}
+                    type="button"
+                    onClick={() => handleSelectPresetMaterial(preset)}
+                    className={`px-2.5 py-1 rounded-xl text-xs font-semibold flex items-center gap-1.5 border transition-all cursor-pointer shadow-2xs ${
+                      isSelected
+                        ? "bg-indigo-600 text-white border-indigo-700 ring-2 ring-indigo-400 shadow-xs"
+                        : "bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-indigo-200 dark:border-indigo-800 hover:border-indigo-400 hover:bg-indigo-50/50"
+                    }`}
+                  >
+                    <span className="font-bold">{preset.name}</span>
+                    <span className="text-[10px] opacity-75">({preset.arabicName})</span>
+                    <span
+                      className={`px-1.5 py-0.2 rounded-md font-mono font-bold text-[10px] ${
+                        isSelected
+                          ? "bg-white/25 text-white"
+                          : "bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800"
+                      }`}
+                    >
+                      {formatIQD(preset.defaultPrice)}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Section 3: Custom Material & Price (Editable Override) */}
+          <div className="pt-2 border-t border-indigo-200/50 dark:border-indigo-900/50 grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            <div>
+              <label className="block text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1 flex items-center gap-1">
+                <Tag className="w-3 h-3 text-indigo-500" />
+                <span>Material Name:</span>
+              </label>
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="e.g. Composite, Zirconia, 3M Filtek..."
+                  value={treatmentMaterial}
+                  onChange={(e) => handleActiveToothMaterialChange(e.target.value)}
+                  className="w-full px-3 py-1.5 rounded-xl border border-indigo-200 dark:border-indigo-800 bg-white dark:bg-slate-900 text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-xs"
+                />
+                {treatmentMaterial && (
+                  <button
+                    type="button"
+                    onClick={() => handleActiveToothMaterialChange("")}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs cursor-pointer"
+                  >
+                    ×
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1 flex items-center gap-1">
+                <Coins className="w-3 h-3 text-emerald-500" />
+                <span>Tooth Fee (IQD):</span>
+              </label>
+              <div className="flex items-center gap-1">
+                <div className="relative flex-1">
+                  <input
+                    type="number"
+                    placeholder="0"
+                    value={treatmentPrice}
+                    onChange={(e) => handleActiveToothPriceChange(e.target.value)}
+                    className="w-full pl-3 pr-10 py-1.5 rounded-xl border border-indigo-200 dark:border-indigo-800 bg-white dark:bg-slate-900 text-xs font-mono font-bold text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-xs"
+                  />
+                  <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400">
+                    IQD
+                  </span>
+                </div>
+
+                {/* Quick Adjust Buttons */}
+                <button
+                  type="button"
+                  onClick={() => handleAdjustPrice(10000)}
+                  className="px-2 py-1.5 rounded-lg text-[10px] font-bold bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-indigo-400 cursor-pointer shadow-2xs whitespace-nowrap"
+                  title="Add 10,000 IQD"
+                >
+                  +10k
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleAdjustPrice(-10000)}
+                  className="px-2 py-1.5 rounded-lg text-[10px] font-bold bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-indigo-400 cursor-pointer shadow-2xs whitespace-nowrap"
+                  title="Subtract 10,000 IQD"
+                >
+                  -10k
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleActiveToothPriceChange("0")}
+                  className="px-2 py-1.5 rounded-lg text-[10px] font-bold bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-rose-600 hover:border-rose-400 cursor-pointer shadow-2xs whitespace-nowrap"
+                  title="Free / 0 IQD"
+                >
+                  Free
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Section 4: Clinical Note Input Box */}
+          <div className="pt-2 border-t border-indigo-200/50 dark:border-indigo-900/50">
             <div className="flex items-center justify-between mb-1">
               <label className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1">
                 <FileText className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
-                <span>Clinical Note for Tooth #{activeTooth.number}:</span>
+                <span>Clinical Diagnosis / Note for Tooth #{activeTooth.number}:</span>
               </label>
               <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-0.5">
                 <CheckCircle2 className="w-3 h-3" />
@@ -1013,20 +1415,31 @@ export function DentalChart({
         </div>
       )}
 
-      {/* ================= 6. SUMMARY OF WORKED TEETH ================= */}
+      {/* ================= 6. SUMMARY OF WORKED TEETH & TOTAL FEES ================= */}
       <div className="mt-2.5 pt-2 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 text-xs text-slate-500 dark:text-slate-400">
-        <div className="flex items-center gap-1.5 flex-wrap">
-          <Activity className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" />
-          <span className="text-[11px] sm:text-xs">
-            Worked Teeth ({teethRecords.length}):{" "}
-            {teethRecords.length > 0 ? (
-              <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
-                {teethRecords.map((r) => `#${r.toothNumber}`).join(", ")}
+        <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-1.5">
+            <Activity className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" />
+            <span className="text-[11px] sm:text-xs">
+              Worked Teeth ({teethRecords.length}):{" "}
+              {teethRecords.length > 0 ? (
+                <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
+                  {teethRecords.map((r) => `#${r.toothNumber}`).join(", ")}
+                </span>
+              ) : (
+                <em className="text-slate-400">Tap any tooth crown to mark</em>
+              )}
+            </span>
+          </div>
+
+          {totalChartPrice > 0 && (
+            <div className="flex items-center gap-1 pl-2 border-l border-slate-300 dark:border-slate-700">
+              <span className="text-[10px] text-slate-400 font-semibold uppercase">Total Fee:</span>
+              <span className="text-xs font-mono font-black text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/80 px-2 py-0.5 rounded-md border border-emerald-200 dark:border-emerald-800">
+                {formatIQD(totalChartPrice)}
               </span>
-            ) : (
-              <em className="text-slate-400">Tap any tooth crown to mark</em>
-            )}
-          </span>
+            </div>
+          )}
         </div>
 
         <div className="flex items-center gap-1 text-[10px] sm:text-[11px]">

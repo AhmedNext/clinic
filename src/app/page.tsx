@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
-import { Patient, Gender, calculateDebt, PatientHistoryEntry } from "@/types/patient";
+import { Patient, Gender, calculateDebt, formatIQD, PatientHistoryEntry } from "@/types/patient";
 import { ToothRecord } from "@/types/dental";
 import { Appointment, AppointmentStatus } from "@/types/appointment";
 
@@ -304,18 +304,36 @@ export default function DashboardPage() {
     }
   };
 
-  const handleSaveTeeth = async (patientId: string, teeth: ToothRecord[]) => {
+  const handleSaveTeeth = async (
+    patientId: string,
+    teeth: ToothRecord[],
+    syncedTotalAmount?: number
+  ) => {
     let targetUpdatedPatient: Patient | null = null;
     const updated = patients.map((p) => {
       if (p.id === patientId) {
-        targetUpdatedPatient = { ...p, teeth };
+        const hasSync = typeof syncedTotalAmount === "number";
+        const newTotal = hasSync ? syncedTotalAmount : p.totalAmount;
+        const newDebt = hasSync
+          ? calculateDebt(newTotal, p.paidAmount, p.debtAmount)
+          : p.debtAmount;
+
+        targetUpdatedPatient = {
+          ...p,
+          teeth,
+          ...(hasSync ? { totalAmount: newTotal, debtAmount: newDebt } : {}),
+        };
         return targetUpdatedPatient;
       }
       return p;
     });
 
     setPatients(updated);
-    setDentalPatient((prev) => (prev && prev.id === patientId ? { ...prev, teeth } : prev));
+    setDentalPatient((prev) => (prev && prev.id === patientId ? targetUpdatedPatient : prev));
+
+    if (typeof syncedTotalAmount === "number") {
+      showToast(`⚡ Dental fees (${formatIQD(syncedTotalAmount)}) synced to patient bill!`);
+    }
 
     if (targetUpdatedPatient) {
       try {

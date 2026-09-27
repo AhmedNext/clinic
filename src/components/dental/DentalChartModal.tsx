@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { X, CheckCircle2 } from "lucide-react";
-import { Patient } from "@/types/patient";
+import { X, CheckCircle2, Zap, Coins } from "lucide-react";
+import { Patient, formatIQD } from "@/types/patient";
 import { ToothRecord } from "@/types/dental";
 import { DentalChart } from "./DentalChart";
 import { PatientAvatar } from "../PatientAvatar";
@@ -11,7 +11,7 @@ interface DentalChartModalProps {
   isOpen: boolean;
   patient: Patient | null;
   onClose: () => void;
-  onSaveTeeth: (patientId: string, teeth: ToothRecord[]) => void;
+  onSaveTeeth: (patientId: string, teeth: ToothRecord[], syncedTotalAmount?: number) => void;
 }
 
 export function DentalChartModal({
@@ -21,11 +21,13 @@ export function DentalChartModal({
   onSaveTeeth,
 }: DentalChartModalProps) {
   const [localTeeth, setLocalTeeth] = useState<ToothRecord[]>([]);
+  const [isSynced, setIsSynced] = useState<boolean>(false);
 
   // Initialize teeth when modal opens for this patient ID
   useEffect(() => {
     if (isOpen && patient) {
       setLocalTeeth(patient.teeth || []);
+      setIsSynced(false);
     }
   }, [isOpen, patient?.id]);
 
@@ -41,6 +43,8 @@ export function DentalChartModal({
   }, [isOpen, onClose]);
 
   if (!isOpen || !patient) return null;
+
+  const totalChartPrice = localTeeth.reduce((sum, r) => sum + (r.price || 0), 0);
 
   // Immediately auto-save whenever a single tooth is updated
   const handleUpdateTooth = (record: ToothRecord) => {
@@ -84,6 +88,12 @@ export function DentalChartModal({
     onSaveTeeth(patient.id, []);
   };
 
+  const handleSyncToBill = () => {
+    onSaveTeeth(patient.id, localTeeth, totalChartPrice);
+    setIsSynced(true);
+    setTimeout(() => setIsSynced(false), 3000);
+  };
+
   const handleDone = () => {
     onSaveTeeth(patient.id, localTeeth);
     onClose();
@@ -117,6 +127,11 @@ export function DentalChartModal({
                 <span className="text-[10px] sm:text-[11px] px-1.5 py-0.2 rounded-full font-bold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 flex-shrink-0">
                   {localTeeth.length} Worked
                 </span>
+                {totalChartPrice > 0 && (
+                  <span className="text-[10px] sm:text-[11px] px-2 py-0.2 rounded-full font-mono font-bold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 flex-shrink-0">
+                    {formatIQD(totalChartPrice)}
+                  </span>
+                )}
               </div>
               <p className="text-[10px] text-slate-500 dark:text-slate-400 flex items-center gap-1 truncate">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse flex-shrink-0" />
@@ -161,9 +176,30 @@ export function DentalChartModal({
 
         {/* Modal Footer */}
         <div className="px-3 sm:px-6 py-2 sm:py-3 border-t border-slate-100 dark:border-slate-800/80 bg-slate-50/90 dark:bg-slate-900/90 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-          <div className="hidden sm:flex items-center gap-2 text-xs text-emerald-600 dark:text-emerald-400 font-medium">
-            <CheckCircle2 className="w-4 h-4" />
-            <span>All selections are stored directly in patient case #{patient.id.slice(0, 6)}</span>
+          {/* Left: Total fees & Sync to Bill Button */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs text-slate-500 dark:text-slate-400 font-semibold">Total Dental Fee:</span>
+              <span className="text-xs sm:text-sm font-mono font-black text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/80 px-2 py-0.5 rounded-lg border border-emerald-300 dark:border-emerald-800">
+                {formatIQD(totalChartPrice)}
+              </span>
+            </div>
+
+            {totalChartPrice > 0 && (
+              <button
+                type="button"
+                onClick={handleSyncToBill}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all shadow-xs cursor-pointer active:scale-95 ${
+                  isSynced
+                    ? "bg-emerald-700 text-white ring-2 ring-emerald-400"
+                    : "bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-600/20"
+                }`}
+                title="Sync this dental procedure fee directly into the patient's billing balance"
+              >
+                <Zap className="w-3.5 h-3.5 fill-current" />
+                <span>{isSynced ? "✓ Synced to Bill!" : "Sync to Patient Bill"}</span>
+              </button>
+            )}
           </div>
 
           <button
