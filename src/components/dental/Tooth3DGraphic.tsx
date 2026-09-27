@@ -21,337 +21,581 @@ export function Tooth3DGraphic({
   const isUpper = jaw === "upper";
   const treatment = status ? TREATMENT_METADATA[status] : null;
 
-  const gId = `g${toothNumber}`;
+  const gId = `t${toothNumber}`;
   const crownGrad = `cg-${gId}`;
   const rootGrad = `rg-${gId}`;
   const shineGrad = `sg-${gId}`;
-  const shadowFilter = `sf-${gId}`;
 
-  // Colour overrides when treatment is applied
-  const crownFill = status === "extraction"
-    ? "#fca5a5"
-    : status === "crown"
-    ? "#bfdbfe"
-    : status === "filling"
-    ? "#fde68a"
-    : status === "root_canal"
-    ? "#ddd6fe"
-    : status === "decay"
-    ? "#fed7aa"
-    : `url(#${crownGrad})`;
+  // Treatment color overrides
+  const crownFill =
+    status === "extraction"
+      ? "#fca5a5"
+      : status === "crown"
+      ? "#bfdbfe"
+      : status === "filling"
+      ? "#fde68a"
+      : status === "root_canal"
+      ? "#ddd6fe"
+      : status === "decay"
+      ? "#fed7aa"
+      : `url(#${crownGrad})`;
 
-  const crownStroke = status === "extraction"
-    ? "#ef4444"
-    : status === "crown"
-    ? "#3b82f6"
-    : status === "filling"
-    ? "#f59e0b"
-    : status === "root_canal"
-    ? "#8b5cf6"
-    : status === "decay"
-    ? "#ea580c"
-    : status === "treated"
-    ? "#10b981"
-    : "#c8d3df";
+  const crownStroke =
+    status === "extraction"
+      ? "#ef4444"
+      : status === "crown"
+      ? "#2563eb"
+      : status === "filling"
+      ? "#d97706"
+      : status === "root_canal"
+      ? "#7c3aed"
+      : status === "decay"
+      ? "#c2410c"
+      : status === "treated"
+      ? "#059669"
+      : "#334155";
 
-  const strokeW = status ? "1.2" : "0.7";
+  const strokeW = status ? "1.2" : "0.9";
+  const rootStroke = "#8c6834";
 
   return (
     <div
-      className={`relative inline-flex items-end justify-center transition-all duration-200 ${
-        isSelected ? "scale-115 drop-shadow-[0_6px_14px_rgba(99,102,241,0.45)]" : "hover:scale-105"
+      className={`relative inline-flex items-center justify-center transition-all duration-200 ${
+        isSelected
+          ? "scale-110 drop-shadow-[0_4px_12px_rgba(99,102,241,0.5)]"
+          : "hover:scale-105"
       } ${className}`}
     >
       <svg
-        viewBox="0 0 48 86"
+        viewBox="0 0 48 88"
         className="w-full h-full overflow-visible"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
       >
         <defs>
-          {/* Enamel pearl gradient */}
-          <linearGradient id={crownGrad} x1="15%" y1="0%" x2="85%" y2="100%">
+          {/* Authentic Enamel White Gradient with subtle 3D lighting */}
+          <linearGradient id={crownGrad} x1="20%" y1="0%" x2="80%" y2="100%">
             <stop offset="0%" stopColor="#ffffff" />
-            <stop offset="35%" stopColor="#f8fafc" />
-            <stop offset="70%" stopColor="#edf2f7" />
-            <stop offset="100%" stopColor="#dce4ef" />
+            <stop offset="60%" stopColor="#fbfcfe" />
+            <stop offset="85%" stopColor="#f1f5f9" />
+            <stop offset="100%" stopColor="#e2e8f0" />
           </linearGradient>
 
-          {/* Natural Dentin Root gradient (matching the warm authentic FDI anatomical chart) */}
-          <linearGradient id={rootGrad} x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#fdf8ed" />
-            <stop offset="35%" stopColor="#f7e9c8" />
-            <stop offset="75%" stopColor="#eed6a2" />
-            <stop offset="100%" stopColor="#debe85" />
+          {/* Authentic Warm Dentin Root Gradient matching anatomical FDI chart */}
+          <linearGradient id={rootGrad} x1="30%" y1="0%" x2="70%" y2="100%">
+            <stop offset="0%" stopColor="#fff8e7" />
+            <stop offset="40%" stopColor="#fae7be" />
+            <stop offset="80%" stopColor="#f2d599" />
+            <stop offset="100%" stopColor="#e2be7c" />
           </linearGradient>
 
-          {/* Enamel specular shine */}
+          {/* Specular enamel shine */}
           <radialGradient id={shineGrad} cx="30%" cy="25%" r="50%">
-            <stop offset="0%" stopColor="#ffffff" stopOpacity="0.95" />
-            <stop offset="55%" stopColor="#ffffff" stopOpacity="0.3" />
+            <stop offset="0%" stopColor="#ffffff" stopOpacity="0.85" />
+            <stop offset="60%" stopColor="#ffffff" stopOpacity="0.2" />
             <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
           </radialGradient>
-
-          {/* Soft shadow */}
-          <filter id={shadowFilter} x="-25%" y="-25%" width="150%" height="150%">
-            <feDropShadow dx="0" dy="1.5" stdDeviation="2" floodColor="#0f172a" floodOpacity="0.14" />
-          </filter>
         </defs>
 
         {isUpper ? (
-          /* ═══ UPPER JAW — roots point up, crown points down ═══ */
-          <g filter={`url(#${shadowFilter})`}>
-
-            {/* ── Upper Molar (18,17,16,15 / 25,26,27,28) ── */}
+          /* ===================================================================
+             UPPER JAW: ROOTS POINT UP, CROWNS POINT DOWN (MATCHING DIAGRAM)
+             =================================================================== */
+          <g>
+            {/* ─── 1. UPPER MOLAR (18, 17, 16 / 26, 27, 28) ─── */}
             {category === "molar" && (
               <>
-                {/* Palatal root (centre-back) */}
+                {/* Palatal Root (center back root) */}
                 <path
-                  d="M21 44 C20 36 19 24 18 13 C17 8 19 5 21 7 C22 9 23 9 24 7 C26 5 28 8 27 13 C26 24 25 36 24 44 Z"
-                  fill={`url(#${rootGrad})`} stroke="#cbb389" strokeWidth="0.6"
+                  d="M21 44 C20 32 21 16 23 4 C24 2 26 2 27 4 C29 16 29 32 28 44 Z"
+                  fill={`url(#${rootGrad})`}
+                  stroke={rootStroke}
+                  strokeWidth="0.8"
                 />
-                {/* Mesiobuccal root (left) */}
+                {/* Mesial Root (left curved root) */}
                 <path
-                  d="M16 44 C14 36 11 25 10 14 C9 8 11 6 13 8 C15 10 16 18 17 38 Z"
-                  fill={`url(#${rootGrad})`} stroke="#cbb389" strokeWidth="0.6"
+                  d="M17 44 C15 34 11 20 8 7 C7 4 10 3 12 5 C15 11 19 26 21 44 Z"
+                  fill={`url(#${rootGrad})`}
+                  stroke={rootStroke}
+                  strokeWidth="0.8"
                 />
-                {/* Distobuccal root (right) */}
+                {/* Distal Root (right curved root) */}
                 <path
-                  d="M29 44 C31 36 34 26 35 15 C36 9 34 7 32 9 C30 11 29 20 28 38 Z"
-                  fill={`url(#${rootGrad})`} stroke="#cbb389" strokeWidth="0.6"
+                  d="M28 44 C30 26 34 11 37 5 C39 3 42 4 41 7 C38 20 34 34 32 44 Z"
+                  fill={`url(#${rootGrad})`}
+                  stroke={rootStroke}
+                  strokeWidth="0.8"
                 />
-                {/* Crown — wide, flat-bottomed, multi-cusp */}
+
+                {/* Wide Anatomical Crown with multi-cusp lobes */}
                 <path
-                  d="M7 42 C6 46 6 58 8 66 C10 73 13 78 16 80 C18 82 30 82 32 80 C35 78 38 73 40 66 C42 58 42 46 41 42 C37 44 31 43 24 43 C17 43 11 44 7 42 Z"
-                  fill={crownFill} stroke={crownStroke} strokeWidth={strokeW}
+                  d="M7 43 
+                     C5 48 5 62 7 71 
+                     C9 77 12 82 17 83 
+                     C20 83.5 22 81 24 81 
+                     C26 81 28 83.5 31 83 
+                     C36 82 39 77 41 71 
+                     C43 62 43 48 41 43 
+                     C37 45 32 44 24 44 
+                     C16 44 11 45 7 43 Z"
+                  fill={crownFill}
+                  stroke={crownStroke}
+                  strokeWidth={strokeW}
                 />
-                {/* Occlusal groove */}
+
+                {/* Cervical line (gumline boundary arc) */}
                 <path
-                  d="M16 74 Q24 78 32 74 M24 68 V 78"
-                  stroke="#94a3b8" strokeWidth="0.9" strokeLinecap="round" opacity="0.45"
+                  d="M7 43 C15 46 33 46 41 43"
+                  stroke={rootStroke}
+                  strokeWidth="0.8"
+                  opacity="0.75"
                 />
-                {/* Buccal groove */}
+
+                {/* Occlusal fissure lines */}
                 <path
-                  d="M24 42 V 56" stroke="#94a3b8" strokeWidth="0.6" strokeLinecap="round" opacity="0.3"
+                  d="M18 78 Q24 75 30 78 M24 74 V81"
+                  stroke="#64748b"
+                  strokeWidth="0.8"
+                  strokeLinecap="round"
+                  opacity="0.45"
                 />
-                {/* Shine */}
-                <ellipse cx="15" cy="57" rx="6" ry="12" fill={`url(#${shineGrad})`} />
+                <ellipse cx="14" cy="58" rx="5" ry="11" fill={`url(#${shineGrad})`} />
               </>
             )}
 
-            {/* ── Upper Premolar ── */}
+            {/* ─── 2. UPPER PREMOLAR (15, 14 / 24, 25) ─── */}
             {category === "premolar" && (
               <>
-                {/* Buccal root */}
+                {/* Left Root Tip */}
                 <path
-                  d="M19 44 C18 34 16 20 15 10 C14 5 16 3 18 6 C19 8 20 16 21 42 Z"
-                  fill={`url(#${rootGrad})`} stroke="#cbb389" strokeWidth="0.6"
+                  d="M17 44 C16 32 14 18 13 8 C13 5 15 4 17 6 C19 12 21 28 22 44 Z"
+                  fill={`url(#${rootGrad})`}
+                  stroke={rootStroke}
+                  strokeWidth="0.8"
                 />
-                {/* Palatal root */}
+                {/* Right Root Tip */}
                 <path
-                  d="M26 44 C27 34 29 20 30 10 C31 5 29 3 27 6 C26 8 25 16 24 42 Z"
-                  fill={`url(#${rootGrad})`} stroke="#cbb389" strokeWidth="0.6"
+                  d="M26 44 C27 28 29 12 31 6 C33 4 35 5 35 8 C34 18 32 32 31 44 Z"
+                  fill={`url(#${rootGrad})`}
+                  stroke={rootStroke}
+                  strokeWidth="0.8"
                 />
-                {/* Crown — slightly narrower, two cusps */}
+
+                {/* Bicuspid Crown */}
                 <path
-                  d="M11 42 C10 46 10 59 13 68 C15 74 18 78 22 79 C26 78 29 74 31 68 C34 59 34 46 33 42 C29 43 25 43 22 43 C19 43 15 43 11 42 Z"
-                  fill={crownFill} stroke={crownStroke} strokeWidth={strokeW}
+                  d="M11 43 
+                     C9 48 9 60 11 69 
+                     C13 76 16 80 20 81.5 
+                     C22 82 23 80.5 24 80.5 
+                     C25 80.5 26 82 28 81.5 
+                     C32 80 35 76 37 69 
+                     C39 60 39 48 37 43 
+                     C33 45 28 44 24 44 
+                     C20 44 15 45 11 43 Z"
+                  fill={crownFill}
+                  stroke={crownStroke}
+                  strokeWidth={strokeW}
                 />
-                {/* Two cusps groove */}
+
+                {/* Cervical line */}
                 <path
-                  d="M22 44 V 56 M15 68 Q22 72 29 68"
-                  stroke="#94a3b8" strokeWidth="0.7" strokeLinecap="round" opacity="0.4"
+                  d="M11 43 C17 45.5 31 45.5 37 43"
+                  stroke={rootStroke}
+                  strokeWidth="0.8"
+                  opacity="0.75"
                 />
-                <ellipse cx="16" cy="56" rx="5" ry="10" fill={`url(#${shineGrad})`} />
+
+                {/* Bicuspid groove */}
+                <path
+                  d="M20 77 Q24 75 28 77 M24 72 V79"
+                  stroke="#64748b"
+                  strokeWidth="0.7"
+                  strokeLinecap="round"
+                  opacity="0.4"
+                />
+                <ellipse cx="16" cy="58" rx="4" ry="10" fill={`url(#${shineGrad})`} />
               </>
             )}
 
-            {/* ── Upper Canine ── */}
+            {/* ─── 3. UPPER CANINE (13 / 23) ─── */}
             {category === "canine" && (
               <>
-                {/* Long single tapering root */}
+                {/* Very Tall Single Stout Root (reaches highest point at apex) */}
                 <path
-                  d="M20 44 C19 30 18 16 19 6 C20 2 22 1 24 1 C26 1 28 2 29 6 C30 16 29 30 28 44 Z"
-                  fill={`url(#${rootGrad})`} stroke="#cbb389" strokeWidth="0.6"
+                  d="M19 44 C18 28 17 14 19 3 C20 1 22 1 24 1 C26 1 28 1 29 3 C31 14 30 28 29 44 Z"
+                  fill={`url(#${rootGrad})`}
+                  stroke={rootStroke}
+                  strokeWidth="0.9"
                 />
-                {/* Crown — pointed cusp top, convex labial face */}
+
+                {/* Pointed Canine Diamond Cusp Crown */}
                 <path
-                  d="M12 42 C11 48 12 60 14 70 C16 76 19 81 24 82 C29 81 32 76 34 70 C36 60 37 48 36 42 C33 43 28 43 24 43 C20 43 15 43 12 42 Z"
-                  fill={crownFill} stroke={crownStroke} strokeWidth={strokeW}
+                  d="M12 43 
+                     C10 49 11 62 13 71 
+                     C15 76 18 80 24 85 
+                     C30 80 33 76 35 71 
+                     C37 62 38 49 36 43 
+                     C32 45 28 44 24 44 
+                     C20 44 16 45 12 43 Z"
+                  fill={crownFill}
+                  stroke={crownStroke}
+                  strokeWidth={strokeW}
                 />
+
+                {/* Cervical line */}
+                <path
+                  d="M12 43 C17 45.5 31 45.5 36 43"
+                  stroke={rootStroke}
+                  strokeWidth="0.8"
+                  opacity="0.75"
+                />
+
                 {/* Labial ridge line */}
-                <path d="M24 44 V 78" stroke="#94a3b8" strokeWidth="0.6" strokeLinecap="round" opacity="0.35" />
-                <ellipse cx="17" cy="56" rx="4" ry="11" fill={`url(#${shineGrad})`} />
+                <path
+                  d="M24 46 V80"
+                  stroke="#64748b"
+                  strokeWidth="0.6"
+                  strokeLinecap="round"
+                  opacity="0.35"
+                />
+                <ellipse cx="17" cy="58" rx="4" ry="11" fill={`url(#${shineGrad})`} />
               </>
             )}
 
-            {/* ── Upper Incisor ── */}
+            {/* ─── 4. UPPER INCISOR (11, 12 / 21, 22) ─── */}
             {category === "incisor" && (
               <>
-                {/* Straight root */}
+                {/* Conical straight root */}
                 <path
-                  d="M20 44 C19 30 19 16 20 7 C21 3 23 1 24 1 C25 1 27 3 28 7 C29 16 29 30 28 44 Z"
-                  fill={`url(#${rootGrad})`} stroke="#cbb389" strokeWidth="0.6"
+                  d="M19 44 C18 30 19 16 20 6 C21 3 23 2 24 2 C25 2 27 3 28 6 C29 16 30 30 29 44 Z"
+                  fill={`url(#${rootGrad})`}
+                  stroke={rootStroke}
+                  strokeWidth="0.85"
                 />
-                {/* Chisel-shaped crown */}
+
+                {/* Broad Spade/Chisel Crown with flat horizontal incisal edge */}
                 <path
-                  d="M12 42 C11 47 12 61 13 70 C14 76 17 81 24 82 C31 81 34 76 35 70 C36 61 37 47 36 42 C32 43 28 43 24 43 C20 43 16 43 12 42 Z"
-                  fill={crownFill} stroke={crownStroke} strokeWidth={strokeW}
+                  d="M11 43 
+                     C10 49 10 63 11 72 
+                     C11.5 78 13 83 15 83 
+                     L33 83 
+                     C35 83 36.5 78 37 72 
+                     C38 63 38 49 37 43 
+                     C33 45 28 44 24 44 
+                     C20 44 15 45 11 43 Z"
+                  fill={crownFill}
+                  stroke={crownStroke}
+                  strokeWidth={strokeW}
                 />
-                {/* Incisal mamelons */}
-                <path d="M14 79 Q24 83 34 79" stroke="#94a3b8" strokeWidth="0.8" strokeLinecap="round" opacity="0.4" />
-                <path d="M20 42 V 55 M28 42 V 55" stroke="#94a3b8" strokeWidth="0.5" strokeLinecap="round" opacity="0.2" />
-                <ellipse cx="17" cy="56" rx="5" ry="11" fill={`url(#${shineGrad})`} />
+
+                {/* Cervical line */}
+                <path
+                  d="M11 43 C17 45.5 31 45.5 37 43"
+                  stroke={rootStroke}
+                  strokeWidth="0.8"
+                  opacity="0.75"
+                />
+
+                {/* Developmental lobes */}
+                <path
+                  d="M18 48 V65 M30 48 V65"
+                  stroke="#64748b"
+                  strokeWidth="0.5"
+                  strokeLinecap="round"
+                  opacity="0.25"
+                />
+                <ellipse cx="17" cy="58" rx="5" ry="11" fill={`url(#${shineGrad})`} />
               </>
             )}
           </g>
         ) : (
-          /* ═══ LOWER JAW — crown points up, roots point down ═══ */
-          <g filter={`url(#${shadowFilter})`}>
-
-            {/* ── Lower Molar ── */}
+          /* ===================================================================
+             LOWER JAW: CROWNS POINT UP, ROOTS POINT DOWN (MATCHING DIAGRAM)
+             =================================================================== */
+          <g>
+            {/* ─── 1. LOWER MOLAR (48, 47, 46 / 36, 37, 38) ─── */}
             {category === "molar" && (
               <>
-                {/* Crown up — wide, flat top */}
+                {/* Mesial Root (left root pointing down) */}
                 <path
-                  d="M7 44 C6 40 6 28 8 20 C10 13 13 8 16 6 C18 4 30 4 32 6 C35 8 38 13 40 20 C42 28 42 40 41 44 C37 42 31 43 24 43 C17 43 11 42 7 44 Z"
-                  fill={crownFill} stroke={crownStroke} strokeWidth={strokeW}
+                  d="M16 45 C15 54 12 68 10 79 C9 83 12 85 14 83 C17 78 19 64 21 45 Z"
+                  fill={`url(#${rootGrad})`}
+                  stroke={rootStroke}
+                  strokeWidth="0.8"
                 />
-                {/* Occlusal groove */}
+                {/* Distal Root (right root pointing down) */}
                 <path
-                  d="M16 12 Q24 8 32 12 M24 8 V 18"
-                  stroke="#94a3b8" strokeWidth="0.9" strokeLinecap="round" opacity="0.45"
+                  d="M27 45 C29 64 31 78 34 83 C36 85 39 83 38 79 C36 68 33 54 32 45 Z"
+                  fill={`url(#${rootGrad})`}
+                  stroke={rootStroke}
+                  strokeWidth="0.8"
                 />
-                {/* Buccal groove */}
-                <path d="M24 44 V 30" stroke="#94a3b8" strokeWidth="0.6" strokeLinecap="round" opacity="0.3" />
-                {/* Mesial root */}
+
+                {/* Wide Anatomical Crown pointing UP */}
                 <path
-                  d="M16 44 C14 52 11 63 10 72 C9 78 11 80 13 78 C15 76 16 66 18 46 Z"
-                  fill={`url(#${rootGrad})`} stroke="#cbb389" strokeWidth="0.6"
+                  d="M7 45 
+                     C5 40 5 26 7 17 
+                     C9 11 12 6 17 5 
+                     C20 4.5 22 7 24 7 
+                     C26 7 28 4.5 31 5 
+                     C36 6 39 11 41 17 
+                     C43 26 43 40 41 45 
+                     C37 43 32 44 24 44 
+                     C16 44 11 43 7 45 Z"
+                  fill={crownFill}
+                  stroke={crownStroke}
+                  strokeWidth={strokeW}
                 />
-                {/* Distal root */}
+
+                {/* Cervical line */}
                 <path
-                  d="M29 44 C31 52 34 63 35 72 C36 78 34 80 32 78 C30 76 29 66 27 46 Z"
-                  fill={`url(#${rootGrad})`} stroke="#cbb389" strokeWidth="0.6"
+                  d="M7 45 C15 42.5 33 42.5 41 45"
+                  stroke={rootStroke}
+                  strokeWidth="0.8"
+                  opacity="0.75"
                 />
-                <ellipse cx="15" cy="26" rx="6" ry="11" fill={`url(#${shineGrad})`} />
+
+                {/* Occlusal fissure lines */}
+                <path
+                  d="M18 10 Q24 13 30 10 M24 7 V14"
+                  stroke="#64748b"
+                  strokeWidth="0.8"
+                  strokeLinecap="round"
+                  opacity="0.45"
+                />
+                <ellipse cx="14" cy="28" rx="5" ry="11" fill={`url(#${shineGrad})`} />
               </>
             )}
 
-            {/* ── Lower Premolar ── */}
+            {/* ─── 2. LOWER PREMOLAR (45, 44 / 34, 35) ─── */}
             {category === "premolar" && (
               <>
+                {/* Single Tapering Root pointing down */}
                 <path
-                  d="M11 44 C10 40 10 27 13 18 C15 11 18 7 22 6 C26 7 29 11 31 18 C34 27 34 40 33 44 C29 42 25 43 22 43 C19 43 15 42 11 44 Z"
-                  fill={crownFill} stroke={crownStroke} strokeWidth={strokeW}
+                  d="M19 45 C18 56 19 68 20 78 C21 82 23 83 24 83 C25 83 27 82 28 78 C29 68 30 56 29 45 Z"
+                  fill={`url(#${rootGrad})`}
+                  stroke={rootStroke}
+                  strokeWidth="0.8"
                 />
+
+                {/* Rounded Bicuspid Crown pointing UP */}
                 <path
-                  d="M15 13 Q22 9 29 13"
-                  stroke="#94a3b8" strokeWidth="0.7" strokeLinecap="round" opacity="0.4"
+                  d="M11 45 
+                     C9 40 9 28 11 19 
+                     C13 12 16 8 20 6.5 
+                     C22 6 23 7.5 24 7.5 
+                     C25 7.5 26 6 28 6.5 
+                     C32 8 35 12 37 19 
+                     C39 28 39 40 37 45 
+                     C33 43 28 44 24 44 
+                     C20 44 15 43 11 45 Z"
+                  fill={crownFill}
+                  stroke={crownStroke}
+                  strokeWidth={strokeW}
                 />
+
+                {/* Cervical line */}
                 <path
-                  d="M18 44 C18 56 20 66 22 76 C24 66 26 56 26 44 Z"
-                  fill={`url(#${rootGrad})`} stroke="#cbb389" strokeWidth="0.6"
+                  d="M11 45 C17 42.5 31 42.5 37 45"
+                  stroke={rootStroke}
+                  strokeWidth="0.8"
+                  opacity="0.75"
                 />
-                <ellipse cx="16" cy="27" rx="5" ry="10" fill={`url(#${shineGrad})`} />
+
+                {/* Bicuspid groove */}
+                <path
+                  d="M20 11 Q24 13 28 11"
+                  stroke="#64748b"
+                  strokeWidth="0.7"
+                  strokeLinecap="round"
+                  opacity="0.4"
+                />
+                <ellipse cx="16" cy="28" rx="4" ry="10" fill={`url(#${shineGrad})`} />
               </>
             )}
 
-            {/* ── Lower Canine ── */}
+            {/* ─── 3. LOWER CANINE (43 / 33) ─── */}
             {category === "canine" && (
               <>
+                {/* Very Long Stout Root pointing down (reaches lowest point at apex) */}
                 <path
-                  d="M12 44 C11 40 12 26 14 16 C16 8 19 4 24 3 C29 4 32 8 34 16 C36 26 37 40 36 44 C33 43 28 43 24 43 C20 43 15 43 12 44 Z"
-                  fill={crownFill} stroke={crownStroke} strokeWidth={strokeW}
+                  d="M19 45 C18 60 17 74 19 85 C20 87 22 87 24 87 C26 87 28 87 29 85 C31 74 30 60 29 45 Z"
+                  fill={`url(#${rootGrad})`}
+                  stroke={rootStroke}
+                  strokeWidth="0.9"
                 />
-                <path d="M24 44 V 10" stroke="#94a3b8" strokeWidth="0.6" strokeLinecap="round" opacity="0.35" />
+
+                {/* Pointed Canine Diamond Cusp Crown pointing UP */}
                 <path
-                  d="M20 44 C19 56 20 66 22 78 C24 66 25 56 25 44 Z"
-                  fill={`url(#${rootGrad})`} stroke="#cbb389" strokeWidth="0.6"
+                  d="M12 45 
+                     C10 39 11 26 13 17 
+                     C15 12 18 8 24 3 
+                     C30 8 33 12 35 17 
+                     C37 26 38 39 36 45 
+                     C32 43 28 44 24 44 
+                     C20 44 16 43 12 45 Z"
+                  fill={crownFill}
+                  stroke={crownStroke}
+                  strokeWidth={strokeW}
                 />
-                <ellipse cx="17" cy="26" rx="4" ry="11" fill={`url(#${shineGrad})`} />
+
+                {/* Cervical line */}
+                <path
+                  d="M12 45 C17 42.5 31 42.5 36 45"
+                  stroke={rootStroke}
+                  strokeWidth="0.8"
+                  opacity="0.75"
+                />
+
+                {/* Labial ridge line */}
+                <path
+                  d="M24 42 V8"
+                  stroke="#64748b"
+                  strokeWidth="0.6"
+                  strokeLinecap="round"
+                  opacity="0.35"
+                />
+                <ellipse cx="17" cy="28" rx="4" ry="11" fill={`url(#${shineGrad})`} />
               </>
             )}
 
-            {/* ── Lower Incisor ── */}
+            {/* ─── 4. LOWER INCISOR (41, 42 / 31, 32) ─── */}
             {category === "incisor" && (
               <>
+                {/* Very Slender Straight Root pointing down */}
                 <path
-                  d="M13 44 C12 40 13 27 14 18 C15 10 18 6 24 5 C30 6 33 10 34 18 C35 27 36 40 35 44 C31 42 28 43 24 43 C20 43 17 42 13 44 Z"
-                  fill={crownFill} stroke={crownStroke} strokeWidth={strokeW}
+                  d="M20 45 C19 58 19 72 20 82 C21 84 23 85 24 85 C25 85 27 84 28 82 C29 72 29 58 28 45 Z"
+                  fill={`url(#${rootGrad})`}
+                  stroke={rootStroke}
+                  strokeWidth="0.8"
                 />
-                {/* Incisal edge */}
-                <path d="M15 7 Q24 4 33 7" stroke="#94a3b8" strokeWidth="0.8" strokeLinecap="round" opacity="0.4" />
-                <path d="M20 44 V 32 M28 44 V 32" stroke="#94a3b8" strokeWidth="0.5" strokeLinecap="round" opacity="0.2" />
+
+                {/* Slender Chisel Crown with flat horizontal incisal edge at top */}
                 <path
-                  d="M19 44 C18 56 20 67 22 78 C24 67 26 56 26 44 Z"
-                  fill={`url(#${rootGrad})`} stroke="#cbb389" strokeWidth="0.6"
+                  d="M13 45 
+                     C12 39 12 25 13 16 
+                     C13.5 10 15 5 17 5 
+                     L31 5 
+                     C33 5 34.5 10 35 16 
+                     C36 25 36 39 35 45 
+                     C31 43 28 44 24 44 
+                     C20 44 17 43 13 45 Z"
+                  fill={crownFill}
+                  stroke={crownStroke}
+                  strokeWidth={strokeW}
                 />
-                <ellipse cx="17" cy="27" rx="5" ry="10" fill={`url(#${shineGrad})`} />
+
+                {/* Cervical line */}
+                <path
+                  d="M13 45 C17 42.5 31 42.5 35 45"
+                  stroke={rootStroke}
+                  strokeWidth="0.8"
+                  opacity="0.75"
+                />
+
+                <ellipse cx="17" cy="28" rx="4" ry="10" fill={`url(#${shineGrad})`} />
               </>
             )}
           </g>
         )}
 
-        {/* ── TREATMENT OVERLAYS ── */}
+        {/* ─── CLINICAL TREATMENT OVERLAYS (VECTOR) ─── */}
         {treatment && (
           <g>
+            {/* Extraction: Red anatomical X */}
             {status === "extraction" && (
-              /* Bold red X */
-              <g stroke="#dc2626" strokeWidth="3" strokeLinecap="round" opacity="0.85">
-                <line x1="10" y1="15" x2="38" y2="70" />
-                <line x1="38" y1="15" x2="10" y2="70" />
+              <g stroke="#dc2626" strokeWidth="3" strokeLinecap="round" opacity="0.9">
+                <line x1="8" y1="12" x2="40" y2="76" />
+                <line x1="40" y1="12" x2="8" y2="76" />
               </g>
             )}
+
+            {/* Crown: Blue prosthetic translucent cap over the anatomical crown */}
             {status === "crown" && (
-              /* Blue translucent cap over crown */
               <rect
-                x={isUpper ? "9" : "9"}
-                y={isUpper ? "43" : "6"}
-                width="30" height="36" rx="8"
-                fill="#3b82f6" fillOpacity="0.22"
-                stroke="#2563eb" strokeWidth="1.5" strokeDasharray="3 2"
+                x="8"
+                y={isUpper ? "44" : "5"}
+                width="32"
+                height="38"
+                rx="6"
+                fill="#3b82f6"
+                fillOpacity="0.25"
+                stroke="#1d4ed8"
+                strokeWidth="1.5"
+                strokeDasharray="3 2"
               />
             )}
+
+            {/* Filling: Amber composite filling restoration */}
             {status === "filling" && (
-              /* Amber filling dot */
               <circle
-                cx="24" cy={isUpper ? "66" : "20"} r="6"
-                fill="#f59e0b" stroke="#d97706" strokeWidth="1.5"
+                cx="24"
+                cy={isUpper ? "66" : "22"}
+                r="6.5"
+                fill="#f59e0b"
+                stroke="#b45309"
+                strokeWidth="1.5"
               />
             )}
+
+            {/* Root Canal: Purple endodontic canal path running along roots */}
             {status === "root_canal" && (
-              /* Purple dashed pulp line through root */
               <>
                 <path
-                  d={isUpper ? "M24 8 V 60" : "M24 78 V 26"}
-                  stroke="#8b5cf6" strokeWidth="2.5" strokeLinecap="round" strokeDasharray="3 3"
+                  d={isUpper ? "M24 6 V 64" : "M24 82 V 24"}
+                  stroke="#7c3aed"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeDasharray="3 3"
                 />
                 <circle
-                  cx="24" cy={isUpper ? "60" : "26"} r="3.5"
-                  fill="#8b5cf6" opacity="0.6"
+                  cx="24"
+                  cy={isUpper ? "64" : "24"}
+                  r="3.5"
+                  fill="#7c3aed"
+                  opacity="0.8"
                 />
               </>
             )}
+
+            {/* Decay: Orange-brown carious cavity spots */}
             {status === "decay" && (
-              /* Orange-brown caries spots */
               <>
-                <circle cx="20" cy={isUpper ? "60" : "24"} r="3.5" fill="#ea580c" stroke="#c2410c" strokeWidth="0.8" opacity="0.85" />
-                <circle cx="28" cy={isUpper ? "68" : "32"} r="2.5" fill="#b45309" opacity="0.65" />
+                <circle
+                  cx="20"
+                  cy={isUpper ? "60" : "24"}
+                  r="3.5"
+                  fill="#ea580c"
+                  stroke="#9a3412"
+                  strokeWidth="0.8"
+                  opacity="0.9"
+                />
+                <circle
+                  cx="28"
+                  cy={isUpper ? "68" : "32"}
+                  r="2.5"
+                  fill="#9a3412"
+                  opacity="0.75"
+                />
               </>
             )}
+
+            {/* Treated: Emerald checkmark indicator */}
             {status === "treated" && (
-              /* Green check circle */
               <circle
-                cx="24" cy={isUpper ? "64" : "22"} r="5.5"
-                fill="#10b981" stroke="#059669" strokeWidth="1.5"
+                cx="24"
+                cy={isUpper ? "64" : "24"}
+                r="5.5"
+                fill="#10b981"
+                stroke="#047857"
+                strokeWidth="1.5"
               />
             )}
           </g>
         )}
       </svg>
 
-      {/* Colour dot badge */}
+      {/* Tiny corner treatment badge */}
       {treatment && (
         <span
           className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full ring-2 ring-white dark:ring-slate-900 shadow-sm"
