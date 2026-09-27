@@ -241,6 +241,115 @@ export function Header({
           </div>
         </div>
       </header>
+
+      {/* Mobile Floating Island Bottom Navigation (Mobbin iOS Inspired - Icons Only) */}
+      <div className="sm:hidden fixed bottom-3 inset-x-4 max-w-[280px] mx-auto z-40">
+        <nav
+          aria-label="Mobile Navigation"
+          className="w-full bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl border border-slate-200/80 dark:border-slate-800/80 rounded-2xl shadow-2xl shadow-indigo-950/20 p-1.5 ring-1 ring-black/5 dark:ring-white/5"
+        >
+          <div className="grid grid-cols-4 items-center gap-1">
+            {/* Tab 1: Patients */}
+            <button
+              type="button"
+              onClick={() => onTabChange("patients")}
+              title={t.tabPatients}
+              aria-label={t.tabPatients}
+              className={`relative flex items-center justify-center py-2.5 px-1.5 rounded-xl transition-all duration-200 cursor-pointer ${
+                activeTab === "patients"
+                  ? "bg-gradient-to-b from-indigo-50 to-indigo-100/70 dark:from-indigo-950/80 dark:to-indigo-900/40 text-indigo-600 dark:text-indigo-400 shadow-2xs"
+                  : "text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+              }`}
+            >
+              <div className="relative flex items-center justify-center">
+                <Users
+                  className={`w-5 h-5 transition-transform duration-200 ${
+                    activeTab === "patients" ? "scale-110 stroke-[2.4]" : "stroke-[2]"
+                  }`}
+                />
+                {patientCount > 0 && (
+                  <span className="absolute -top-1.5 -right-2 rtl:-right-auto rtl:-left-2 px-1 min-w-[15px] h-[15px] flex items-center justify-center rounded-full text-[9px] font-black bg-indigo-600 text-white ring-2 ring-white dark:ring-slate-900 shadow-xs">
+                    {patientCount > 99 ? "99+" : patientCount}
+                  </span>
+                )}
+              </div>
+            </button>
+
+            {/* Tab 2: Appointments */}
+            <button
+              type="button"
+              onClick={() => onTabChange("appointments")}
+              title={t.tabAppointments}
+              aria-label={t.tabAppointments}
+              className={`relative flex items-center justify-center py-2.5 px-1.5 rounded-xl transition-all duration-200 cursor-pointer ${
+                activeTab === "appointments"
+                  ? "bg-gradient-to-b from-indigo-50 to-indigo-100/70 dark:from-indigo-950/80 dark:to-indigo-900/40 text-indigo-600 dark:text-indigo-400 shadow-2xs"
+                  : "text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+              }`}
+            >
+              <div className="relative flex items-center justify-center">
+                <CalendarClock
+                  className={`w-5 h-5 transition-transform duration-200 ${
+                    activeTab === "appointments" ? "scale-110 stroke-[2.4]" : "stroke-[2]"
+                  }`}
+                />
+                {appointmentCount > 0 && (
+                  <span className="absolute -top-1.5 -right-2 rtl:-right-auto rtl:-left-2 px-1 min-w-[15px] h-[15px] flex items-center justify-center rounded-full text-[9px] font-black bg-indigo-600 text-white ring-2 ring-white dark:ring-slate-900 shadow-xs">
+                    {appointmentCount > 99 ? "99+" : appointmentCount}
+                  </span>
+                )}
+              </div>
+            </button>
+
+            {/* Tab 3: Materials */}
+            <button
+              type="button"
+              onClick={() => onTabChange("materials")}
+              title={t.tabMaterials}
+              aria-label={t.tabMaterials}
+              className={`relative flex items-center justify-center py-2.5 px-1.5 rounded-xl transition-all duration-200 cursor-pointer ${
+                activeTab === "materials"
+                  ? "bg-gradient-to-b from-indigo-50 to-indigo-100/70 dark:from-indigo-950/80 dark:to-indigo-900/40 text-indigo-600 dark:text-indigo-400 shadow-2xs"
+                  : "text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+              }`}
+            >
+              <div className="relative flex items-center justify-center">
+                <Package
+                  className={`w-5 h-5 transition-transform duration-200 ${
+                    activeTab === "materials" ? "scale-110 stroke-[2.4]" : "stroke-[2]"
+                  }`}
+                />
+                {materialCount > 0 && (
+                  <span className="absolute -top-1.5 -right-2 rtl:-right-auto rtl:-left-2 px-1 min-w-[15px] h-[15px] flex items-center justify-center rounded-full text-[9px] font-black bg-indigo-600 text-white ring-2 ring-white dark:ring-slate-900 shadow-xs">
+                    {materialCount > 99 ? "99+" : materialCount}
+                  </span>
+                )}
+              </div>
+            </button>
+
+            {/* Tab 4: Reports */}
+            <button
+              type="button"
+              onClick={() => onTabChange("reports")}
+              title={t.tabReports}
+              aria-label={t.tabReports}
+              className={`relative flex items-center justify-center py-2.5 px-1.5 rounded-xl transition-all duration-200 cursor-pointer ${
+                activeTab === "reports"
+                  ? "bg-gradient-to-b from-indigo-50 to-indigo-100/70 dark:from-indigo-950/80 dark:to-indigo-900/40 text-indigo-600 dark:text-indigo-400 shadow-2xs"
+                  : "text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+              }`}
+            >
+              <div className="relative flex items-center justify-center">
+                <TrendingUp
+                  className={`w-5 h-5 transition-transform duration-200 ${
+                    activeTab === "reports" ? "scale-110 stroke-[2.4]" : "stroke-[2]"
+                  }`}
+                />
+              </div>
+            </button>
+          </div>
+        </nav>
+      </div>
     </>
   );
 }

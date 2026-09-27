@@ -658,99 +658,6 @@ export default function DashboardPage() {
     return <LoginScreen onSuccess={() => setIsAuthenticated(true)} />;
   }
 
-  // Mobile navigation tabs: ICONS ONLY on phone screen (speaking clearly without text truncation)
-  const renderMobileNav = () => (
-    <div className="sm:hidden w-full mb-3 animate-in fade-in duration-150">
-      <nav
-        aria-label="Mobile Navigation"
-        className="w-full grid grid-cols-4 items-center p-1 rounded-2xl bg-slate-100/90 dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800 shadow-2xs gap-1.5"
-      >
-        {/* Tab 1: Patients (Users icon) */}
-        <button
-          type="button"
-          onClick={() => setActiveTab("patients")}
-          title={t.tabPatients}
-          aria-label={t.tabPatients}
-          className={`relative flex items-center justify-center py-2.5 px-2 rounded-xl transition-all duration-200 cursor-pointer ${
-            activeTab === "patients"
-              ? "bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-xs ring-1 ring-black/5 dark:ring-white/10"
-              : "text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
-          }`}
-        >
-          <div className="relative flex items-center justify-center">
-            <Users className="w-5 h-5 stroke-[2.3]" />
-            {patients.length > 0 && (
-              <span className="absolute -top-1.5 -right-2.5 rtl:-right-auto rtl:-left-2.5 px-1 min-w-[15px] h-[15px] flex items-center justify-center rounded-full text-[9px] font-black bg-indigo-600 text-white ring-2 ring-white dark:ring-slate-900 shadow-xs">
-                {patients.length > 99 ? "99+" : patients.length}
-              </span>
-            )}
-          </div>
-        </button>
-
-        {/* Tab 2: Appointments (CalendarClock - Calendar with clock clearly denoting appointments) */}
-        <button
-          type="button"
-          onClick={() => setActiveTab("appointments")}
-          title={t.tabAppointments}
-          aria-label={t.tabAppointments}
-          className={`relative flex items-center justify-center py-2.5 px-2 rounded-xl transition-all duration-200 cursor-pointer ${
-            activeTab === "appointments"
-              ? "bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-xs ring-1 ring-black/5 dark:ring-white/10"
-              : "text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
-          }`}
-        >
-          <div className="relative flex items-center justify-center">
-            <CalendarClock className="w-5 h-5 stroke-[2.3]" />
-            {appointments.length > 0 && (
-              <span className="absolute -top-1.5 -right-2.5 rtl:-right-auto rtl:-left-2.5 px-1 min-w-[15px] h-[15px] flex items-center justify-center rounded-full text-[9px] font-black bg-indigo-600 text-white ring-2 ring-white dark:ring-slate-900 shadow-xs">
-                {appointments.length > 99 ? "99+" : appointments.length}
-              </span>
-            )}
-          </div>
-        </button>
-
-        {/* Tab 3: Materials & Expenses (Package - Supplies box clearly denoting materials) */}
-        <button
-          type="button"
-          onClick={() => setActiveTab("materials")}
-          title={t.tabMaterials}
-          aria-label={t.tabMaterials}
-          className={`relative flex items-center justify-center py-2.5 px-2 rounded-xl transition-all duration-200 cursor-pointer ${
-            activeTab === "materials"
-              ? "bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-xs ring-1 ring-black/5 dark:ring-white/10"
-              : "text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
-          }`}
-        >
-          <div className="relative flex items-center justify-center">
-            <Package className="w-5 h-5 stroke-[2.3]" />
-            {materials.length > 0 && (
-              <span className="absolute -top-1.5 -right-2.5 rtl:-right-auto rtl:-left-2.5 px-1 min-w-[15px] h-[15px] flex items-center justify-center rounded-full text-[9px] font-black bg-indigo-600 text-white ring-2 ring-white dark:ring-slate-900 shadow-xs">
-                {materials.length > 99 ? "99+" : materials.length}
-              </span>
-            )}
-          </div>
-        </button>
-
-        {/* Tab 4: Financial Reports (TrendingUp - Growth trend clearly denoting financial analytics) */}
-        <button
-          type="button"
-          onClick={() => setActiveTab("reports")}
-          title={t.tabReports}
-          aria-label={t.tabReports}
-          className={`relative flex items-center justify-center py-2.5 px-2 rounded-xl transition-all duration-200 cursor-pointer ${
-            activeTab === "reports"
-              ? "bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-xs ring-1 ring-black/5 dark:ring-white/10"
-              : "text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
-          }`}
-        >
-          <div className="relative flex items-center justify-center">
-            <TrendingUp className="w-5 h-5 stroke-[2.3]" />
-          </div>
-        </button>
-      </nav>
-    </div>
-  );
-
   return (
     <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col transition-colors duration-200">
       {/* Top Sleek Navigation Header */}
@@ -765,34 +672,27 @@ export default function DashboardPage() {
       />
 
       {/* Main Container */}
-      <main className="flex-1 w-full max-w-full px-3 sm:px-6 xl:px-10 pt-3 sm:pt-6 pb-12 sm:pb-8">
+      <main className="flex-1 w-full max-w-full px-3 sm:px-6 xl:px-10 pt-3 sm:pt-6 pb-28 md:pb-8">
         {activeTab === "appointments" ? (
           /* ================= APPOINTMENTS FULL MONTH TAB ================= */
-          <div>
-            {renderMobileNav()}
-            <AppointmentsView
-              appointments={appointments}
-              patients={patients}
-              onAddAppointment={handleAddAppointment}
-              onToggleStatus={handleToggleAppointmentStatus}
-              onDeleteAppointment={handleDeleteAppointment}
-            />
-          </div>
+          <AppointmentsView
+            appointments={appointments}
+            patients={patients}
+            onAddAppointment={handleAddAppointment}
+            onToggleStatus={handleToggleAppointmentStatus}
+            onDeleteAppointment={handleDeleteAppointment}
+          />
         ) : activeTab === "materials" ? (
           /* ================= CLINIC MATERIALS & EXPENSES TAB ================= */
-          <div>
-            {renderMobileNav()}
-            <MaterialsView
-              materials={materials}
-              onAddMaterial={handleAddMaterial}
-              onUpdateMaterial={handleUpdateMaterial}
-              onDeleteMaterial={handleDeleteMaterial}
-            />
-          </div>
+          <MaterialsView
+            materials={materials}
+            onAddMaterial={handleAddMaterial}
+            onUpdateMaterial={handleUpdateMaterial}
+            onDeleteMaterial={handleDeleteMaterial}
+          />
         ) : activeTab === "reports" ? (
           /* ================= MONTHLY REPORTS TAB ================= */
-          <div>
-            {renderMobileNav()}
+          <>
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-black text-slate-900 dark:text-slate-100">{t.monthlyReports}</h2>
             </div>
@@ -803,7 +703,7 @@ export default function DashboardPage() {
               onViewHistory={(patient) => setHistoryPatient(patient)}
               onOpenRentModal={() => setIsRentModalOpen(true)}
             />
-          </div>
+          </>
         ) : (
           /* ================= PATIENTS CASES TAB ================= */
           <>
@@ -816,9 +716,6 @@ export default function DashboardPage() {
               monthSubtitle={monthFilter === "all" ? undefined : formatMonthName(monthFilter)}
               onOpenRentModal={() => setIsRentModalOpen(true)}
             />
-
-            {/* Mobile Navigation Tabs: ON TOP OF THE SEARCH FIELD SECTION ON PHONES */}
-            {renderMobileNav()}
 
             {/* Filter and Control Toolbar (Mobbin-style segmented controls) */}
             <div className="mb-4 sm:mb-6 flex flex-col md:flex-row gap-2.5 sm:gap-3 md:items-center md:justify-between">
@@ -1097,7 +994,7 @@ export default function DashboardPage() {
           <button
             type="button"
             onClick={() => setIsModalOpen(true)}
-            className="sm:hidden fixed bottom-6 right-4 rtl:right-auto rtl:left-4 z-30 flex items-center gap-2 px-4 py-3 rounded-full bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-bold shadow-xl shadow-indigo-600/35 active:scale-95 transition-all cursor-pointer"
+            className="sm:hidden fixed bottom-20 right-4 rtl:right-auto rtl:left-4 z-30 flex items-center gap-2 px-4 py-3 rounded-full bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-bold shadow-xl shadow-indigo-600/35 active:scale-95 transition-all cursor-pointer"
             aria-label={t.addPatient}
           >
             <UserPlus className="w-5 h-5 stroke-[2.2]" />
