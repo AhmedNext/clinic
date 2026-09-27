@@ -3,12 +3,19 @@ export type ToothJaw = "upper" | "lower";
 export type ToothSide = "right" | "left";
 
 export type ToothTreatment =
-  | "treated"     // General treatment completed
-  | "filling"     // Composite / Amalgam filling
-  | "root_canal"  // Endodontic therapy
-  | "crown"       // Prosthetic crown
-  | "extraction"  // Tooth extracted / missing
-  | "decay";      // Cavity / Caries noted
+  | "treated"            // General treatment completed
+  | "filling"            // Composite / Amalgam filling
+  | "root_canal"         // Endodontic therapy
+  | "crown"              // Prosthetic crown
+  | "extraction"         // Tooth extracted / missing
+  | "decay"              // Cavity / Caries noted
+  | "denture"            // Full Denture
+  | "partial_denture"    // Partial Denture
+  | "orthodontic"        // Orthodontic treatment
+  | "scaling_polishing"  // Scaling and polishing
+  | "whitening"          // Whitening
+  | "implant"            // Implant
+  | "examination";       // Examination / Consultation
 
 export interface ToothRecord {
   toothNumber: number; // 11-18, 21-28, 31-38, 41-48 (FDI notation)
@@ -145,4 +152,70 @@ export const TREATMENT_METADATA: Record<ToothTreatment, { label: string; color: 
     badgeBorder: "border-orange-300 dark:border-orange-800",
     badgeText: "text-orange-700 dark:text-orange-300",
   },
+  denture: {
+    label: "Denture",
+    color: "#ec4899", // Pink
+    badgeBg: "bg-pink-50 dark:bg-pink-950/60",
+    badgeBorder: "border-pink-300 dark:border-pink-800",
+    badgeText: "text-pink-700 dark:text-pink-300",
+  },
+  partial_denture: {
+    label: "Partial Denture",
+    color: "#d946ef", // Fuchsia
+    badgeBg: "bg-fuchsia-50 dark:bg-fuchsia-950/60",
+    badgeBorder: "border-fuchsia-300 dark:border-fuchsia-800",
+    badgeText: "text-fuchsia-700 dark:text-fuchsia-300",
+  },
+  orthodontic: {
+    label: "Orthodontic treatment",
+    color: "#06b6d4", // Cyan
+    badgeBg: "bg-cyan-50 dark:bg-cyan-950/60",
+    badgeBorder: "border-cyan-300 dark:border-cyan-800",
+    badgeText: "text-cyan-700 dark:text-cyan-300",
+  },
+  scaling_polishing: {
+    label: "Scaling and polishing",
+    color: "#14b8a6", // Teal
+    badgeBg: "bg-teal-50 dark:bg-teal-950/60",
+    badgeBorder: "border-teal-300 dark:border-teal-800",
+    badgeText: "text-teal-700 dark:text-teal-300",
+  },
+  whitening: {
+    label: "Whitening",
+    color: "#6366f1", // Indigo
+    badgeBg: "bg-indigo-50 dark:bg-indigo-950/60",
+    badgeBorder: "border-indigo-300 dark:border-indigo-800",
+    badgeText: "text-indigo-700 dark:text-indigo-300",
+  },
+  implant: {
+    label: "Implant",
+    color: "#64748b", // Slate
+    badgeBg: "bg-slate-100 dark:bg-slate-800/80",
+    badgeBorder: "border-slate-300 dark:border-slate-700",
+    badgeText: "text-slate-700 dark:text-slate-300",
+  },
+  examination: {
+    label: "Examination",
+    color: "#84cc16", // Lime
+    badgeBg: "bg-lime-50 dark:bg-lime-950/60",
+    badgeBorder: "border-lime-300 dark:border-lime-800",
+    badgeText: "text-lime-700 dark:text-lime-300",
+  },
 };
+
+export const ALL_TREATMENTS: ToothTreatment[] = [
+  "treated",
+  "filling",
+  "root_canal",
+  "crown",
+  "extraction",
+  "decay",
+  "denture",
+  "partial_denture",
+  "orthodontic",
+  "scaling_polishing",
+  "whitening",
+  "implant",
+  "examination",
+];
+

@@ -38,6 +38,20 @@ export function Tooth3DGraphic({
       ? "#ddd6fe"
       : status === "decay"
       ? "#fed7aa"
+      : status === "denture"
+      ? "#fbcfe8"
+      : status === "partial_denture"
+      ? "#f5d0fe"
+      : status === "orthodontic"
+      ? "#cffafe"
+      : status === "scaling_polishing"
+      ? "#ccfbf1"
+      : status === "whitening"
+      ? "#ffffff"
+      : status === "implant"
+      ? "#cbd5e1"
+      : status === "examination"
+      ? "#ecfccb"
       : `url(#${crownGrad})`;
 
   const crownStroke =
@@ -51,6 +65,20 @@ export function Tooth3DGraphic({
       ? "#7c3aed"
       : status === "decay"
       ? "#c2410c"
+      : status === "denture"
+      ? "#db2777"
+      : status === "partial_denture"
+      ? "#c026d3"
+      : status === "orthodontic"
+      ? "#0891b2"
+      : status === "scaling_polishing"
+      ? "#0d9488"
+      : status === "whitening"
+      ? "#6366f1"
+      : status === "implant"
+      ? "#475569"
+      : status === "examination"
+      ? "#65a30d"
       : status === "treated"
       ? "#059669"
       : "#334155";
@@ -590,6 +618,126 @@ export function Tooth3DGraphic({
                 stroke="#047857"
                 strokeWidth="1.5"
               />
+            )}
+
+            {/* Denture: Pink prosthetic indicator */}
+            {status === "denture" && (
+              <circle
+                cx="24"
+                cy={isUpper ? "64" : "24"}
+                r="5.5"
+                fill="#ec4899"
+                stroke="#be185d"
+                strokeWidth="1.5"
+              />
+            )}
+
+            {/* Partial Denture: Fuchsia clasp indicator */}
+            {status === "partial_denture" && (
+              <g>
+                <circle
+                  cx="24"
+                  cy={isUpper ? "64" : "24"}
+                  r="5.5"
+                  fill="#d946ef"
+                  stroke="#a21caf"
+                  strokeWidth="1.5"
+                />
+                <path
+                  d={isUpper ? "M18 64 Q24 59 30 64" : "M18 24 Q24 29 30 24"}
+                  stroke="#ffffff"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  fill="none"
+                />
+              </g>
+            )}
+
+            {/* Orthodontic: Cyan bracket and archwire across crown */}
+            {status === "orthodontic" && (
+              <g>
+                <line
+                  x1="6"
+                  y1={isUpper ? "64" : "24"}
+                  x2="42"
+                  y2={isUpper ? "64" : "24"}
+                  stroke="#0891b2"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                />
+                <rect
+                  x="18"
+                  y={isUpper ? "58" : "18"}
+                  width="12"
+                  height="12"
+                  rx="2.5"
+                  fill="#06b6d4"
+                  stroke="#0891b2"
+                  strokeWidth="1.2"
+                />
+              </g>
+            )}
+
+            {/* Scaling and Polishing: Teal clean circle */}
+            {status === "scaling_polishing" && (
+              <circle
+                cx="24"
+                cy={isUpper ? "64" : "24"}
+                r="5.5"
+                fill="#14b8a6"
+                stroke="#0f766e"
+                strokeWidth="1.5"
+              />
+            )}
+
+            {/* Whitening: Indigo sparkle star badge */}
+            {status === "whitening" && (
+              <g>
+                <circle
+                  cx="24"
+                  cy={isUpper ? "64" : "24"}
+                  r="5.5"
+                  fill="#6366f1"
+                  stroke="#4f46e5"
+                  strokeWidth="1.5"
+                />
+                <path
+                  d={isUpper ? "M24 60 V68 M20 64 H28" : "M24 20 V28 M20 24 H28"}
+                  stroke="#ffffff"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                />
+              </g>
+            )}
+
+            {/* Implant: Titanium metallic screw threads along root */}
+            {status === "implant" && (
+              <g stroke="#475569" strokeWidth="1.6" strokeLinecap="round">
+                <line x1="20" y1={isUpper ? "15" : "70"} x2="28" y2={isUpper ? "15" : "70"} />
+                <line x1="18" y1={isUpper ? "22" : "63"} x2="30" y2={isUpper ? "22" : "63"} />
+                <line x1="19" y1={isUpper ? "29" : "56"} x2="29" y2={isUpper ? "29" : "56"} />
+                <line x1="21" y1={isUpper ? "36" : "49"} x2="27" y2={isUpper ? "36" : "49"} />
+              </g>
+            )}
+
+            {/* Examination: Lime check/observation marker */}
+            {status === "examination" && (
+              <g>
+                <circle
+                  cx="24"
+                  cy={isUpper ? "64" : "24"}
+                  r="5.5"
+                  fill="#84cc16"
+                  stroke="#4d7c0f"
+                  strokeWidth="1.5"
+                />
+                <circle
+                  cx="24"
+                  cy={isUpper ? "64" : "24"}
+                  r="2"
+                  fill="#ffffff"
+                />
+              </g>
             )}
           </g>
         )}

@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import {
   ALL_TEETH,
+  ALL_TREATMENTS,
   TREATMENT_METADATA,
   ToothInfo,
   ToothRecord,
@@ -157,6 +158,13 @@ export function DentalChart({
     "Extraction needed",
     "Sensitive to cold",
     "Fractured cusp",
+    "Scaling and polishing",
+    "Orthodontic treatment",
+    "Implant procedure",
+    "Teeth whitening",
+    "Denture fitting",
+    "Partial denture",
+    "Clinical examination",
   ];
 
   // Handle clicking on a tooth (supports single select by default, multi-select ONLY if toggled or Shift held)
@@ -666,7 +674,7 @@ export function DentalChart({
               className="px-2.5 py-1 rounded-xl bg-indigo-900/90 text-white text-xs font-semibold border border-indigo-700 focus:outline-none cursor-pointer"
             >
               <option value="" disabled>Status...</option>
-              {(["treated", "filling", "root_canal", "crown", "extraction", "decay"] as ToothTreatment[]).map((s) => (
+              {ALL_TREATMENTS.map((s) => (
                 <option key={s} value={s}>{TREATMENT_METADATA[s].label}</option>
               ))}
             </select>
@@ -760,17 +768,23 @@ export function DentalChart({
                   <polygon
                     points={poly.points}
                     onClick={(e) => handleToothClick(poly.num, e)}
+                    style={
+                      record && !isSelected
+                        ? {
+                            stroke: TREATMENT_METADATA[record.status]?.color || "#10b981",
+                            strokeWidth: 2.2,
+                            fill: `${TREATMENT_METADATA[record.status]?.color || "#10b981"}33`,
+                          }
+                        : undefined
+                    }
                     className={`
                       transition-all duration-150
                       ${
                         isSelected
                           ? "fill-indigo-600/40 stroke-indigo-600 stroke-[3.5px] filter drop-shadow-md"
-                          : "fill-transparent stroke-transparent hover:fill-indigo-500/25 hover:stroke-indigo-500/80 hover:stroke-[2px]"
-                      }
-                      ${
-                        record && !isSelected
-                          ? "stroke-emerald-500/80 stroke-[2px] fill-emerald-500/15"
-                          : ""
+                          : !record
+                          ? "fill-transparent stroke-transparent hover:fill-indigo-500/25 hover:stroke-indigo-500/80 hover:stroke-[2px]"
+                          : "hover:opacity-90"
                       }
                     `}
                   >
@@ -878,6 +892,159 @@ export function DentalChart({
                             fontWeight="900"
                           >
                             ✓
+                          </text>
+                        </g>
+                      )}
+
+                      {record.status === "denture" && (
+                        <g>
+                          <circle
+                            cx={poly.centerX}
+                            cy={poly.centerY}
+                            r="6.5"
+                            fill="#ec4899"
+                            stroke="#ffffff"
+                            strokeWidth="2"
+                          />
+                          <text
+                            x={poly.centerX}
+                            y={poly.centerY + 3.5}
+                            textAnchor="middle"
+                            fill="#ffffff"
+                            fontSize="8"
+                            fontWeight="900"
+                          >
+                            D
+                          </text>
+                        </g>
+                      )}
+
+                      {record.status === "partial_denture" && (
+                        <g>
+                          <circle
+                            cx={poly.centerX}
+                            cy={poly.centerY}
+                            r="6.5"
+                            fill="#d946ef"
+                            stroke="#ffffff"
+                            strokeWidth="2"
+                          />
+                          <text
+                            x={poly.centerX}
+                            y={poly.centerY + 3.5}
+                            textAnchor="middle"
+                            fill="#ffffff"
+                            fontSize="7"
+                            fontWeight="900"
+                          >
+                            PD
+                          </text>
+                        </g>
+                      )}
+
+                      {record.status === "orthodontic" && (
+                        <g>
+                          <rect
+                            x={poly.centerX - 5.5}
+                            y={poly.centerY - 5.5}
+                            width="11"
+                            height="11"
+                            rx="2.5"
+                            fill="#06b6d4"
+                            stroke="#ffffff"
+                            strokeWidth="1.5"
+                          />
+                          <line
+                            x1={poly.centerX - 7}
+                            y1={poly.centerY}
+                            x2={poly.centerX + 7}
+                            y2={poly.centerY}
+                            stroke="#ffffff"
+                            strokeWidth="1.5"
+                          />
+                        </g>
+                      )}
+
+                      {record.status === "scaling_polishing" && (
+                        <g>
+                          <circle
+                            cx={poly.centerX}
+                            cy={poly.centerY}
+                            r="6.5"
+                            fill="#14b8a6"
+                            stroke="#ffffff"
+                            strokeWidth="2"
+                          />
+                          <path
+                            d={`M ${poly.centerX - 3} ${poly.centerY + 1} Q ${poly.centerX} ${poly.centerY - 3} ${poly.centerX + 3} ${poly.centerY + 1}`}
+                            stroke="#ffffff"
+                            strokeWidth="1.2"
+                            fill="none"
+                            strokeLinecap="round"
+                          />
+                        </g>
+                      )}
+
+                      {record.status === "whitening" && (
+                        <text
+                          x={poly.centerX}
+                          y={poly.centerY + 5}
+                          textAnchor="middle"
+                          fontSize="12"
+                          className="select-none filter drop-shadow-xs"
+                        >
+                          ✨
+                        </text>
+                      )}
+
+                      {record.status === "implant" && (
+                        <g>
+                          <circle
+                            cx={poly.centerX}
+                            cy={poly.centerY}
+                            r="6.5"
+                            fill="#475569"
+                            stroke="#ffffff"
+                            strokeWidth="2"
+                          />
+                          <line
+                            x1={poly.centerX - 3}
+                            y1={poly.centerY - 2}
+                            x2={poly.centerX + 3}
+                            y2={poly.centerY - 2}
+                            stroke="#ffffff"
+                            strokeWidth="1.2"
+                          />
+                          <line
+                            x1={poly.centerX - 3}
+                            y1={poly.centerY + 1.5}
+                            x2={poly.centerX + 3}
+                            y2={poly.centerY + 1.5}
+                            stroke="#ffffff"
+                            strokeWidth="1.2"
+                          />
+                        </g>
+                      )}
+
+                      {record.status === "examination" && (
+                        <g>
+                          <circle
+                            cx={poly.centerX}
+                            cy={poly.centerY}
+                            r="6.5"
+                            fill="#84cc16"
+                            stroke="#ffffff"
+                            strokeWidth="2"
+                          />
+                          <text
+                            x={poly.centerX}
+                            y={poly.centerY + 3.5}
+                            textAnchor="middle"
+                            fill="#ffffff"
+                            fontSize="8"
+                            fontWeight="900"
+                          >
+                            ?
                           </text>
                         </g>
                       )}
@@ -1044,7 +1211,7 @@ export function DentalChart({
                 onChange={(e) => handleActiveToothStatusChange(e.target.value as ToothTreatment)}
                 className="w-full px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-semibold text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
               >
-                {(["treated", "filling", "root_canal", "crown", "extraction", "decay"] as ToothTreatment[]).map((s) => (
+                {ALL_TREATMENTS.map((s) => (
                   <option key={s} value={s}>{TREATMENT_METADATA[s].label}</option>
                 ))}
               </select>
