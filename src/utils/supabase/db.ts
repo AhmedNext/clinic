@@ -275,10 +275,12 @@ export async function fetchMaterialsFromDB(): Promise<ClinicMaterial[]> {
     const { data, error } = await getSupabase()
       .from("clinic_materials")
       .select("*")
+      .neq("category", "Rent")
       .order("created_at", { ascending: false });
 
     if (!error && data) {
       const parsed = data
+        .filter((row) => row.category !== "Rent")
         .map(mapRowToMaterial)
         .filter((m) => !["mat-1", "mat-2", "mat-3", "mat-4", "mat-5", "mat-6"].includes(m.id));
 
@@ -357,3 +359,79 @@ export async function deleteMaterialFromDB(id: string): Promise<void> {
     console.warn("Could not delete material from Supabase:", e);
   }
 }
+
+// ================= CLINIC MONTHLY RENT API =================
+const LOCAL_STORAGE_RENT_KEY = "dr_qayssar_rent_cache";
+
+export async function fetchRentFromDB(): Promise<Record<string, number>> {
+  try {
+    const { data, error } = await getSupabase()
+      .from("clinic_materials")
+      .select("*")
+      .eq("category", "Rent");
+
+    if (!error && data) {
+      const rentMap: Record<string, number> = {};
+      data.forEach((row: any) => {
+        const ym = (row.purchase_date || row.name || "").substring(0, 7);
+        if (ym) {
+          rentMap[ym] = Number(row.cost_price) || 0;
+        }
+      });
+      if (typeof window !== "undefined") {
+        localStorage.setItem(LOCAL_STORAGE_RENT_KEY, JSON.stringify(rentMap));
+      }
+      return rentMap;
+    }
+  } catch (err) {
+    console.warn("Error fetching rent from Supabase, using cache:", err);
+  }
+
+  if (typeof window !== "undefined") {
+    try {
+      const cached = localStorage.getItem(LOCAL_STORAGE_RENT_KEY);
+      if (cached) return JSON.parse(cached);
+    } catch {}
+  }
+  return {};
+}
+
+export async function saveRentToDB(month: string, amount: number): Promise<void> {
+  const rentId = `rent-${month}`;
+  if (typeof window !== "undefined") {
+    try {
+      const cached = localStorage.getItem(LOCAL_STORAGE_RENT_KEY);
+      const map: Record<string, number> = cached ? JSON.parse(cached) : {};
+      if (amount <= 0) {
+        delete map[month];
+      } else {
+        map[month] = amount;
+      }
+      localStorage.setItem(LOCAL_STORAGE_RENT_KEY, JSON.stringify(map));
+    } catch {}
+  }
+
+  try {
+    if (amount <= 0) {
+      await getSupabase().from("clinic_materials").delete().eq("id", rentId);
+    } else {
+      await getSupabase().from("clinic_materials").upsert({
+        id: rentId,
+        name: `Rent ${month}`,
+        category: "Rent",
+        unit: "Month",
+        quantity: 1,
+        min_quantity: 0,
+        cost_price: amount,
+        patient_price: 0,
+        supplier: "Clinic Rent",
+        purchase_date: `${month}-01`,
+        created_at: Date.now(),
+        updated_at: new Date().toISOString(),
+      });
+    }
+  } catch (e) {
+    console.warn("Could not save rent to Supabase:", e);
+  }
+}
+

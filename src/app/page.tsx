@@ -31,6 +31,8 @@ import {
   fetchMaterialsFromDB,
   upsertMaterialToDB,
   deleteMaterialFromDB,
+  fetchRentFromDB,
+  saveRentToDB,
   getCachedPatients,
   getCachedAppointments,
   getCachedMaterials,
@@ -67,6 +69,10 @@ const MaterialsView = dynamic(
   () => import("@/components/materials/MaterialsView").then((m) => m.MaterialsView),
   { ssr: false }
 );
+const MonthlyRentModal = dynamic(
+  () => import("@/components/MonthlyRentModal").then((m) => m.MonthlyRentModal),
+  { ssr: false }
+);
 
 export default function DashboardPage() {
   const [sessionChecked, setSessionChecked] = useState(false);
@@ -78,10 +84,12 @@ export default function DashboardPage() {
   const [patients, setPatients] = useState<Patient[]>(() => getCachedPatients());
   const [appointments, setAppointments] = useState<Appointment[]>(() => getCachedAppointments());
   const [materials, setMaterials] = useState<ClinicMaterial[]>(() => getCachedMaterials());
+  const [rentMap, setRentMap] = useState<Record<string, number>>({});
   const [isLoading, setIsLoading] = useState(false);
 
   // Modals state
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isRentModalOpen, setIsRentModalOpen] = useState(false);
   const [editingPatient, setEditingPatient] = useState<Patient | null>(null);
   const [historyPatient, setHistoryPatient] = useState<Patient | null>(null);
   const [dentalPatient, setDentalPatient] = useState<Patient | null>(null);
@@ -121,14 +129,16 @@ export default function DashboardPage() {
     async function loadData() {
       setIsLoading(true);
       try {
-        const [dbPatients, dbApts, dbMaterials] = await Promise.all([
+        const [dbPatients, dbApts, dbMaterials, dbRent] = await Promise.all([
           fetchPatientsFromDB(),
           fetchAppointmentsFromDB(),
           fetchMaterialsFromDB(),
+          fetchRentFromDB(),
         ]);
         setPatients(dbPatients);
         setAppointments(dbApts);
         setMaterials(dbMaterials);
+        setRentMap(dbRent);
       } catch (err) {
         console.error("Supabase fetch error:", err);
       } finally {
@@ -516,9 +526,38 @@ export default function DashboardPage() {
     }
   };
 
-  // Extract available months from patient dates and history entries
+  // Variable Monthly Clinic Rent Handler
+  const handleSaveRent = async (month: string, amount: number) => {
+    setRentMap((prev) => {
+      const next = { ...prev };
+      if (amount <= 0) {
+        delete next[month];
+      } else {
+        next[month] = amount;
+      }
+      return next;
+    });
+
+    if (amount <= 0) {
+      showToast(`Removed rent for ${month}`);
+    } else {
+      showToast(`Rent for ${month} set to ${formatIQD(amount)}`);
+    }
+
+    try {
+      await saveRentToDB(month, amount);
+    } catch (err) {
+      console.error("Failed to save rent to Supabase:", err);
+      showToast("⚠️ Failed to sync rent to cloud");
+    }
+  };
+
+  // Extract available months from patient dates, history, rent, and materials
   const availableMonths = useMemo(() => {
     const set = new Set<string>();
+    // Fallback: current month
+    set.add(new Date().toISOString().substring(0, 7));
+
     patients.forEach((p) => {
       if (p.date && p.date.length >= 7) {
         set.add(p.date.substring(0, 7)); // 'YYYY-MM'
@@ -529,8 +568,14 @@ export default function DashboardPage() {
         }
       });
     });
+
+    Object.keys(rentMap).forEach((ym) => set.add(ym));
+    materials.forEach((m) => {
+      if (m.date && m.date.length >= 7) set.add(m.date.substring(0, 7));
+    });
+
     return Array.from(set).sort((a, b) => b.localeCompare(a));
-  }, [patients]);
+  }, [patients, rentMap, materials]);
 
   const formatMonthName = (yearMonth: string) => {
     try {
@@ -640,17 +685,23 @@ export default function DashboardPage() {
             </div>
             <MonthlyReportView
               patients={patients}
+              materials={materials}
+              rentMap={rentMap}
               onViewHistory={(patient) => setHistoryPatient(patient)}
+              onOpenRentModal={() => setIsRentModalOpen(true)}
             />
           </>
         ) : (
           /* ================= PATIENTS CASES TAB ================= */
           <>
-            {/* Quick Stats Overview (shows income, materials spend, net profit, debts) */}
+            {/* Quick Stats Overview (shows income, materials spend, clinic rent, net profit, debts) */}
             <StatsOverview
               patients={monthFilter === "all" ? patients : filteredAndSortedPatients}
               materials={materials}
+              rentMap={rentMap}
+              selectedMonth={monthFilter}
               monthSubtitle={monthFilter === "all" ? undefined : formatMonthName(monthFilter)}
+              onOpenRentModal={() => setIsRentModalOpen(true)}
             />
 
             {/* Filter and Control Toolbar (Mobile-first) */}
@@ -966,6 +1017,15 @@ export default function DashboardPage() {
         onClose={() => setDentalPatient(null)}
         onSaveTeeth={handleSaveTeeth}
         clinicMaterials={materials}
+      />
+
+      {/* Variable Monthly Clinic Rent Modal */}
+      <MonthlyRentModal
+        isOpen={isRentModalOpen}
+        onClose={() => setIsRentModalOpen(false)}
+        rentMap={rentMap}
+        availableMonths={availableMonths}
+        onSaveRent={handleSaveRent}
       />
 
       {/* Toast Notification */}

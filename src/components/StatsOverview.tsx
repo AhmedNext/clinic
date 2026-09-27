@@ -3,15 +3,33 @@
 import React from "react";
 import { Patient, calculateDebt, formatIQD } from "@/types/patient";
 import { ClinicMaterial } from "@/types/material";
-import { Users, AlertCircle, CheckCircle, Boxes, TrendingUp } from "lucide-react";
+import {
+  Users,
+  AlertCircle,
+  CheckCircle,
+  Boxes,
+  TrendingUp,
+  Building2,
+  Settings,
+} from "lucide-react";
 
 interface StatsOverviewProps {
   patients: Patient[];
   materials?: ClinicMaterial[];
+  rentMap?: Record<string, number>;
+  selectedMonth?: string;
   monthSubtitle?: string;
+  onOpenRentModal?: () => void;
 }
 
-export function StatsOverview({ patients, materials = [], monthSubtitle }: StatsOverviewProps) {
+export function StatsOverview({
+  patients,
+  materials = [],
+  rentMap = {},
+  selectedMonth,
+  monthSubtitle,
+  onOpenRentModal,
+}: StatsOverviewProps) {
   const total = patients.length;
 
   // Total money collected from patients
@@ -27,17 +45,24 @@ export function StatsOverview({ patients, materials = [], monthSubtitle }: Stats
     0
   );
 
-  // Total Billed = Total case charges
-  const totalBilled = totalPaid + totalDebt;
+  // Material spend (for selected month if filtered, else all-time)
+  const isMonthFiltered = Boolean(selectedMonth && selectedMonth !== "all");
+  const filteredMaterials = isMonthFiltered
+    ? materials.filter((m) => m.date?.startsWith(selectedMonth!))
+    : materials;
 
-  // Total money spent on clinic materials / suppliers
-  const totalMaterialCost = materials.reduce(
+  const totalMaterialCost = filteredMaterials.reduce(
     (sum, m) => sum + (m.costPrice || 0),
     0
   );
 
-  // Net Worth (Clinic Profit) = Total Income from patients minus Material Costs
-  const netWorth = totalPaid - totalMaterialCost;
+  // Clinic Rent (for selected month if filtered, else sum of all recorded rent)
+  const clinicRent = isMonthFiltered
+    ? (rentMap[selectedMonth!] || 0)
+    : Object.values(rentMap).reduce((sum, v) => sum + (v || 0), 0);
+
+  // Net Worth = Total Income minus Material Spend minus Clinic Rent!
+  const netWorth = totalPaid - totalMaterialCost - clinicRent;
 
   const debtCasesCount = patients.filter(
     (p) => calculateDebt(p.totalAmount, p.paidAmount, p.debtAmount) > 0
@@ -45,6 +70,8 @@ export function StatsOverview({ patients, materials = [], monthSubtitle }: Stats
 
   const maleCount = patients.filter((p) => p.gender === "male").length;
   const femaleCount = patients.filter((p) => p.gender === "female").length;
+
+  const recordedRentCount = Object.keys(rentMap).filter((k) => (rentMap[k] || 0) > 0).length;
 
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 sm:gap-3 mb-4 sm:mb-6">
@@ -66,25 +93,7 @@ export function StatsOverview({ patients, materials = [], monthSubtitle }: Stats
         </p>
       </div>
 
-      {/* 2. Total Billed (Total Value of Procedures) */}
-      <div className="p-3 sm:p-3.5 rounded-2xl border border-blue-200/80 dark:border-blue-900/40 bg-gradient-to-br from-blue-50/50 to-white dark:from-blue-950/20 dark:to-slate-900 shadow-2xs">
-        <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-1">
-          <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-blue-700 dark:text-blue-400 truncate">
-            Total Billed
-          </span>
-          <div className="p-1 rounded-lg bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300 flex-shrink-0">
-            <TrendingUp className="w-3.5 h-3.5" />
-          </div>
-        </div>
-        <div className="text-sm sm:text-lg font-black text-blue-700 dark:text-blue-400 tracking-tight truncate">
-          {formatIQD(totalBilled)}
-        </div>
-        <p className="text-[10px] text-blue-600/80 dark:text-blue-400/70 mt-0.5 truncate font-medium">
-          Total case charges
-        </p>
-      </div>
-
-      {/* 3. Total Income (Collected from Patients) */}
+      {/* 2. Total Income (Collected from Patients) */}
       <div className="p-3 sm:p-3.5 rounded-2xl border border-emerald-200/80 dark:border-emerald-900/40 bg-gradient-to-br from-emerald-50/50 to-white dark:from-emerald-950/20 dark:to-slate-900 shadow-2xs">
         <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-1">
           <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400 truncate">
@@ -102,7 +111,7 @@ export function StatsOverview({ patients, materials = [], monthSubtitle }: Stats
         </p>
       </div>
 
-      {/* 4. Total Material Spend (Supplier Expenses) */}
+      {/* 3. Total Material Spend (Supplier Expenses) */}
       <div className="p-3 sm:p-3.5 rounded-2xl border border-amber-200/80 dark:border-amber-900/40 bg-gradient-to-br from-amber-50/50 to-white dark:from-amber-950/20 dark:to-slate-900 shadow-2xs">
         <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-1">
           <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400 truncate">
@@ -116,25 +125,57 @@ export function StatsOverview({ patients, materials = [], monthSubtitle }: Stats
           {formatIQD(totalMaterialCost)}
         </div>
         <p className="text-[10px] text-amber-600/80 dark:text-amber-400/70 mt-0.5 truncate font-medium">
-          {materials.length} {materials.length === 1 ? "expense" : "expenses"} logged
+          {filteredMaterials.length} {filteredMaterials.length === 1 ? "expense" : "expenses"} logged
         </p>
       </div>
 
-      {/* 5. Net Worth (Total Income - Material Spend) */}
+      {/* 4. Monthly Clinic Rent (Variable & Doctor-Adjustable) */}
       <div className="p-3 sm:p-3.5 rounded-2xl border border-violet-200/80 dark:border-violet-900/40 bg-gradient-to-br from-violet-50/50 to-white dark:from-violet-950/20 dark:to-slate-900 shadow-2xs">
         <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-1">
           <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-violet-700 dark:text-violet-400 truncate">
+            Clinic Rent
+          </span>
+          <button
+            type="button"
+            onClick={onOpenRentModal}
+            className="p-1 rounded-lg bg-violet-100 dark:bg-violet-900/60 hover:bg-violet-200 dark:hover:bg-violet-800 text-violet-700 dark:text-violet-300 flex-shrink-0 transition-colors cursor-pointer"
+            title="Adjust monthly rent"
+          >
+            <Settings className="w-3.5 h-3.5" />
+          </button>
+        </div>
+        <div className="text-sm sm:text-lg font-black text-violet-700 dark:text-violet-300 tracking-tight truncate">
+          {formatIQD(clinicRent)}
+        </div>
+        <div className="flex items-center justify-between mt-0.5">
+          <p className="text-[10px] text-violet-600/80 dark:text-violet-400/70 truncate font-medium">
+            {isMonthFiltered ? `${monthSubtitle} rent` : `${recordedRentCount} months rent`}
+          </p>
+          <button
+            type="button"
+            onClick={onOpenRentModal}
+            className="text-[10px] text-indigo-600 dark:text-indigo-400 font-bold hover:underline cursor-pointer"
+          >
+            Adjust
+          </button>
+        </div>
+      </div>
+
+      {/* 5. Net Worth (Total Income - Material Spend - Clinic Rent) */}
+      <div className="p-3 sm:p-3.5 rounded-2xl border border-indigo-200/80 dark:border-indigo-900/40 bg-gradient-to-br from-indigo-50/50 to-white dark:from-indigo-950/20 dark:to-slate-900 shadow-2xs">
+        <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-1">
+          <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-indigo-700 dark:text-indigo-400 truncate">
             Net Worth
           </span>
-          <div className="p-1 rounded-lg bg-violet-100 dark:bg-violet-900/60 text-violet-700 dark:text-violet-300 flex-shrink-0">
+          <div className="p-1 rounded-lg bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 flex-shrink-0">
             <TrendingUp className="w-3.5 h-3.5" />
           </div>
         </div>
-        <div className="text-sm sm:text-lg font-black text-violet-700 dark:text-violet-300 tracking-tight truncate">
+        <div className="text-sm sm:text-lg font-black text-indigo-700 dark:text-indigo-300 tracking-tight truncate">
           {formatIQD(netWorth)}
         </div>
-        <p className="text-[10px] text-violet-600/80 dark:text-violet-400/70 mt-0.5 truncate font-medium">
-          Income - Materials
+        <p className="text-[10px] text-indigo-600/80 dark:text-indigo-400/70 mt-0.5 truncate font-medium">
+          Income - Materials - Rent
         </p>
       </div>
 
@@ -174,4 +215,5 @@ export function StatsOverview({ patients, materials = [], monthSubtitle }: Stats
     </div>
   );
 }
+
 
