@@ -117,10 +117,26 @@ export default function DashboardPage() {
 
   // Patient CRUD
   const handleAddPatient = async (data: Omit<Patient, "id">) => {
+    const now = Date.now();
+    const patientId = `pat-${now}-${Math.random().toString(36).substring(2, 6)}`;
+
+    // Auto-create an initial history entry from the patient's first visit data
+    const initialEntry: PatientHistoryEntry = {
+      id: `hist-${now}-${Math.random().toString(36).substring(2, 6)}`,
+      date: data.date,
+      title: "Initial Visit",
+      notes: data.notes || "",
+      fee: 0,
+      paid: data.paidAmount ?? 0,
+      debt: data.debtAmount ?? 0,
+      createdAt: now,
+    };
+
     const newPatient: Patient = {
       ...data,
-      id: `pat-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
-      createdAt: Date.now(),
+      id: patientId,
+      history: [initialEntry, ...(data.history || [])],
+      createdAt: now,
     };
     setPatients((prev) => [newPatient, ...prev]);
     showToast(`Added case for "${newPatient.name}"`);
