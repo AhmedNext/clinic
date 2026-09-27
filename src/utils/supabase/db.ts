@@ -191,39 +191,47 @@ export async function fetchMaterialsFromDB(): Promise<ClinicMaterial[]> {
       .select("*")
       .order("created_at", { ascending: false });
 
-    if (!error && data && data.length > 0) {
-      const parsed = data.map(mapRowToMaterial);
+    if (!error && data) {
+      const parsed = data
+        .map(mapRowToMaterial)
+        .filter((m) => !["mat-1", "mat-2", "mat-3", "mat-4", "mat-5", "mat-6"].includes(m.id));
+
       if (typeof window !== "undefined") {
         localStorage.setItem(LOCAL_STORAGE_MATERIALS_KEY, JSON.stringify(parsed));
       }
       return parsed;
     }
   } catch (err) {
-    console.warn("Supabase clinic_materials not available or empty, using fallback:", err);
+    console.warn("Supabase clinic_materials not available, using fallback:", err);
   }
 
-  // Fallback to localStorage or default seed
+  // Fallback to localStorage or empty array
   if (typeof window !== "undefined") {
     const cached = localStorage.getItem(LOCAL_STORAGE_MATERIALS_KEY);
     if (cached) {
       try {
         const parsed = JSON.parse(cached);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          return parsed;
+        if (Array.isArray(parsed)) {
+          // Filter out any legacy dummy seed items
+          const cleaned = parsed.filter(
+            (m) => !["mat-1", "mat-2", "mat-3", "mat-4", "mat-5", "mat-6"].includes(m.id)
+          );
+          localStorage.setItem(LOCAL_STORAGE_MATERIALS_KEY, JSON.stringify(cleaned));
+          return cleaned;
         }
       } catch (e) {
         // ignore
       }
     }
-    localStorage.setItem(LOCAL_STORAGE_MATERIALS_KEY, JSON.stringify(DEFAULT_CLINIC_MATERIALS));
+    localStorage.setItem(LOCAL_STORAGE_MATERIALS_KEY, JSON.stringify([]));
   }
-  return DEFAULT_CLINIC_MATERIALS;
+  return [];
 }
 
 export async function upsertMaterialToDB(mat: ClinicMaterial): Promise<void> {
   if (typeof window !== "undefined") {
     const cached = localStorage.getItem(LOCAL_STORAGE_MATERIALS_KEY);
-    let list: ClinicMaterial[] = cached ? JSON.parse(cached) : [...DEFAULT_CLINIC_MATERIALS];
+    let list: ClinicMaterial[] = cached ? JSON.parse(cached) : [];
     const idx = list.findIndex((m) => m.id === mat.id);
     if (idx >= 0) {
       list[idx] = mat;
