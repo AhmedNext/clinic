@@ -1,29 +1,16 @@
 export interface ClinicMaterial {
   id: string;
-  name: string;
-  category: "Restorative" | "Endodontics" | "Prosthetics" | "Surgery" | "Hygiene" | "Orthodontics" | "General";
-  unit: string;
-  quantity: number;
-  minQuantity: number;
-  costPrice: number;       // Spent by doctor / clinic (IQD)
-  patientPrice: number;    // Default fee charged to patient (IQD)
-  supplier?: string;
-  purchaseDate?: string;   // YYYY-MM-DD
-  expiryDate?: string;     // YYYY-MM-DD
+  date: string;       // 1. Date of purchase (YYYY-MM-DD)
+  supplier: string;   // 2. Supplier / Material description
+  costPrice: number;  // 3. Total money spent (IQD)
+  name?: string;      // Alias for supplier in dental chart
+  patientPrice?: number;
   notes?: string;
   createdAt: number;
   updatedAt?: number;
 }
 
-export const MATERIAL_CATEGORIES: ClinicMaterial["category"][] = [
-  "Restorative",
-  "Endodontics",
-  "Prosthetics",
-  "Surgery",
-  "Hygiene",
-  "Orthodontics",
-  "General",
-];
+export type NewClinicMaterial = Omit<ClinicMaterial, "id" | "createdAt">;
 
-// Starts empty so doctor adds their own real clinic materials
 export const DEFAULT_CLINIC_MATERIALS: ClinicMaterial[] = [];
+

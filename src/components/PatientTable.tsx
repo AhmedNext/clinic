@@ -3,7 +3,7 @@
 import React from "react";
 import { Patient, calculateDebt, formatIQD, getWhatsAppUrl } from "@/types/patient";
 import { PatientAvatar } from "./PatientAvatar";
-import { Calendar, Trash2, FileText, Pencil, History, Phone } from "lucide-react";
+import { Calendar, Trash2, FileText, Pencil, History, Phone, Check } from "lucide-react";
 import { formatStaticDate } from "@/utils/date";
 
 interface PatientTableProps {
@@ -12,6 +12,7 @@ interface PatientTableProps {
   onEditPatient: (patient: Patient) => void;
   onViewHistory: (patient: Patient) => void;
   onOpenDentalChart: (patient: Patient) => void;
+  onSettleDebt?: (patient: Patient) => void;
 }
 
 export const PatientTable = React.memo(function PatientTable({
@@ -20,6 +21,7 @@ export const PatientTable = React.memo(function PatientTable({
   onEditPatient,
   onViewHistory,
   onOpenDentalChart,
+  onSettleDebt,
 }: PatientTableProps) {
   const formatDate = (dateString: string) => formatStaticDate(dateString);
 
@@ -164,9 +166,20 @@ export const PatientTable = React.memo(function PatientTable({
                   <td className="py-3.5 px-3 text-xs">
                     {debt > 0 ? (
                       <div className="space-y-1">
-                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full font-semibold text-[11px] bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-900/60 whitespace-nowrap">
-                          Debt: {formatIQD(debt)}
-                        </span>
+                        <div className="flex items-center gap-1.5">
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full font-semibold text-[11px] bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-900/60 whitespace-nowrap">
+                            Debt: {formatIQD(debt)}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => onSettleDebt?.(patient)}
+                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow-2xs transition-all cursor-pointer"
+                            title="Mark debt as paid"
+                          >
+                            <Check className="w-2.5 h-2.5" />
+                            <span>Paid ✓</span>
+                          </button>
+                        </div>
                         <div className="text-[11px] text-slate-500 dark:text-slate-400 pl-1 font-medium whitespace-nowrap">
                           Paid: {formatIQD(paid)}
                         </div>

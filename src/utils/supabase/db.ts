@@ -238,18 +238,14 @@ export async function deleteAppointmentFromDB(id: string): Promise<void> {
 
 // ================= MATERIAL & EXPENSES API =================
 export function mapRowToMaterial(row: any): ClinicMaterial {
+  const supplier = row.supplier || row.name || "Clinic Supplier";
   return {
     id: row.id,
-    name: row.name,
-    category: row.category || "General",
-    unit: row.unit || "pcs",
-    quantity: row.quantity !== null && row.quantity !== undefined ? Number(row.quantity) : 0,
-    minQuantity: row.min_quantity !== null && row.min_quantity !== undefined ? Number(row.min_quantity) : 1,
+    date: row.purchase_date || (row.date ? row.date : new Date().toISOString().substring(0, 10)),
+    supplier,
+    name: supplier,
     costPrice: row.cost_price !== null && row.cost_price !== undefined ? Number(row.cost_price) : 0,
-    patientPrice: row.patient_price !== null && row.patient_price !== undefined ? Number(row.patient_price) : 0,
-    supplier: row.supplier ?? undefined,
-    purchaseDate: row.purchase_date ?? undefined,
-    expiryDate: row.expiry_date ?? undefined,
+    patientPrice: row.patient_price ? Number(row.patient_price) : 0,
     notes: row.notes ?? undefined,
     createdAt: row.created_at ? Number(row.created_at) : Date.now(),
     updatedAt: row.updated_at ? new Date(row.updated_at).getTime() : undefined,
@@ -259,16 +255,15 @@ export function mapRowToMaterial(row: any): ClinicMaterial {
 export function mapMaterialToRow(mat: ClinicMaterial): any {
   return {
     id: mat.id,
-    name: mat.name,
-    category: mat.category,
-    unit: mat.unit,
-    quantity: mat.quantity,
-    min_quantity: mat.minQuantity,
+    name: mat.supplier,
+    supplier: mat.supplier,
+    category: "General",
+    unit: "Item",
+    quantity: 1,
+    min_quantity: 0,
     cost_price: mat.costPrice,
-    patient_price: mat.patientPrice,
-    supplier: mat.supplier ?? null,
-    purchase_date: mat.purchaseDate ?? null,
-    expiry_date: mat.expiryDate ?? null,
+    patient_price: 0,
+    purchase_date: mat.date,
     notes: mat.notes ?? null,
     created_at: mat.createdAt ?? Date.now(),
     updated_at: new Date().toISOString(),

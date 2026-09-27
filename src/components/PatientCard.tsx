@@ -3,7 +3,7 @@
 import React from "react";
 import { Patient, calculateDebt, formatIQD, getWhatsAppUrl } from "@/types/patient";
 import { PatientAvatar } from "./PatientAvatar";
-import { Calendar, Trash2, FileText, Pencil, History, Phone } from "lucide-react";
+import { Calendar, Trash2, FileText, Pencil, History, Phone, Check } from "lucide-react";
 import { formatStaticDate } from "@/utils/date";
 
 interface PatientCardProps {
@@ -12,6 +12,7 @@ interface PatientCardProps {
   onEditPatient: (patient: Patient) => void;
   onViewHistory: (patient: Patient) => void;
   onOpenDentalChart: (patient: Patient) => void;
+  onSettleDebt?: (patient: Patient) => void;
 }
 
 export const PatientCard = React.memo(function PatientCard({
@@ -20,6 +21,7 @@ export const PatientCard = React.memo(function PatientCard({
   onEditPatient,
   onViewHistory,
   onOpenDentalChart,
+  onSettleDebt,
 }: PatientCardProps) {
   const isMale = patient.gender === "male";
   const debt = calculateDebt(patient.totalAmount, patient.paidAmount, patient.debtAmount);
@@ -132,9 +134,23 @@ export const PatientCard = React.memo(function PatientCard({
             </strong>
           </span>
           {debt > 0 ? (
-            <span className="font-bold text-rose-600 dark:text-rose-400">
-              Owes {formatIQD(debt)}
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="font-bold text-rose-600 dark:text-rose-400">
+                Owes {formatIQD(debt)}
+              </span>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onSettleDebt?.(patient);
+                }}
+                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow-2xs active:scale-95 transition-all cursor-pointer"
+                title="Click to mark debt as paid"
+              >
+                <Check className="w-3.5 h-3.5" />
+                <span>Paid ✓</span>
+              </button>
+            </div>
           ) : (
             <span className="inline-flex items-center gap-1 font-semibold text-emerald-700 dark:text-emerald-400">
               <span>✓</span>

@@ -271,8 +271,8 @@ export function DentalChart({
   // Select clinic material (instantly populates material + auto-fills default procedure fee!)
   const handleSelectClinicMaterial = (mat: ClinicMaterial) => {
     if (!activeTooth) return;
-    setTreatmentMaterial(mat.name);
-    setTreatmentPrice(String(mat.patientPrice));
+    setTreatmentMaterial(mat.name || mat.supplier || "");
+    setTreatmentPrice(String(mat.patientPrice ?? ""));
 
     const existingRecord = recordsMap.get(activeTooth.number);
     const updatedRecord: ToothRecord = {

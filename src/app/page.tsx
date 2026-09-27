@@ -438,7 +438,45 @@ export default function DashboardPage() {
     }
   };
 
-  // Material & Inventory CRUD
+  // Quick settle patient debt (one-click check to mark as fully paid)
+  const handleSettleDebt = async (patient: Patient) => {
+    const curPaid = patient.paidAmount ?? 0;
+    const curDebt = calculateDebt(patient.totalAmount, patient.paidAmount, patient.debtAmount);
+    if (curDebt <= 0) return;
+
+    const newPaid = curPaid + curDebt;
+    const updatedPatient: Patient = {
+      ...patient,
+      paidAmount: newPaid,
+      debtAmount: 0,
+      totalAmount: Math.max(patient.totalAmount ?? 0, newPaid),
+      history: [
+        ...(patient.history || []),
+        {
+          id: `hist-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+          date: new Date().toISOString().substring(0, 10),
+          title: "Debt Settled (Paid in Full)",
+          notes: `Paid remaining balance of ${formatIQD(curDebt)}`,
+          fee: curDebt,
+          paid: curDebt,
+          debt: 0,
+          createdAt: Date.now(),
+        },
+      ],
+    };
+
+    setPatients((prev) => prev.map((p) => (p.id === patient.id ? updatedPatient : p)));
+    showToast(`✓ Debt of ${formatIQD(curDebt)} for "${patient.name}" marked as fully paid!`);
+
+    try {
+      await upsertPatientToDB(updatedPatient);
+    } catch (e) {
+      console.error("Failed to settle debt in Supabase:", e);
+      showToast("⚠️ Failed to sync debt settlement to cloud");
+    }
+  };
+
+  // Material & Supplier Expense CRUD (Date, Supplier, Total Money Spent)
   const handleAddMaterial = async (data: Omit<ClinicMaterial, "id" | "createdAt">) => {
     const newMat: ClinicMaterial = {
       ...data,
@@ -446,7 +484,7 @@ export default function DashboardPage() {
       createdAt: Date.now(),
     };
     setMaterials((prev) => [newMat, ...prev]);
-    showToast(`Added material "${newMat.name}"`);
+    showToast(`Added expense for "${newMat.supplier}"`);
 
     try {
       await upsertMaterialToDB(newMat);
@@ -468,7 +506,7 @@ export default function DashboardPage() {
     const target = materials.find((m) => m.id === id);
     setMaterials((prev) => prev.filter((m) => m.id !== id));
     if (target) {
-      showToast(`Deleted "${target.name}"`);
+      showToast(`Deleted expense for "${target.supplier}"`);
     }
 
     try {
@@ -839,6 +877,7 @@ export default function DashboardPage() {
                       onEditPatient={(patient) => setEditingPatient(patient)}
                       onViewHistory={(patient) => setHistoryPatient(patient)}
                       onOpenDentalChart={(patient) => setDentalPatient(patient)}
+                      onSettleDebt={handleSettleDebt}
                     />
                   </div>
                 ) : null}
@@ -857,6 +896,7 @@ export default function DashboardPage() {
                       onEditPatient={(patient) => setEditingPatient(patient)}
                       onViewHistory={(patient) => setHistoryPatient(patient)}
                       onOpenDentalChart={(patient) => setDentalPatient(patient)}
+                      onSettleDebt={handleSettleDebt}
                     />
                   ))}
                 </div>

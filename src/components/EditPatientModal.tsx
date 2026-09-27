@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { X, Calendar, User, FileText, CheckCircle2, Banknote, Phone } from "lucide-react";
+import { X, Calendar, User, FileText, CheckCircle2, Banknote, Phone, Check } from "lucide-react";
 import { Gender, Patient, calculateDebt } from "@/types/patient";
 import { ToothRecord } from "@/types/dental";
 import { DentalChart } from "./dental/DentalChart";
@@ -360,6 +360,23 @@ export function EditPatientModal({
                 />
               </div>
             </div>
+
+            {/* Quick Settle Debt Button */}
+            {parseFloat(debtAmount) > 0 && (
+              <button
+                type="button"
+                onClick={() => {
+                  const p = parseFloat(paidAmount) || 0;
+                  const d = parseFloat(debtAmount) || 0;
+                  setPaidAmount(String(p + d));
+                  setDebtAmount("0");
+                }}
+                className="w-full mt-2 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow-2xs transition-all cursor-pointer"
+              >
+                <Check className="w-3.5 h-3.5" />
+                <span>Patient Paid Debt (Set Debt to 0 IQD)</span>
+              </button>
+            )}
           </div>
 
           {/* Notes / Current Case Diagnosis */}
