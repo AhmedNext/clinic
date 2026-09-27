@@ -246,7 +246,7 @@ export const translations: Record<Language, Translations> = {
     addPatient: "Add Patient",
     clinicPro: "Clinic Pro",
     activeCloud: "Active Cloud",
-    clinicSubtitle: "Dr. Qayssar Saleh • Clinic & Odontogram",
+    clinicSubtitle: "Dr. Qayssar Salah • Clinic & Odontogram",
     signOut: "Sign out",
     signOutTooltip: "Log out from clinic system",
 
@@ -304,7 +304,7 @@ export const translations: Record<Language, Translations> = {
     password: "Password",
     unlockDashboard: "Unlock Clinic Dashboard",
     offlineCacheAccess: "Enter Clinic Workspace (Offline Cache)",
-    offlineCacheDesc: "Protected by Row-Level Security • Dr. Qayssar Saleh Clinic",
+    offlineCacheDesc: "Protected by Row-Level Security • Dr. Qayssar Salah Clinic",
     verifyingSession: "Verifying clinic session...",
 
     // Modals & General
@@ -477,7 +477,7 @@ export const translations: Record<Language, Translations> = {
     addPatient: "إضافة مريض",
     clinicPro: "عيادة احترافية",
     activeCloud: "متصل سحابياً",
-    clinicSubtitle: "د. قيصر صالح • إدارة العيادة ومخطط الأسنان",
+    clinicSubtitle: "د. قيصر صلاح • إدارة العيادة ومخطط الأسنان",
     signOut: "تسجيل الخروج",
     signOutTooltip: "تسجيل الخروج من نظام العيادة",
 
@@ -535,7 +535,7 @@ export const translations: Record<Language, Translations> = {
     password: "كلمة المرور",
     unlockDashboard: "دخول نظام العيادة",
     offlineCacheAccess: "الدخول ببيانات العيادة المحفوظة (بدون إنترنت)",
-    offlineCacheDesc: "محمي بنظام أمان البيانات • عيادة د. قيصر صالح",
+    offlineCacheDesc: "محمي بنظام أمان البيانات • عيادة د. قيصر صلاح",
     verifyingSession: "جاري التحقق من جلسة العيادة...",
 
     // Modals & General
@@ -708,7 +708,7 @@ export const translations: Record<Language, Translations> = {
     addPatient: "نەخۆشی نوێ",
     clinicPro: "نۆرینگەی تایبەت",
     activeCloud: "کلاودی چالاک",
-    clinicSubtitle: "د. قەیسەر ساڵح • نۆرینگەی ددان و چارەسەر",
+    clinicSubtitle: "د. قەیسەر سەڵاح • نۆرینگەی ددان و چارەسەر",
     signOut: "دەرچوون",
     signOutTooltip: "دەرچوون لە سیستەمی نۆرینگە",
 
@@ -766,7 +766,7 @@ export const translations: Record<Language, Translations> = {
     password: "وشەی نهێنی",
     unlockDashboard: "چوونەژوورەوە بۆ نۆرینگە",
     offlineCacheAccess: "چوونەژوورەوە بە کاشی نۆرینگە (بێ ئینتەرنێت)",
-    offlineCacheDesc: "پارێزراوە بە سیستەمی پاراستن • نۆرینگەی د. قەیسەر ساڵح",
+    offlineCacheDesc: "پارێزراوە بە سیستەمی پاراستن • نۆرینگەی د. قەیسەر سەڵاح",
     verifyingSession: "پشکنینی هەژماری نۆرینگە...",
 
     // Modals & General

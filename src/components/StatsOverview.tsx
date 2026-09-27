@@ -76,7 +76,7 @@ export function StatsOverview({
   const recordedRentCount = Object.keys(rentMap).filter((k) => (rentMap[k] || 0) > 0).length;
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 sm:gap-3 mb-4 sm:mb-6">
+    <div className="grid grid-cols-1 min-[380px]:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-2.5 sm:gap-3.5 mb-4 sm:mb-6">
       {/* 1. Total Patients / Cases */}
       <div className="p-3 sm:p-3.5 rounded-2xl border border-indigo-100 dark:border-indigo-900/40 bg-gradient-to-br from-indigo-50/40 via-white to-white dark:from-indigo-950/20 dark:via-slate-900 dark:to-slate-900 shadow-2xs hover:-translate-y-0.5 hover:shadow-md transition-all duration-200 group">
         <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-1">
