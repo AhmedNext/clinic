@@ -668,7 +668,7 @@ export default function DashboardPage() {
       />
 
       {/* Main Container */}
-      <main className="flex-1 w-full px-3 sm:px-6 xl:px-10 py-4 sm:py-8">
+      <main className="flex-1 w-full px-3 sm:px-6 xl:px-10 py-4 pb-24 md:pb-8">
         {activeTab === "appointments" ? (
           /* ================= APPOINTMENTS FULL MONTH TAB ================= */
           <AppointmentsView
@@ -994,11 +994,11 @@ export default function DashboardPage() {
           <button
             type="button"
             onClick={() => setIsModalOpen(true)}
-            className="sm:hidden fixed bottom-5 right-5 z-40 flex items-center gap-2 px-4 py-3 rounded-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold shadow-xl shadow-indigo-600/35 active:scale-95 transition-all cursor-pointer"
-            aria-label="Add new patient"
+            className="sm:hidden fixed bottom-20 right-4 rtl:right-auto rtl:left-4 z-30 flex items-center gap-2 px-4 py-3 rounded-full bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-bold shadow-xl shadow-indigo-600/35 active:scale-95 transition-all cursor-pointer"
+            aria-label={t.addPatient}
           >
             <UserPlus className="w-5 h-5 stroke-[2.2]" />
-            <span className="text-xs font-bold">Add Patient</span>
+            <span className="text-xs font-bold">{t.addPatient}</span>
           </button>
         )}
       </main>
@@ -1048,7 +1048,7 @@ export default function DashboardPage() {
 
       {/* Toast Notification */}
       {notification && (
-        <div className="fixed bottom-5 right-5 z-50 px-4 py-2.5 rounded-2xl bg-slate-900 text-white dark:bg-white dark:text-slate-900 text-xs font-semibold shadow-2xl border border-slate-700 dark:border-slate-200 animate-in fade-in slide-in-from-bottom-2 duration-200">
+        <div className="fixed bottom-20 sm:bottom-5 right-4 rtl:right-auto rtl:left-4 sm:right-5 sm:rtl:left-5 z-50 px-4 py-2.5 rounded-2xl bg-slate-900 text-white dark:bg-white dark:text-slate-900 text-xs font-semibold shadow-2xl border border-slate-700 dark:border-slate-200 animate-in fade-in slide-in-from-bottom-2 duration-200">
           {notification}
         </div>
       )}

@@ -6,6 +6,10 @@ export interface Translations {
   appointments: string;
   materials: string;
   reports: string;
+  tabPatients: string;
+  tabAppointments: string;
+  tabMaterials: string;
+  tabReports: string;
   monthlyReports: string;
   addPatient: string;
   clinicPro: string;
@@ -234,6 +238,10 @@ export const translations: Record<Language, Translations> = {
     appointments: "Appointments",
     materials: "Materials",
     reports: "Financial Reports",
+    tabPatients: "Patients",
+    tabAppointments: "Appointments",
+    tabMaterials: "Materials",
+    tabReports: "Reports",
     monthlyReports: "Monthly Financial Reports",
     addPatient: "Add Patient",
     clinicPro: "Clinic Pro",
@@ -461,6 +469,10 @@ export const translations: Record<Language, Translations> = {
     appointments: "المواعيد",
     materials: "المواد والمصاريف",
     reports: "التقارير المالية",
+    tabPatients: "المرضى",
+    tabAppointments: "المواعيد",
+    tabMaterials: "المواد",
+    tabReports: "التقارير",
     monthlyReports: "التقارير المالية الشهرية",
     addPatient: "إضافة مريض",
     clinicPro: "عيادة احترافية",
@@ -688,6 +700,10 @@ export const translations: Record<Language, Translations> = {
     appointments: "مەوعیدەکان",
     materials: "مەواد و خەرجی",
     reports: "ڕاپۆرتە داراییەکان",
+    tabPatients: "نەخۆشەکان",
+    tabAppointments: "مەوعیدەکان",
+    tabMaterials: "مەواد",
+    tabReports: "ڕاپۆرتەکان",
     monthlyReports: "ڕاپۆرتە داراییە مانگانەکان",
     addPatient: "نەخۆشی نوێ",
     clinicPro: "نۆرینگەی تایبەت",

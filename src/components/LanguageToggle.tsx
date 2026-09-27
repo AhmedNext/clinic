@@ -38,11 +38,10 @@ export function LanguageToggle() {
         title="Change clinic language"
         className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-slate-200/90 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md hover:bg-slate-50 dark:hover:bg-slate-800/80 text-slate-700 dark:text-slate-200 text-xs font-bold shadow-2xs transition-all cursor-pointer active:scale-95 group"
       >
-        <Globe className="w-3.5 h-3.5 text-indigo-500 group-hover:rotate-45 transition-transform duration-300" />
-        <span className="hidden sm:inline font-mono uppercase text-[11px] tracking-wider">
+        <Globe className="w-3.5 h-3.5 text-indigo-500 group-hover:rotate-45 transition-transform duration-300 flex-shrink-0" />
+        <span className="font-mono uppercase text-[11px] font-bold tracking-wider">
           {current.code.toUpperCase()}
         </span>
-        <span className="sm:hidden text-xs">{current.flag}</span>
       </button>
 
       {isOpen && (
