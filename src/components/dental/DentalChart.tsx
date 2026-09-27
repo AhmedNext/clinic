@@ -8,7 +8,6 @@ import {
   ToothRecord,
   ToothTreatment,
 } from "@/types/dental";
-import { Tooth3DGraphic } from "./Tooth3DGraphic";
 import {
   Check,
   Activity,
@@ -29,52 +28,78 @@ interface DentalChartProps {
   readonly?: boolean;
 }
 
-// FDI category definitions & exact colors matching the anatomical reference chart
+// Measured pixel coordinates from public/teeth.png (1537 x 1023)
+export const UPPER_HOTSPOTS = [
+  { num: 18, centerPct: 12.1, leftPct: 8.39, widthPct: 6.8 },
+  { num: 17, centerPct: 18.28, leftPct: 15.19, widthPct: 6.2 },
+  { num: 16, centerPct: 24.5, leftPct: 21.39, widthPct: 5.94 },
+  { num: 15, centerPct: 30.16, leftPct: 27.33, widthPct: 5.22 },
+  { num: 14, centerPct: 34.94, leftPct: 32.55, widthPct: 5.09 },
+  { num: 13, centerPct: 40.34, leftPct: 37.64, widthPct: 4.88 },
+  { num: 12, centerPct: 44.7, leftPct: 42.52, widthPct: 4.07 },
+  { num: 11, centerPct: 48.47, leftPct: 46.58, widthPct: 4.08 },
+  { num: 21, centerPct: 52.86, leftPct: 50.67, widthPct: 4.29 },
+  { num: 22, centerPct: 57.06, leftPct: 54.96, widthPct: 4.33 },
+  { num: 23, centerPct: 61.52, leftPct: 59.29, widthPct: 4.98 },
+  { num: 24, centerPct: 67.01, leftPct: 64.26, widthPct: 5.14 },
+  { num: 25, centerPct: 71.8, leftPct: 69.4, widthPct: 5.2 },
+  { num: 26, centerPct: 77.42, leftPct: 74.61, widthPct: 5.82 },
+  { num: 27, centerPct: 83.44, leftPct: 80.43, widthPct: 5.63 },
+  { num: 28, centerPct: 88.68, leftPct: 86.06, widthPct: 5.76 },
+];
+
+export const LOWER_HOTSPOTS = [
+  { num: 48, centerPct: 12.26, leftPct: 8.71, widthPct: 6.51 },
+  { num: 47, centerPct: 18.18, leftPct: 15.22, widthPct: 6.59 },
+  { num: 46, centerPct: 25.44, leftPct: 21.81, widthPct: 6.83 },
+  { num: 45, centerPct: 31.85, leftPct: 28.64, widthPct: 5.48 },
+  { num: 44, centerPct: 36.4, leftPct: 34.12, widthPct: 4.57 },
+  { num: 43, centerPct: 40.99, leftPct: 38.7, widthPct: 4.77 },
+  { num: 42, centerPct: 45.93, leftPct: 43.46, widthPct: 3.89 },
+  { num: 41, centerPct: 48.76, leftPct: 47.35, widthPct: 2.85 },
+  { num: 31, centerPct: 51.63, leftPct: 50.2, widthPct: 3.06 },
+  { num: 32, centerPct: 54.88, leftPct: 53.25, widthPct: 4.16 },
+  { num: 33, centerPct: 59.95, leftPct: 57.42, widthPct: 4.88 },
+  { num: 34, centerPct: 64.64, leftPct: 62.3, widthPct: 4.62 },
+  { num: 35, centerPct: 69.19, leftPct: 66.92, widthPct: 5.61 },
+  { num: 36, centerPct: 75.86, leftPct: 72.53, widthPct: 6.64 },
+  { num: 37, centerPct: 82.47, leftPct: 79.16, widthPct: 6.21 },
+  { num: 38, centerPct: 88.29, leftPct: 85.38, widthPct: 6.41 },
+];
+
 export const FDI_CATEGORIES = {
   molars: {
     label: "molaires",
     color: "#a21caf",
     textColor: "text-fuchsia-700 dark:text-fuchsia-400",
-    borderClass: "border-fuchsia-500",
-    bgClass: "bg-fuchsia-500",
   },
   premolars: {
     label: "Prémolaires",
     color: "#16a34a",
     textColor: "text-emerald-600 dark:text-emerald-400",
-    borderClass: "border-emerald-500",
-    bgClass: "bg-emerald-500",
   },
   canine: {
     label: "canine",
     color: "#ea580c",
     textColor: "text-orange-600 dark:text-orange-400",
-    borderClass: "border-orange-500",
-    bgClass: "bg-orange-500",
   },
   incisors: {
     label: "incisives",
     color: "#0284c7",
     textColor: "text-sky-600 dark:text-sky-400",
-    borderClass: "border-sky-500",
-    bgClass: "bg-sky-500",
   },
 } as const;
 
 export function getFdiCategory(toothNumber: number) {
-  // Molars: 18, 17, 16 / 26, 27, 28 / 48, 47, 46 / 36, 37, 38
   if ([18, 17, 16, 26, 27, 28, 48, 47, 46, 36, 37, 38].includes(toothNumber)) {
     return FDI_CATEGORIES.molars;
   }
-  // Premolars: 15, 14 / 24, 25 / 45, 44 / 34, 35
   if ([15, 14, 24, 25, 45, 44, 34, 35].includes(toothNumber)) {
     return FDI_CATEGORIES.premolars;
   }
-  // Canines: 13, 23, 43, 33
   if ([13, 23, 43, 33].includes(toothNumber)) {
     return FDI_CATEGORIES.canine;
   }
-  // Incisors: 12, 11, 21, 22 / 42, 41, 31, 32
   return FDI_CATEGORIES.incisors;
 }
 
@@ -86,32 +111,19 @@ export function DentalChart({
   onRemoveMultipleTeeth,
   readonly = false,
 }: DentalChartProps) {
-  // Active procedure tool (default: "treated")
   const [activeTool, setActiveTool] = useState<ToothTreatment | "erase">("treated");
   const [selectedTeethNumbers, setSelectedTeethNumbers] = useState<number[]>([]);
   const [treatmentNote, setTreatmentNote] = useState("");
   const [activeTooth, setActiveTooth] = useState<ToothInfo | null>(null);
 
-  // Map tooth records by number for fast lookup
   const recordsMap = new Map<number, ToothRecord>(
     teethRecords.map((r) => [r.toothNumber, r])
   );
 
-  // Exact 16 Upper Teeth in horizontal FDI order (Right to Left): 18 -> 28
-  const upperTeethSequence = [18, 17, 16, 15, 14, 13, 12, 11, 21, 22, 23, 24, 25, 26, 27, 28].map(
-    (num) => ALL_TEETH.find((t) => t.number === num)!
-  );
-
-  // Exact 16 Lower Teeth in horizontal FDI order (Right to Left): 48 -> 38
-  const lowerTeethSequence = [48, 47, 46, 45, 44, 43, 42, 41, 31, 32, 33, 34, 35, 36, 37, 38].map(
-    (num) => ALL_TEETH.find((t) => t.number === num)!
-  );
-
-  const upperTeethNumbers = upperTeethSequence.map((t) => t.number);
-  const lowerTeethNumbers = lowerTeethSequence.map((t) => t.number);
+  const upperTeethNumbers = UPPER_HOTSPOTS.map((s) => s.num);
+  const lowerTeethNumbers = LOWER_HOTSPOTS.map((s) => s.num);
   const allTeethNumbers = [...upperTeethNumbers, ...lowerTeethNumbers];
 
-  // Quick preset chips for rapid charting
   const NOTE_PRESETS = [
     "Composite filling",
     "Deep cavity",
@@ -122,28 +134,28 @@ export function DentalChart({
     "Fractured cusp",
   ];
 
-  // When clicking on a tooth:
-  const handleToothClick = (tooth: ToothInfo) => {
+  const handleToothClick = (toothNum: number) => {
     if (readonly) return;
 
-    setActiveTooth(tooth);
-    setSelectedTeethNumbers([tooth.number]);
+    const tooth = ALL_TEETH.find((t) => t.number === toothNum);
+    if (!tooth) return;
 
-    const existingRecord = recordsMap.get(tooth.number);
+    setActiveTooth(tooth);
+    setSelectedTeethNumbers([toothNum]);
+
+    const existingRecord = recordsMap.get(toothNum);
     setTreatmentNote(existingRecord?.notes || "");
 
-    // If Erase tool is active:
     if (activeTool === "erase") {
       if (existingRecord) {
-        onRemoveTooth(tooth.number);
+        onRemoveTooth(toothNum);
       }
       return;
     }
 
-    // If tooth does not have a record yet, create one with activeTool
     if (!existingRecord) {
       const newRecord: ToothRecord = {
-        toothNumber: tooth.number,
+        toothNumber: toothNum,
         status: activeTool,
         procedure: TREATMENT_METADATA[activeTool].label,
         notes: undefined,
@@ -153,7 +165,6 @@ export function DentalChart({
     }
   };
 
-  // Immediate note editing for the active tooth
   const handleActiveToothNoteChange = (text: string) => {
     setTreatmentNote(text);
     if (!activeTooth) return;
@@ -171,7 +182,6 @@ export function DentalChart({
     onUpdateTooth(updatedRecord);
   };
 
-  // Immediate status change for the active tooth
   const handleActiveToothStatusChange = (status: ToothTreatment | "erase") => {
     if (!activeTooth) return;
 
@@ -196,7 +206,6 @@ export function DentalChart({
     handleActiveToothNoteChange(newNote);
   };
 
-  // Quick selection helpers
   const handleSelectUpper = () => setSelectedTeethNumbers(upperTeethNumbers);
   const handleSelectLower = () => setSelectedTeethNumbers(lowerTeethNumbers);
   const handleSelectAll = () => setSelectedTeethNumbers(allTeethNumbers);
@@ -205,7 +214,6 @@ export function DentalChart({
     setTreatmentNote("");
   };
 
-  // Apply a status to all currently selected teeth
   const handleApplyStatusToSelected = (status: ToothTreatment) => {
     if (selectedTeethNumbers.length === 0) return;
 
@@ -224,7 +232,6 @@ export function DentalChart({
     }
   };
 
-  // Erase status from selected teeth
   const handleClearSelectedTreatments = () => {
     if (selectedTeethNumbers.length === 0) return;
 
@@ -235,7 +242,6 @@ export function DentalChart({
     }
   };
 
-  // Save clinical note for selected teeth
   const handleSaveNote = () => {
     if (selectedTeethNumbers.length === 0) return;
     const updated: ToothRecord[] = [];
@@ -267,56 +273,103 @@ export function DentalChart({
   const singleRecord =
     selectedCount === 1 ? recordsMap.get(selectedTeethNumbers[0]) : null;
 
-  // Render individual tooth item in the column
-  const renderToothItem = (tooth: ToothInfo) => {
-    const record = recordsMap.get(tooth.number);
+  // Render a hotspot button overlay on top of teeth.png
+  const renderHotspot = (
+    spot: { num: number; leftPct: number; widthPct: number },
+    topPct: string,
+    heightPct: string
+  ) => {
+    const record = recordsMap.get(spot.num);
+    const toothInfo = ALL_TEETH.find((t) => t.number === spot.num);
     const isSelected =
-      activeTooth?.number === tooth.number || selectedTeethNumbers.includes(tooth.number);
+      activeTooth?.number === spot.num || selectedTeethNumbers.includes(spot.num);
     const hasNote = Boolean(record?.notes);
 
     return (
       <button
-        key={tooth.number}
+        key={spot.num}
         type="button"
         disabled={readonly}
-        onClick={() => handleToothClick(tooth)}
-        title={`${tooth.number} - ${tooth.name} (${tooth.arabicName})${
-          record ? ` • ${TREATMENT_METADATA[record.status].label}` : " • Click to mark"
+        onClick={() => handleToothClick(spot.num)}
+        style={{
+          left: `${spot.leftPct}%`,
+          width: `${spot.widthPct}%`,
+          top: topPct,
+          height: heightPct,
+        }}
+        title={`Tooth #${spot.num} - ${toothInfo?.name || ""} (${toothInfo?.arabicName || ""})${
+          record ? ` • ${TREATMENT_METADATA[record.status].label}` : " • Tap to select"
         }${record?.notes ? ` • Note: ${record.notes}` : ""}`}
         className={`
-          relative flex flex-col items-center justify-center p-0.5 sm:p-1 rounded-xl transition-all duration-150 cursor-pointer group active:scale-95
+          absolute z-10 flex flex-col items-center justify-between p-0.5 rounded-lg transition-all duration-150 cursor-pointer select-none
           ${
             isSelected
-              ? "bg-indigo-100/90 dark:bg-indigo-950/80 ring-2 ring-indigo-500 scale-105 z-20 shadow-md shadow-indigo-500/25"
-              : "hover:bg-slate-100/80 dark:hover:bg-slate-800/60"
+              ? "bg-indigo-500/30 ring-2 ring-indigo-600 shadow-md shadow-indigo-500/30 z-20"
+              : "hover:bg-indigo-500/20 hover:ring-1 hover:ring-indigo-400/50"
           }
-          ${record && !isSelected ? "ring-1 ring-emerald-500/40 bg-emerald-50/50 dark:bg-emerald-950/30" : ""}
+          ${record && !isSelected ? "ring-1 ring-emerald-500/50 bg-emerald-500/10" : ""}
         `}
       >
         {/* Note indicator badge icon */}
         {hasNote && (
           <span
-            className="absolute top-0 right-0 z-20 text-[10px] leading-none drop-shadow-xs"
+            className="absolute top-0.5 right-0.5 z-30 text-[10px] sm:text-xs leading-none bg-white/90 dark:bg-slate-900/90 rounded-full px-0.5 shadow-xs"
             title={`Note: ${record?.notes}`}
           >
             📝
           </span>
         )}
 
-        <div className="w-5 sm:w-7 md:w-8 lg:w-9 h-14 sm:h-18 md:h-20 flex items-center justify-center">
-          <Tooth3DGraphic
-            category={tooth.category}
-            jaw={tooth.jaw}
-            toothNumber={tooth.number}
-            status={record?.status}
-            isSelected={isSelected}
-          />
-        </div>
+        {/* Treatment Graphic Overlay */}
+        {record && (
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            {record.status === "extraction" && (
+              <svg
+                className="w-full h-full stroke-rose-600 stroke-[4px] drop-shadow-sm opacity-90"
+                viewBox="0 0 40 40"
+              >
+                <line x1="8" y1="8" x2="32" y2="32" strokeLinecap="round" />
+                <line x1="32" y1="8" x2="8" y2="32" strokeLinecap="round" />
+              </svg>
+            )}
 
-        {/* Small badge dot if worked */}
+            {record.status === "crown" && (
+              <span className="bg-amber-500 text-white text-[8px] sm:text-[9px] font-black px-1 py-0.5 rounded shadow-sm">
+                👑 CROWN
+              </span>
+            )}
+
+            {record.status === "filling" && (
+              <div className="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full bg-blue-500 border-2 border-white shadow-sm ring-1 ring-blue-600" />
+            )}
+
+            {record.status === "root_canal" && (
+              <svg
+                className="w-full h-full stroke-purple-600 stroke-[3px] stroke-dasharray-[3_2] drop-shadow-sm opacity-90"
+                viewBox="0 0 40 40"
+              >
+                <line x1="20" y1="6" x2="20" y2="34" strokeLinecap="round" />
+              </svg>
+            )}
+
+            {record.status === "decay" && (
+              <div className="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full bg-rose-600 border-2 border-white shadow-sm ring-1 ring-rose-700 flex items-center justify-center text-[8px] text-white font-bold">
+                !
+              </div>
+            )}
+
+            {record.status === "treated" && (
+              <div className="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full bg-emerald-500 text-white flex items-center justify-center text-[9px] font-bold shadow-sm">
+                ✓
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Small bottom dot badge if marked */}
         {record && (
           <span
-            className="w-1.5 h-1.5 rounded-full mt-0.5"
+            className="w-1.5 h-1.5 rounded-full absolute bottom-1 z-20 shadow-xs"
             style={{ backgroundColor: TREATMENT_METADATA[record.status].color }}
           />
         )}
@@ -501,259 +554,22 @@ export function DentalChart({
         )}
       </div>
 
-      {/* ================= 2. PANORAMIC FDI ODONTOGRAM (EXACT REFERENCE DIAGRAM) ================= */}
-      <div className="w-full bg-white dark:bg-slate-900/90 border border-slate-200/90 dark:border-slate-800 rounded-2xl sm:rounded-3xl p-3 sm:p-5 shadow-sm">
-        {/* Title & Top Direction */}
-        <div className="flex flex-col items-center justify-center mb-3">
-          <h3 className="text-base sm:text-lg font-black tracking-tight text-slate-900 dark:text-slate-100">
-            Numérotation dentaire
-          </h3>
-          <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 mt-0.5 uppercase tracking-wider">
-            Haut <span className="text-[10px] font-normal text-slate-400">(Upper / الفك العلوي)</span>
-          </span>
-        </div>
+      {/* ================= 2. PANORAMIC FDI ODONTOGRAM (ORIGINAL IMAGE + CSS HOTSPOTS) ================= */}
+      <div className="w-full overflow-x-auto pb-2 select-none">
+        <div className="min-w-[620px] max-w-4xl mx-auto relative aspect-[1537/1023] overflow-hidden rounded-2xl sm:rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-sm">
+          {/* Original FDI anatomical illustration from public/teeth.png */}
+          <img
+            src="/teeth.png"
+            alt="Numérotation dentaire FDI"
+            className="w-full h-full object-contain pointer-events-none select-none block"
+            draggable={false}
+          />
 
-        {/* Scrollable FDI Panoramic Container */}
-        <div className="w-full overflow-x-auto pb-2 select-none">
-          <div className="min-w-[620px] max-w-4xl mx-auto flex items-center justify-between gap-1 sm:gap-3">
-            {/* Left Side Label (Dentist Right / Droite) */}
-            <div className="flex flex-col items-center justify-center text-center px-1 flex-shrink-0">
-              <span className="text-xs sm:text-sm font-black text-slate-800 dark:text-slate-200">
-                Droite
-              </span>
-              <span className="text-[10px] font-bold text-indigo-500">
-                Right (يمين)
-              </span>
-            </div>
+          {/* Upper Arch Hotspots (18 to 28) */}
+          {UPPER_HOTSPOTS.map((spot) => renderHotspot(spot, "27.5%", "25%"))}
 
-            {/* Main Center Teeth FDI Matrix */}
-            <div className="flex-1 relative flex flex-col items-center">
-              {/* Soft Gingival Wash / Gum Blush Band (matching red halo in reference image) */}
-              <div className="absolute inset-x-2 top-1/2 -translate-y-1/2 h-24 sm:h-32 rounded-full bg-gradient-to-r from-rose-200/25 via-rose-300/40 to-rose-200/25 dark:from-rose-950/20 dark:via-rose-900/35 dark:to-rose-950/20 pointer-events-none blur-xs" />
-
-              {/* Central Midline Subtle Guide */}
-              <div className="absolute top-0 bottom-0 left-1/2 -translate-x-1/2 w-[1px] bg-indigo-500/25 dark:bg-indigo-400/20 pointer-events-none z-10" />
-
-              {/* ─── ROW 1: UPPER CATEGORIES & COLORED UNDERLINES ─── */}
-              <div className="w-full grid grid-cols-[repeat(16,minmax(0,1fr))] gap-0.5 sm:gap-1 text-center mb-1">
-                {/* 18, 17, 16: Molaires */}
-                <div className="col-span-3 flex flex-col items-center">
-                  <span className="text-[10px] sm:text-xs font-semibold text-fuchsia-700 dark:text-fuchsia-400 truncate">
-                    molaires
-                  </span>
-                  <div className="w-full h-0.5 sm:h-1 rounded-full bg-fuchsia-500/80 mt-0.5" />
-                </div>
-
-                {/* 15, 14: Prémolaires */}
-                <div className="col-span-2 flex flex-col items-center">
-                  <span className="text-[10px] sm:text-xs font-semibold text-emerald-600 dark:text-emerald-400 truncate">
-                    Prémolaires
-                  </span>
-                  <div className="w-full h-0.5 sm:h-1 rounded-full bg-emerald-500/80 mt-0.5" />
-                </div>
-
-                {/* 13: Canine */}
-                <div className="col-span-1 flex flex-col items-center">
-                  <span className="text-[10px] sm:text-xs font-semibold text-orange-600 dark:text-orange-400 truncate">
-                    canine
-                  </span>
-                  <div className="w-full h-0.5 sm:h-1 rounded-full bg-orange-500/80 mt-0.5" />
-                </div>
-
-                {/* 12, 11: Incisives */}
-                <div className="col-span-2 flex flex-col items-center">
-                  <span className="text-[10px] sm:text-xs font-semibold text-sky-600 dark:text-sky-400 truncate">
-                    incisives
-                  </span>
-                  <div className="w-full h-0.5 sm:h-1 rounded-full bg-sky-500/80 mt-0.5" />
-                </div>
-
-                {/* 21, 22: Incisives */}
-                <div className="col-span-2 flex flex-col items-center">
-                  <span className="text-[10px] sm:text-xs font-semibold text-sky-600 dark:text-sky-400 truncate">
-                    incisives
-                  </span>
-                  <div className="w-full h-0.5 sm:h-1 rounded-full bg-sky-500/80 mt-0.5" />
-                </div>
-
-                {/* 23: Canine */}
-                <div className="col-span-1 flex flex-col items-center">
-                  <span className="text-[10px] sm:text-xs font-semibold text-orange-600 dark:text-orange-400 truncate">
-                    canine
-                  </span>
-                  <div className="w-full h-0.5 sm:h-1 rounded-full bg-orange-500/80 mt-0.5" />
-                </div>
-
-                {/* 24, 25: Prémolaires */}
-                <div className="col-span-2 flex flex-col items-center">
-                  <span className="text-[10px] sm:text-xs font-semibold text-emerald-600 dark:text-emerald-400 truncate">
-                    Prémolaires
-                  </span>
-                  <div className="w-full h-0.5 sm:h-1 rounded-full bg-emerald-500/80 mt-0.5" />
-                </div>
-
-                {/* 26, 27, 28: Molaires */}
-                <div className="col-span-3 flex flex-col items-center">
-                  <span className="text-[10px] sm:text-xs font-semibold text-fuchsia-700 dark:text-fuchsia-400 truncate">
-                    molaires
-                  </span>
-                  <div className="w-full h-0.5 sm:h-1 rounded-full bg-fuchsia-500/80 mt-0.5" />
-                </div>
-              </div>
-
-              {/* ─── ROW 2: UPPER TOOTH NUMBERS (COLORED MATCHING CATEGORY) ─── */}
-              <div className="w-full grid grid-cols-[repeat(16,minmax(0,1fr))] gap-0.5 sm:gap-1 text-center mb-0.5">
-                {upperTeethSequence.map((tooth) => {
-                  const cat = getFdiCategory(tooth.number);
-                  const isSelected = activeTooth?.number === tooth.number || selectedTeethNumbers.includes(tooth.number);
-                  const rec = recordsMap.get(tooth.number);
-                  const hasNote = Boolean(rec?.notes);
-
-                  return (
-                    <button
-                      key={tooth.number}
-                      type="button"
-                      onClick={() => handleToothClick(tooth)}
-                      className={`relative flex items-center justify-center gap-0.5 text-[11px] sm:text-xs md:text-sm font-bold font-mono transition-transform cursor-pointer ${
-                        isSelected ? "scale-125 font-black text-indigo-600" : cat.textColor
-                      }`}
-                      title={hasNote ? `Tooth ${tooth.number} Note: ${rec?.notes}` : `Tooth ${tooth.number}`}
-                    >
-                      <span>{tooth.number}</span>
-                      {hasNote && <span className="text-[10px]" title={rec?.notes}>📝</span>}
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* ─── ROW 3: UPPER TEETH GRAPHICS (18 TO 28, ROOTS UP, CROWNS DOWN) ─── */}
-              <div className="w-full grid grid-cols-[repeat(16,minmax(0,1fr))] gap-0.5 sm:gap-1 items-end relative z-10">
-                {upperTeethSequence.map((tooth) => (
-                  <div key={tooth.number} className="flex justify-center">
-                    {renderToothItem(tooth)}
-                  </div>
-                ))}
-              </div>
-
-              {/* ─── ROW 4: LOWER TEETH GRAPHICS (48 TO 38, CROWNS UP, ROOTS DOWN) ─── */}
-              <div className="w-full grid grid-cols-[repeat(16,minmax(0,1fr))] gap-0.5 sm:gap-1 items-start relative z-10 mt-1">
-                {lowerTeethSequence.map((tooth) => (
-                  <div key={tooth.number} className="flex justify-center">
-                    {renderToothItem(tooth)}
-                  </div>
-                ))}
-              </div>
-
-              {/* ─── ROW 5: LOWER TOOTH NUMBERS (COLORED MATCHING CATEGORY) ─── */}
-              <div className="w-full grid grid-cols-[repeat(16,minmax(0,1fr))] gap-0.5 sm:gap-1 text-center mt-1 mb-0.5">
-                {lowerTeethSequence.map((tooth) => {
-                  const cat = getFdiCategory(tooth.number);
-                  const isSelected = activeTooth?.number === tooth.number || selectedTeethNumbers.includes(tooth.number);
-                  const rec = recordsMap.get(tooth.number);
-                  const hasNote = Boolean(rec?.notes);
-
-                  return (
-                    <button
-                      key={tooth.number}
-                      type="button"
-                      onClick={() => handleToothClick(tooth)}
-                      className={`relative flex items-center justify-center gap-0.5 text-[11px] sm:text-xs md:text-sm font-bold font-mono transition-transform cursor-pointer ${
-                        isSelected ? "scale-125 font-black text-indigo-600" : cat.textColor
-                      }`}
-                      title={hasNote ? `Tooth ${tooth.number} Note: ${rec?.notes}` : `Tooth ${tooth.number}`}
-                    >
-                      <span>{tooth.number}</span>
-                      {hasNote && <span className="text-[10px]" title={rec?.notes}>📝</span>}
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* ─── ROW 6: LOWER CATEGORIES & COLORED UNDERLINES ─── */}
-              <div className="w-full grid grid-cols-[repeat(16,minmax(0,1fr))] gap-0.5 sm:gap-1 text-center mt-0.5">
-                {/* 48, 47, 46: Molaires */}
-                <div className="col-span-3 flex flex-col items-center">
-                  <div className="w-full h-0.5 sm:h-1 rounded-full bg-fuchsia-500/80 mb-0.5" />
-                  <span className="text-[10px] sm:text-xs font-semibold text-fuchsia-700 dark:text-fuchsia-400 truncate">
-                    molaires
-                  </span>
-                </div>
-
-                {/* 45, 44: Prémolaires */}
-                <div className="col-span-2 flex flex-col items-center">
-                  <div className="w-full h-0.5 sm:h-1 rounded-full bg-emerald-500/80 mb-0.5" />
-                  <span className="text-[10px] sm:text-xs font-semibold text-emerald-600 dark:text-emerald-400 truncate">
-                    Prémolaires
-                  </span>
-                </div>
-
-                {/* 43: Canine */}
-                <div className="col-span-1 flex flex-col items-center">
-                  <div className="w-full h-0.5 sm:h-1 rounded-full bg-orange-500/80 mb-0.5" />
-                  <span className="text-[10px] sm:text-xs font-semibold text-orange-600 dark:text-orange-400 truncate">
-                    canine
-                  </span>
-                </div>
-
-                {/* 42, 41: Incisives */}
-                <div className="col-span-2 flex flex-col items-center">
-                  <div className="w-full h-0.5 sm:h-1 rounded-full bg-sky-500/80 mb-0.5" />
-                  <span className="text-[10px] sm:text-xs font-semibold text-sky-600 dark:text-sky-400 truncate">
-                    incisives
-                  </span>
-                </div>
-
-                {/* 31, 32: Incisives */}
-                <div className="col-span-2 flex flex-col items-center">
-                  <div className="w-full h-0.5 sm:h-1 rounded-full bg-sky-500/80 mb-0.5" />
-                  <span className="text-[10px] sm:text-xs font-semibold text-sky-600 dark:text-sky-400 truncate">
-                    incisives
-                  </span>
-                </div>
-
-                {/* 33: Canine */}
-                <div className="col-span-1 flex flex-col items-center">
-                  <div className="w-full h-0.5 sm:h-1 rounded-full bg-orange-500/80 mb-0.5" />
-                  <span className="text-[10px] sm:text-xs font-semibold text-orange-600 dark:text-orange-400 truncate">
-                    canine
-                  </span>
-                </div>
-
-                {/* 34, 35: Prémolaires */}
-                <div className="col-span-2 flex flex-col items-center">
-                  <div className="w-full h-0.5 sm:h-1 rounded-full bg-emerald-500/80 mb-0.5" />
-                  <span className="text-[10px] sm:text-xs font-semibold text-emerald-600 dark:text-emerald-400 truncate">
-                    Prémolaires
-                  </span>
-                </div>
-
-                {/* 36, 37, 38: Molaires */}
-                <div className="col-span-3 flex flex-col items-center">
-                  <div className="w-full h-0.5 sm:h-1 rounded-full bg-fuchsia-500/80 mb-0.5" />
-                  <span className="text-[10px] sm:text-xs font-semibold text-fuchsia-700 dark:text-fuchsia-400 truncate">
-                    molaires
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Right Side Label (Dentist Left / Gauche) */}
-            <div className="flex flex-col items-center justify-center text-center px-1 flex-shrink-0">
-              <span className="text-xs sm:text-sm font-black text-slate-800 dark:text-slate-200">
-                Gauche
-              </span>
-              <span className="text-[10px] font-bold text-indigo-500">
-                Left (يسار)
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Bottom Direction Label */}
-        <div className="flex items-center justify-center mt-2 pt-1 border-t border-slate-100 dark:border-slate-800/80">
-          <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-            Bas <span className="text-[10px] font-normal text-slate-400">(Lower / الفك السفلي)</span>
-          </span>
+          {/* Lower Arch Hotspots (48 to 38) */}
+          {LOWER_HOTSPOTS.map((spot) => renderHotspot(spot, "52.5%", "28%"))}
         </div>
       </div>
 
