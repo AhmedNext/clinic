@@ -22,6 +22,7 @@ import {
   ArrowUpDown,
   UserPlus,
   Filter,
+  Calendar,
 } from "lucide-react";
 
 import {
@@ -57,6 +58,7 @@ export default function DashboardPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [genderFilter, setGenderFilter] = useState<"all" | Gender>("all");
   const [paymentFilter, setPaymentFilter] = useState<"all" | "paid" | "debt">("all");
+  const [monthFilter, setMonthFilter] = useState<string>("all"); // 'all' or 'YYYY-MM'
   const [viewMode, setViewMode] = useState<"table" | "grid">("grid");
   const [sortOrder, setSortOrder] = useState<"desc" | "asc">("desc"); // 'desc' = newest first
   const [notification, setNotification] = useState<string | null>(null);
@@ -260,6 +262,59 @@ export default function DashboardPage() {
     }
   };
 
+  const handleUpdateHistoryEntry = async (
+    patientId: string,
+    entryId: string,
+    entryData: Omit<PatientHistoryEntry, "id" | "createdAt">
+  ) => {
+    let targetUpdatedPatient: Patient | null = null;
+    const updated = patients.map((p) => {
+      if (p.id !== patientId) return p;
+      const history = (p.history || []).map((h) => {
+        if (h.id !== entryId) return h;
+        return {
+          ...h,
+          ...entryData,
+        };
+      });
+
+      // Recalculate totals across all history items
+      const historyPaid = history.reduce((sum, h) => sum + (h.paid || 0), 0);
+      const historyDebt = history.reduce((sum, h) => sum + (h.debt || 0), 0);
+
+      // Keep latest date if exists
+      const sortedHistory = [...history].sort((a, b) =>
+        (b.date || "").localeCompare(a.date || "")
+      );
+      const latestDate = sortedHistory[0]?.date || p.date;
+
+      const updatedPatient: Patient = {
+        ...p,
+        date: latestDate,
+        paidAmount: historyPaid > 0 ? historyPaid : p.paidAmount,
+        debtAmount: historyDebt > 0 ? historyDebt : p.debtAmount,
+        totalAmount: (historyPaid > 0 ? historyPaid : (p.paidAmount ?? 0)) + (historyDebt > 0 ? historyDebt : (p.debtAmount ?? 0)),
+        history,
+      };
+
+      targetUpdatedPatient = updatedPatient;
+      setHistoryPatient(updatedPatient);
+      return updatedPatient;
+    });
+
+    setPatients(updated);
+    localStorage.setItem(PATIENTS_STORAGE_KEY, JSON.stringify(updated));
+    showToast("Updated visit record in Supabase");
+
+    if (targetUpdatedPatient) {
+      try {
+        await upsertPatientToDB(targetUpdatedPatient);
+      } catch (e) {
+        console.warn("Could not sync updated history entry to Supabase:", e);
+      }
+    }
+  };
+
   const handleSaveTeeth = async (patientId: string, teeth: ToothRecord[]) => {
     let targetUpdatedPatient: Patient | null = null;
     const updated = patients.map((p) => {
@@ -343,6 +398,32 @@ export default function DashboardPage() {
     }
   };
 
+  // Extract available months from patient dates and history entries
+  const availableMonths = useMemo(() => {
+    const set = new Set<string>();
+    patients.forEach((p) => {
+      if (p.date && p.date.length >= 7) {
+        set.add(p.date.substring(0, 7)); // 'YYYY-MM'
+      }
+      p.history?.forEach((h) => {
+        if (h.date && h.date.length >= 7) {
+          set.add(h.date.substring(0, 7));
+        }
+      });
+    });
+    return Array.from(set).sort((a, b) => b.localeCompare(a));
+  }, [patients]);
+
+  const formatMonthName = (yearMonth: string) => {
+    try {
+      const [year, month] = yearMonth.split("-");
+      const d = new Date(parseInt(year, 10), parseInt(month, 10) - 1, 1);
+      return d.toLocaleDateString("en-US", { month: "short", year: "numeric" });
+    } catch {
+      return yearMonth;
+    }
+  };
+
   // Filter and sort patients
   const filteredAndSortedPatients = useMemo(() => {
     return patients
@@ -364,7 +445,14 @@ export default function DashboardPage() {
           (paymentFilter === "paid" && debt === 0) ||
           (paymentFilter === "debt" && debt > 0);
 
-        return matchesSearch && matchesGender && matchesPayment;
+        // Filter by month: matches if patient date starts with selected YYYY-MM
+        // or if patient has any history/bill entry in that month
+        const matchesMonth =
+          monthFilter === "all" ||
+          (patient.date && patient.date.startsWith(monthFilter)) ||
+          patient.history?.some((h) => h.date && h.date.startsWith(monthFilter));
+
+        return matchesSearch && matchesGender && matchesPayment && matchesMonth;
       })
       .sort((a, b) => {
         const dateA = a.date || "";
@@ -375,7 +463,7 @@ export default function DashboardPage() {
           return dateA.localeCompare(dateB);
         }
       });
-  }, [patients, searchQuery, genderFilter, paymentFilter, sortOrder]);
+  }, [patients, searchQuery, genderFilter, paymentFilter, monthFilter, sortOrder]);
 
   // Show loading splash while checking local stored session
   if (!sessionChecked) {
@@ -420,8 +508,11 @@ export default function DashboardPage() {
         ) : (
           /* ================= PATIENTS CASES TAB ================= */
           <>
-            {/* Quick Stats Overview */}
-            <StatsOverview patients={patients} />
+            {/* Quick Stats Overview (updates when month is filtered to show monthly collection & debts) */}
+            <StatsOverview
+              patients={monthFilter === "all" ? patients : filteredAndSortedPatients}
+              monthSubtitle={monthFilter === "all" ? undefined : formatMonthName(monthFilter)}
+            />
 
             {/* Filter and Control Toolbar (Mobile-first) */}
             <div className="mb-4 sm:mb-6 flex flex-col md:flex-row gap-2.5 sm:gap-3 md:items-center md:justify-between">
@@ -524,6 +615,34 @@ export default function DashboardPage() {
                   </button>
                 </div>
 
+                {/* Month / Billing Month Filter */}
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs flex-shrink-0">
+                  <Calendar className="w-3.5 h-3.5 text-indigo-500 flex-shrink-0" />
+                  <label htmlFor="month-select" className="sr-only">Filter by Month</label>
+                  <select
+                    id="month-select"
+                    value={monthFilter}
+                    onChange={(e) => setMonthFilter(e.target.value)}
+                    className="bg-transparent text-xs font-semibold text-slate-700 dark:text-slate-300 focus:outline-none cursor-pointer pr-1"
+                  >
+                    <option value="all">All Months</option>
+                    {availableMonths.map((ym) => (
+                      <option key={ym} value={ym} className="text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-900">
+                        {formatMonthName(ym)}
+                      </option>
+                    ))}
+                  </select>
+                  {monthFilter !== "all" && (
+                    <button
+                      onClick={() => setMonthFilter("all")}
+                      title="Clear month filter"
+                      className="ml-0.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs font-bold leading-none cursor-pointer"
+                    >
+                      ×
+                    </button>
+                  )}
+                </div>
+
                 {/* Sort toggle */}
                 <button
                   onClick={() =>
@@ -580,17 +699,18 @@ export default function DashboardPage() {
                   No matching patient cases
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto mt-1 mb-5">
-                  {searchQuery || genderFilter !== "all" || paymentFilter !== "all"
+                  {searchQuery || genderFilter !== "all" || paymentFilter !== "all" || monthFilter !== "all"
                     ? "Try clearing your filters or changing your search terms to see other patients."
                     : "No patient cases have been added yet. Click below to create your first patient case file."}
                 </p>
                 <div className="flex items-center justify-center gap-3">
-                  {searchQuery || genderFilter !== "all" || paymentFilter !== "all" ? (
+                  {searchQuery || genderFilter !== "all" || paymentFilter !== "all" || monthFilter !== "all" ? (
                     <button
                       onClick={() => {
                         setSearchQuery("");
                         setGenderFilter("all");
                         setPaymentFilter("all");
+                        setMonthFilter("all");
                       }}
                       className="px-4 py-2 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer"
                     >
@@ -694,6 +814,7 @@ export default function DashboardPage() {
         patient={historyPatient}
         onClose={() => setHistoryPatient(null)}
         onAddHistoryEntry={handleAddHistoryEntry}
+        onUpdateHistoryEntry={handleUpdateHistoryEntry}
         onDeleteHistoryEntry={handleDeleteHistoryEntry}
       />
 

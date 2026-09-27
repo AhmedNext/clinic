@@ -12,6 +12,9 @@ import {
   Activity,
   CheckCircle2,
   Stethoscope,
+  Pencil,
+  RotateCcw,
+  CloudCheck,
 } from "lucide-react";
 import { Patient, PatientHistoryEntry, calculateDebt, formatIQD } from "@/types/patient";
 import { PatientAvatar } from "./PatientAvatar";
@@ -25,6 +28,11 @@ interface PatientHistoryModalProps {
     patientId: string,
     entry: Omit<PatientHistoryEntry, "id" | "createdAt">
   ) => void;
+  onUpdateHistoryEntry: (
+    patientId: string,
+    entryId: string,
+    entry: Omit<PatientHistoryEntry, "id" | "createdAt">
+  ) => void;
   onDeleteHistoryEntry: (patientId: string, entryId: string) => void;
 }
 
@@ -33,6 +41,7 @@ export function PatientHistoryModal({
   patient,
   onClose,
   onAddHistoryEntry,
+  onUpdateHistoryEntry,
   onDeleteHistoryEntry,
 }: PatientHistoryModalProps) {
   const getTodayString = () => {
@@ -43,25 +52,37 @@ export function PatientHistoryModal({
     return `${y}-${m}-${d}`;
   };
 
+  // Add form state
   const [showAddForm, setShowAddForm] = useState(false);
   const [newDate, setNewDate] = useState(getTodayString());
   const [newTitle, setNewTitle] = useState("");
   const [newNotes, setNewNotes] = useState("");
   const [newPaid, setNewPaid] = useState("0");
   const [newDebt, setNewDebt] = useState("0");
-  const [error, setError] = useState<string | null>(null);
+  const [addError, setAddError] = useState<string | null>(null);
+
+  // Edit form state
+  const [editingEntryId, setEditingEntryId] = useState<string | null>(null);
+  const [editDate, setEditDate] = useState("");
+  const [editTitle, setEditTitle] = useState("");
+  const [editNotes, setEditNotes] = useState("");
+  const [editPaid, setEditPaid] = useState("0");
+  const [editDebt, setEditDebt] = useState("0");
+  const [editError, setEditError] = useState<string | null>(null);
 
   useEffect(() => {
     if (isOpen) {
       setShowAddForm(false);
+      setEditingEntryId(null);
       setNewDate(getTodayString());
       setNewTitle("");
       setNewNotes("");
       setNewPaid("0");
       setNewDebt("0");
-      setError(null);
+      setAddError(null);
+      setEditError(null);
     }
-  }, [isOpen, patient]);
+  }, [isOpen, patient?.id]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -75,14 +96,50 @@ export function PatientHistoryModal({
 
   const formatDate = (dateString: string) => formatStaticDate(dateString);
 
-  const handlePaidChange = (val: string) => {
-    setNewPaid(val);
+  // Start editing an entry
+  const startEditing = (entry: PatientHistoryEntry) => {
+    setEditingEntryId(entry.id);
+    setEditDate(entry.date || getTodayString());
+    setEditTitle(entry.title || "");
+    setEditNotes(entry.notes || "");
+    setEditPaid(String(entry.paid ?? 0));
+    setEditDebt(String(entry.debt ?? 0));
+    setEditError(null);
+    setShowAddForm(false); // close add form if open
   };
 
+  const cancelEditing = () => {
+    setEditingEntryId(null);
+    setEditError(null);
+  };
+
+  // Submit edit
+  const handleEditSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingEntryId) return;
+    if (!editTitle.trim()) {
+      setEditError("Please enter a title or procedure.");
+      return;
+    }
+
+    onUpdateHistoryEntry(patient.id, editingEntryId, {
+      date: editDate,
+      title: editTitle.trim(),
+      notes: editNotes.trim(),
+      fee: 0,
+      paid: parseFloat(editPaid) || 0,
+      debt: parseFloat(editDebt) || 0,
+    });
+
+    setEditingEntryId(null);
+    setEditError(null);
+  };
+
+  // Submit add
   const handleAddSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTitle.trim()) {
-      setError("Please enter a visit title or reason.");
+      setAddError("Please enter a visit title or reason.");
       return;
     }
     onAddHistoryEntry(patient.id, {
@@ -98,7 +155,7 @@ export function PatientHistoryModal({
     setNewPaid("0");
     setNewDebt("0");
     setShowAddForm(false);
-    setError(null);
+    setAddError(null);
   };
 
   const historyEntries = [...(patient.history || [])].sort((a, b) =>
@@ -109,7 +166,7 @@ export function PatientHistoryModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-950/70 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-950/75 backdrop-blur-sm"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
       role="dialog"
       aria-modal="true"
@@ -143,8 +200,9 @@ export function PatientHistoryModal({
                     {patient.age}y
                   </span>
                 )}
-                <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono">
-                  {patient.id}
+                <span className="inline-flex items-center gap-1 text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold bg-emerald-50 dark:bg-emerald-950/50 px-1.5 py-0.5 rounded-md border border-emerald-200 dark:border-emerald-900/60">
+                  <span>☁️</span>
+                  <span>Supabase Live</span>
                 </span>
               </div>
             </div>
@@ -202,14 +260,17 @@ export function PatientHistoryModal({
             <div className="flex items-center gap-2">
               <Activity className="w-4 h-4 text-indigo-500" />
               <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                Visit Timeline
+                Patient History & Treatments
                 <span className="ml-1.5 text-xs font-normal text-slate-400 dark:text-slate-500">
-                  ({historyEntries.length} {historyEntries.length === 1 ? "visit" : "visits"})
+                  ({historyEntries.length} {historyEntries.length === 1 ? "entry" : "entries"})
                 </span>
               </span>
             </div>
             <button
-              onClick={() => setShowAddForm((v) => !v)}
+              onClick={() => {
+                setShowAddForm((v) => !v);
+                setEditingEntryId(null);
+              }}
               className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold shadow-sm transition-all cursor-pointer ${
                 showAddForm
                   ? "bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200"
@@ -217,7 +278,7 @@ export function PatientHistoryModal({
               }`}
             >
               <Plus className="w-3.5 h-3.5" />
-              {showAddForm ? "Cancel" : "Log Visit"}
+              {showAddForm ? "Cancel" : "Add Entry"}
             </button>
           </div>
 
@@ -225,19 +286,22 @@ export function PatientHistoryModal({
           {showAddForm && (
             <form
               onSubmit={handleAddSubmit}
-              className="mx-4 mb-4 p-4 rounded-2xl border border-indigo-100 dark:border-indigo-900/50 bg-indigo-50/50 dark:bg-indigo-950/20 space-y-3"
+              className="mx-4 mb-4 p-4 rounded-2xl border border-indigo-200 dark:border-indigo-900/60 bg-indigo-50/50 dark:bg-indigo-950/20 space-y-3"
             >
-              <p className="text-[11px] font-bold uppercase tracking-widest text-indigo-700 dark:text-indigo-300">
-                New Visit Record
-              </p>
+              <div className="flex items-center justify-between">
+                <p className="text-[11px] font-bold uppercase tracking-widest text-indigo-700 dark:text-indigo-300">
+                  New Visit / Treatment Record
+                </p>
+                <span className="text-[10px] text-indigo-500 font-medium">Saves to Supabase</span>
+              </div>
 
-              {error && (
+              {addError && (
                 <p className="text-xs text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 rounded-lg px-3 py-2">
-                  {error}
+                  {addError}
                 </p>
               )}
 
-              {/* Date + Title — stacked on mobile */}
+              {/* Date + Title */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1">
@@ -253,12 +317,12 @@ export function PatientHistoryModal({
                 </div>
                 <div>
                   <label className="block text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1">
-                    Title / Reason *
+                    Title / Procedure *
                   </label>
                   <input
                     type="text"
                     required
-                    placeholder="e.g. Root Canal, Filling, Check-up"
+                    placeholder="e.g. Root Canal, Filling, Scaling, Extraction"
                     value={newTitle}
                     onChange={(e) => setNewTitle(e.target.value)}
                     className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400/30"
@@ -266,7 +330,7 @@ export function PatientHistoryModal({
                 </div>
               </div>
 
-              {/* Paid & Debt — 2 columns */}
+              {/* Paid & Debt */}
               <div className="grid grid-cols-2 gap-2">
                 <div>
                   <label className="block text-[11px] font-medium text-emerald-600 dark:text-emerald-400 mb-1">
@@ -276,9 +340,9 @@ export function PatientHistoryModal({
                     type="number"
                     min="0"
                     step="1000"
-                    placeholder="25000"
+                    placeholder="0"
                     value={newPaid}
-                    onChange={(e) => handlePaidChange(e.target.value)}
+                    onChange={(e) => setNewPaid(e.target.value)}
                     className="w-full px-3 py-2 rounded-xl border border-emerald-200 dark:border-emerald-900/60 bg-white dark:bg-slate-900 text-emerald-700 dark:text-emerald-400 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-400/30"
                   />
                 </div>
@@ -301,11 +365,11 @@ export function PatientHistoryModal({
               {/* Notes */}
               <div>
                 <label className="block text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1">
-                  Clinical Notes
+                  Clinical Notes / Prescription
                 </label>
                 <textarea
                   rows={3}
-                  placeholder="Symptoms, treatment, prescription, observations..."
+                  placeholder="Symptoms, medication, procedure details, teeth involved..."
                   value={newNotes}
                   onChange={(e) => setNewNotes(e.target.value)}
                   className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400/30 resize-none"
@@ -317,7 +381,7 @@ export function PatientHistoryModal({
                 className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold bg-indigo-600 hover:bg-indigo-500 text-white shadow-sm transition-all cursor-pointer"
               >
                 <CheckCircle2 className="w-4 h-4" />
-                Save Visit Record
+                Save Entry to Supabase
               </button>
             </form>
           )}
@@ -326,9 +390,9 @@ export function PatientHistoryModal({
           {historyEntries.length === 0 ? (
             <div className="mx-4 mb-4 py-12 flex flex-col items-center text-center rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/20">
               <Stethoscope className="w-9 h-9 text-slate-300 dark:text-slate-700 mb-3" />
-              <p className="text-sm font-semibold text-slate-600 dark:text-slate-400">No visits logged yet</p>
-              <p className="text-xs text-slate-400 dark:text-slate-500 mt-1 max-w-[220px]">
-                Tap "Log Visit" above to record consultations and treatments.
+              <p className="text-sm font-semibold text-slate-600 dark:text-slate-400">No visits or treatments logged yet</p>
+              <p className="text-xs text-slate-400 dark:text-slate-500 mt-1 max-w-[240px]">
+                Click "Add Entry" above to record procedures, payments, and notes for this patient.
               </p>
             </div>
           ) : (
@@ -343,6 +407,7 @@ export function PatientHistoryModal({
                     const entryDebt = entry.debt ?? 0;
                     const entryPaid = entry.paid ?? 0;
                     const isFirst = idx === 0;
+                    const isEditingThis = editingEntryId === entry.id;
 
                     return (
                       <div key={entry.id} className="relative flex gap-4 group">
@@ -361,76 +426,202 @@ export function PatientHistoryModal({
                           />
                         </div>
 
-                        {/* Card */}
+                        {/* Card or Edit Form */}
                         <div className="flex-1 min-w-0 pb-1">
-                          <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/80 overflow-hidden hover:border-slate-300 dark:hover:border-slate-700 transition-colors">
-                            {/* Card header */}
-                            <div className="flex items-start justify-between gap-2 px-4 pt-3 pb-2.5">
-                              <div className="min-w-0">
-                                {/* Date */}
-                                <div className="flex items-center gap-1.5 mb-1">
-                                  <Calendar className="w-3 h-3 text-slate-400 flex-shrink-0" />
-                                  <span className="text-[11px] font-medium text-slate-400 dark:text-slate-500">
-                                    {formatDate(entry.date)}
-                                  </span>
-                                  {isFirst && (
-                                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800">
-                                      Latest
+                          {isEditingThis ? (
+                            /* ── INLINE EDIT FORM ── */
+                            <form
+                              onSubmit={handleEditSubmit}
+                              className="rounded-2xl border-2 border-indigo-500 bg-indigo-50/40 dark:bg-indigo-950/30 p-4 space-y-3 shadow-md"
+                            >
+                              <div className="flex items-center justify-between">
+                                <span className="text-xs font-bold text-indigo-700 dark:text-indigo-300 flex items-center gap-1.5">
+                                  <Pencil className="w-3.5 h-3.5" />
+                                  Editing Entry
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={cancelEditing}
+                                  className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1"
+                                >
+                                  <X className="w-4 h-4" />
+                                </button>
+                              </div>
+
+                              {editError && (
+                                <p className="text-xs text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 rounded-lg px-2.5 py-1.5">
+                                  {editError}
+                                </p>
+                              )}
+
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                                <div>
+                                  <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">
+                                    Date *
+                                  </label>
+                                  <input
+                                    type="date"
+                                    required
+                                    value={editDate}
+                                    onChange={(e) => setEditDate(e.target.value)}
+                                    className="w-full px-2.5 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-medium focus:ring-2 focus:ring-indigo-400"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">
+                                    Title / Procedure *
+                                  </label>
+                                  <input
+                                    type="text"
+                                    required
+                                    value={editTitle}
+                                    onChange={(e) => setEditTitle(e.target.value)}
+                                    className="w-full px-2.5 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-medium focus:ring-2 focus:ring-indigo-400"
+                                  />
+                                </div>
+                              </div>
+
+                              <div className="grid grid-cols-2 gap-2.5">
+                                <div>
+                                  <label className="block text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 mb-1">
+                                    Paid (IQD)
+                                  </label>
+                                  <input
+                                    type="number"
+                                    min="0"
+                                    step="1000"
+                                    value={editPaid}
+                                    onChange={(e) => setEditPaid(e.target.value)}
+                                    className="w-full px-2.5 py-1.5 rounded-xl border border-emerald-300 dark:border-emerald-800 bg-white dark:bg-slate-900 text-xs font-semibold text-emerald-700 dark:text-emerald-400 focus:ring-2 focus:ring-emerald-400"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-[11px] font-semibold text-rose-600 dark:text-rose-400 mb-1">
+                                    Debt (IQD)
+                                  </label>
+                                  <input
+                                    type="number"
+                                    min="0"
+                                    step="1000"
+                                    value={editDebt}
+                                    onChange={(e) => setEditDebt(e.target.value)}
+                                    className="w-full px-2.5 py-1.5 rounded-xl border border-rose-300 dark:border-rose-800 bg-white dark:bg-slate-900 text-xs font-semibold text-rose-600 dark:text-rose-400 focus:ring-2 focus:ring-rose-400"
+                                  />
+                                </div>
+                              </div>
+
+                              <div>
+                                <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">
+                                  Clinical Notes
+                                </label>
+                                <textarea
+                                  rows={2}
+                                  value={editNotes}
+                                  onChange={(e) => setEditNotes(e.target.value)}
+                                  className="w-full px-2.5 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs focus:ring-2 focus:ring-indigo-400 resize-none"
+                                />
+                              </div>
+
+                              <div className="flex items-center gap-2 pt-1">
+                                <button
+                                  type="submit"
+                                  className="flex-1 py-2 px-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-xs cursor-pointer"
+                                >
+                                  Save Updates
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={cancelEditing}
+                                  className="py-2 px-3 rounded-xl bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold cursor-pointer"
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            </form>
+                          ) : (
+                            /* ── DISPLAY CARD ── */
+                            <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/80 overflow-hidden hover:border-slate-300 dark:hover:border-slate-700 transition-colors">
+                              {/* Card header */}
+                              <div className="flex items-start justify-between gap-2 px-4 pt-3 pb-2.5">
+                                <div className="min-w-0">
+                                  {/* Date */}
+                                  <div className="flex items-center gap-1.5 mb-1 flex-wrap">
+                                    <Calendar className="w-3 h-3 text-slate-400 flex-shrink-0" />
+                                    <span className="text-[11px] font-medium text-slate-400 dark:text-slate-500">
+                                      {formatDate(entry.date)}
+                                    </span>
+                                    {isFirst && (
+                                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800">
+                                        Latest
+                                      </span>
+                                    )}
+                                  </div>
+                                  {/* Title */}
+                                  <p className="text-sm font-bold text-slate-900 dark:text-slate-100 leading-snug">
+                                    {entry.title}
+                                  </p>
+                                </div>
+
+                                {/* Actions: Edit + Delete */}
+                                <div className="flex items-center gap-1 flex-shrink-0">
+                                  <button
+                                    onClick={() => startEditing(entry)}
+                                    title="Edit this entry"
+                                    className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 transition-all cursor-pointer"
+                                  >
+                                    <Pencil className="w-3.5 h-3.5" />
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      if (confirm(`Delete visit record "${entry.title}"?`)) {
+                                        onDeleteHistoryEntry(patient.id, entry.id);
+                                      }
+                                    }}
+                                    title="Delete this record"
+                                    className="p-1.5 rounded-lg text-slate-300 dark:text-slate-700 hover:text-rose-500 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-all cursor-pointer"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
+                              </div>
+
+                              {/* Notes */}
+                              {entry.notes && (
+                                <div className="px-4 pb-3">
+                                  <div className="flex items-start gap-2 p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
+                                    <FileText className="w-3.5 h-3.5 text-slate-400 flex-shrink-0 mt-0.5" />
+                                    <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-wrap">
+                                      {entry.notes}
+                                    </p>
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Financial row */}
+                              {(entry.fee !== undefined || entry.paid !== undefined || entry.debt !== undefined) && (
+                                <div className="flex items-center justify-between px-4 py-2.5 border-t border-slate-100 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/30">
+                                  <div className="flex items-center gap-1.5">
+                                    <Banknote className="w-3.5 h-3.5 text-slate-400" />
+                                    <span className="text-xs text-slate-500 dark:text-slate-400">
+                                      Paid:{" "}
+                                      <strong className="text-slate-700 dark:text-slate-200 font-semibold">
+                                        {formatIQD(entryPaid)}
+                                      </strong>
+                                    </span>
+                                  </div>
+                                  {entryDebt > 0 ? (
+                                    <span className="text-xs font-bold text-rose-600 dark:text-rose-400">
+                                      Debt: {formatIQD(entryDebt)}
+                                    </span>
+                                  ) : (
+                                    <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                                      ✓ Paid
                                     </span>
                                   )}
                                 </div>
-                                {/* Title */}
-                                <p className="text-sm font-bold text-slate-900 dark:text-slate-100 leading-snug">
-                                  {entry.title}
-                                </p>
-                              </div>
-
-                              {/* Delete */}
-                              <button
-                                onClick={() => onDeleteHistoryEntry(patient.id, entry.id)}
-                                title="Delete this record"
-                                className="flex-shrink-0 p-1.5 rounded-lg text-slate-300 dark:text-slate-700 hover:text-rose-500 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-all cursor-pointer opacity-0 group-hover:opacity-100 focus:opacity-100"
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </button>
+                              )}
                             </div>
-
-                            {/* Notes */}
-                            {entry.notes && (
-                              <div className="px-4 pb-3">
-                                <div className="flex items-start gap-2 p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
-                                  <FileText className="w-3.5 h-3.5 text-slate-400 flex-shrink-0 mt-0.5" />
-                                  <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-                                    {entry.notes}
-                                  </p>
-                                </div>
-                              </div>
-                            )}
-
-                            {/* Financial row */}
-                            {(entry.fee !== undefined || entry.paid !== undefined) && (
-                              <div className="flex items-center justify-between px-4 py-2.5 border-t border-slate-100 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/30">
-                                <div className="flex items-center gap-1.5">
-                                  <Banknote className="w-3.5 h-3.5 text-slate-400" />
-                                  <span className="text-xs text-slate-500 dark:text-slate-400">
-                                    Paid:{" "}
-                                    <strong className="text-slate-700 dark:text-slate-200 font-semibold">
-                                      {formatIQD(entryPaid)}
-                                    </strong>
-                                  </span>
-                                </div>
-                                {entryDebt > 0 ? (
-                                  <span className="text-xs font-bold text-rose-600 dark:text-rose-400">
-                                    Debt: {formatIQD(entryDebt)}
-                                  </span>
-                                ) : (
-                                  <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">
-                                    ✓ Paid in full
-                                  </span>
-                                )}
-                              </div>
-                            )}
-                          </div>
+                          )}
                         </div>
                       </div>
                     );
@@ -443,9 +634,10 @@ export function PatientHistoryModal({
 
         {/* ── FOOTER ── */}
         <div className="px-4 py-3 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 flex items-center justify-between">
-          <span className="text-[11px] text-slate-400 dark:text-slate-500">
-            Stored on this device
-          </span>
+          <div className="flex items-center gap-1.5 text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold">
+            <span>☁️</span>
+            <span>Stored in Supabase Cloud Database</span>
+          </div>
           <button
             onClick={onClose}
             className="px-5 py-2 rounded-xl text-xs font-semibold bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 transition-colors cursor-pointer"

@@ -40,6 +40,10 @@ export function Header({
                   <ShieldCheck className="w-3 h-3 text-indigo-500" />
                   Clinic Pro
                 </span>
+                <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  Supabase Cloud
+                </span>
               </div>
               <p className="text-[10px] sm:text-[11px] text-slate-400 dark:text-slate-500 font-medium mt-0.5">
                 3D Odontogram & Management

@@ -167,6 +167,34 @@ export function PatientCard({
             {patient.teeth?.length ?? 0} teeth
           </span>
         </button>
+
+        {/* Row 5: Latest Treatment / History Snippet */}
+        {patient.history && patient.history.length > 0 && (
+          <button
+            type="button"
+            onClick={() => onViewHistory(patient)}
+            className="w-full text-left p-2.5 rounded-xl bg-indigo-50/50 dark:bg-indigo-950/30 border border-indigo-100 dark:border-indigo-900/50 hover:border-indigo-300 dark:hover:border-indigo-700 transition-all cursor-pointer group/hist"
+          >
+            <div className="flex items-center justify-between text-[11px] mb-1">
+              <span className="font-bold text-indigo-700 dark:text-indigo-300 flex items-center gap-1.5 truncate">
+                <History className="w-3.5 h-3.5 text-indigo-500 flex-shrink-0" />
+                <span className="truncate">Latest: {patient.history[0].title}</span>
+              </span>
+              <span className="text-[10px] text-slate-400 group-hover/hist:text-indigo-500 font-semibold flex-shrink-0 ml-1">
+                {patient.history.length} {patient.history.length === 1 ? "visit" : "visits"} →
+              </span>
+            </div>
+            {patient.history[0].notes ? (
+              <p className="text-[11px] text-slate-600 dark:text-slate-400 line-clamp-1">
+                {patient.history[0].notes}
+              </p>
+            ) : (
+              <p className="text-[10px] text-slate-400 font-mono">
+                {formatStaticDate(patient.history[0].date)}
+              </p>
+            )}
+          </button>
+        )}
       </div>
 
       {/* ── FOOTER: Date + Notes + History link ── */}

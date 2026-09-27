@@ -6,9 +6,10 @@ import { Users, Banknote, AlertCircle, CheckCircle } from "lucide-react";
 
 interface StatsOverviewProps {
   patients: Patient[];
+  monthSubtitle?: string;
 }
 
-export function StatsOverview({ patients }: StatsOverviewProps) {
+export function StatsOverview({ patients, monthSubtitle }: StatsOverviewProps) {
   const total = patients.length;
 
   // Financial calculations in Iraqi Dinar (IQD)
@@ -36,7 +37,9 @@ export function StatsOverview({ patients }: StatsOverviewProps) {
       {/* Total Cases */}
       <div className="p-3 sm:p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/80 shadow-xs">
         <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-1.5 sm:mb-2">
-          <span className="text-[11px] sm:text-xs font-semibold uppercase tracking-wider">Total Cases</span>
+          <span className="text-[11px] sm:text-xs font-semibold uppercase tracking-wider">
+            Total Cases {monthSubtitle && <span className="text-indigo-500 font-bold lowercase">({monthSubtitle})</span>}
+          </span>
           <div className="p-1 sm:p-1.5 rounded-lg bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400">
             <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
           </div>
