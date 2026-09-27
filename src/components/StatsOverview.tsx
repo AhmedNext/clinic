@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Patient, calculateDebt, formatIQD } from "@/types/patient";
+import { Patient, calculateDebt, formatIQD, getPatientMonthlyStats } from "@/types/patient";
 import { ClinicMaterial } from "@/types/material";
 import { useLanguage } from "@/context/LanguageContext";
 import {
@@ -33,22 +33,32 @@ export function StatsOverview({
 }: StatsOverviewProps) {
   const { t } = useLanguage();
   const total = patients.length;
+  const isMonthFiltered = Boolean(selectedMonth && selectedMonth !== "all");
 
-  // Total money collected from patients
-  const totalPaid = patients.reduce(
-    (sum, p) => sum + (typeof p.paidAmount === "number" ? p.paidAmount : 0),
-    0
-  );
+  // Total money collected from patients (month-specific when filtered, else all-time)
+  const totalPaid = isMonthFiltered
+    ? patients.reduce(
+        (sum, p) => sum + getPatientMonthlyStats(p, selectedMonth!).paid,
+        0
+      )
+    : patients.reduce(
+        (sum, p) => sum + (typeof p.paidAmount === "number" ? p.paidAmount : 0),
+        0
+      );
 
-  // Total unpaid debt patients owe
-  const totalDebt = patients.reduce(
-    (sum, p) =>
-      sum + calculateDebt(p.totalAmount, p.paidAmount, p.debtAmount),
-    0
-  );
+  // Total unpaid debt patients owe (month-specific when filtered, else all-time)
+  const totalDebt = isMonthFiltered
+    ? patients.reduce(
+        (sum, p) => sum + getPatientMonthlyStats(p, selectedMonth!).debt,
+        0
+      )
+    : patients.reduce(
+        (sum, p) =>
+          sum + calculateDebt(p.totalAmount, p.paidAmount, p.debtAmount),
+        0
+      );
 
   // Material spend (for selected month if filtered, else all-time)
-  const isMonthFiltered = Boolean(selectedMonth && selectedMonth !== "all");
   const filteredMaterials = isMonthFiltered
     ? materials.filter((m) => m.date?.startsWith(selectedMonth!))
     : materials;
@@ -66,9 +76,11 @@ export function StatsOverview({
   // Net Worth = Total Income minus Material Spend minus Clinic Rent!
   const netWorth = totalPaid - totalMaterialCost - clinicRent;
 
-  const debtCasesCount = patients.filter(
-    (p) => calculateDebt(p.totalAmount, p.paidAmount, p.debtAmount) > 0
-  ).length;
+  const debtCasesCount = isMonthFiltered
+    ? patients.filter((p) => getPatientMonthlyStats(p, selectedMonth!).debt > 0).length
+    : patients.filter(
+        (p) => calculateDebt(p.totalAmount, p.paidAmount, p.debtAmount) > 0
+      ).length;
 
   const maleCount = patients.filter((p) => p.gender === "male").length;
   const femaleCount = patients.filter((p) => p.gender === "female").length;

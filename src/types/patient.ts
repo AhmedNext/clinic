@@ -81,3 +81,55 @@ export function getWhatsAppUrl(phone?: string, patientName?: string): string {
   );
   return `https://wa.me/${num}?text=${msg}`;
 }
+
+export interface PatientMonthlyStats {
+  paid: number;
+  debt: number;
+  visits: number;
+  hasActivity: boolean;
+}
+
+/**
+ * Calculates payments, debt, and visits made specifically within a given month (YYYY-MM).
+ * Distributes multi-month treatments across their respective calendar months based on history entries.
+ */
+export function getPatientMonthlyStats(patient: Patient, monthKey: string): PatientMonthlyStats {
+  const history = patient.history || [];
+  const monthHistory = history.filter((h) => h.date && h.date.startsWith(monthKey));
+
+  if (history.length > 0) {
+    const hasHistoryInMonth = monthHistory.length > 0;
+    const historyTotalPaid = history.reduce((s, h) => s + (h.paid ?? 0), 0);
+
+    // If history entries have explicit payments logged or visits occurred in this month
+    if (historyTotalPaid > 0 || hasHistoryInMonth) {
+      const monthPaid = monthHistory.reduce((s, h) => s + (h.paid ?? 0), 0);
+      const monthDebt = monthHistory.reduce((s, h) => s + (h.debt ?? 0), 0);
+      return {
+        paid: monthPaid,
+        debt: monthDebt,
+        visits: monthHistory.length,
+        hasActivity: hasHistoryInMonth,
+      };
+    }
+  }
+
+  // Fallback for initial/legacy patients without multiple history entries:
+  const matchesDate = Boolean(patient.date && patient.date.startsWith(monthKey));
+  if (matchesDate) {
+    const debt = calculateDebt(patient.totalAmount, patient.paidAmount, patient.debtAmount);
+    return {
+      paid: patient.paidAmount ?? 0,
+      debt,
+      visits: Math.max(1, history.length),
+      hasActivity: true,
+    };
+  }
+
+  return {
+    paid: 0,
+    debt: 0,
+    visits: 0,
+    hasActivity: false,
+  };
+}

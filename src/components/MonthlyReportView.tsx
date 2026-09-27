@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
-import { Patient, calculateDebt, formatIQD } from "@/types/patient";
+import { Patient, calculateDebt, formatIQD, getPatientMonthlyStats } from "@/types/patient";
 import { ClinicMaterial } from "@/types/material";
 import {
   Calendar,
@@ -27,10 +27,16 @@ interface MonthlyReportViewProps {
   onOpenRentModal?: () => void;
 }
 
+export interface MonthPatientRecord extends Patient {
+  monthPaid: number;
+  monthDebt: number;
+  monthVisits: number;
+}
+
 interface MonthBucket {
   key: string; // 'YYYY-MM'
   label: string; // 'Sep 2026'
-  patients: Patient[];
+  patients: MonthPatientRecord[];
   totalPaid: number;
   totalDebt: number;
   totalBilled: number;
@@ -52,33 +58,43 @@ export function MonthlyReportView({
   const [expandedMonth, setExpandedMonth] = useState<string | null>(null);
 
   const monthBuckets: MonthBucket[] = useMemo(() => {
-    const map = new Map<string, Patient[]>();
+    // Collect all unique months from patient dates, history entries, rent, and materials
+    const monthKeys = new Set<string>();
 
     patients.forEach((p) => {
-      const ym = p.date?.substring(0, 7);
-      if (!ym) return;
-      if (!map.has(ym)) map.set(ym, []);
-      map.get(ym)!.push(p);
+      if (p.date) monthKeys.add(p.date.substring(0, 7));
+      p.history?.forEach((h) => {
+        if (h.date) monthKeys.add(h.date.substring(0, 7));
+      });
     });
 
-    // Also include months where only rent or materials exist
-    Object.keys(rentMap).forEach((ym) => {
-      if (!map.has(ym)) map.set(ym, []);
-    });
+    Object.keys(rentMap).forEach((ym) => monthKeys.add(ym));
     materials.forEach((m) => {
-      const ym = m.date?.substring(0, 7);
-      if (ym && !map.has(ym)) map.set(ym, []);
+      if (m.date) monthKeys.add(m.date.substring(0, 7));
     });
 
-    return Array.from(map.entries())
-      .sort(([a], [b]) => b.localeCompare(a))
-      .map(([key, pts]) => {
-        const totalPaid = pts.reduce((s, p) => s + (p.paidAmount ?? 0), 0);
-        const totalDebt = pts.reduce(
-          (s, p) => s + calculateDebt(p.totalAmount, p.paidAmount, p.debtAmount),
-          0
-        );
-        const visitCount = pts.reduce((s, p) => s + (p.history?.length ?? 0), 0);
+    return Array.from(monthKeys)
+      .sort((a, b) => b.localeCompare(a))
+      .map((key) => {
+        let totalPaid = 0;
+        let totalDebt = 0;
+        let visitCount = 0;
+        const monthPatients: MonthPatientRecord[] = [];
+
+        patients.forEach((p) => {
+          const stats = getPatientMonthlyStats(p, key);
+          if (stats.hasActivity) {
+            totalPaid += stats.paid;
+            totalDebt += stats.debt;
+            visitCount += stats.visits;
+            monthPatients.push({
+              ...p,
+              monthPaid: stats.paid,
+              monthDebt: stats.debt,
+              monthVisits: stats.visits,
+            });
+          }
+        });
 
         // Material spend in this month
         const monthMaterials = materials.filter((m) => m.date?.startsWith(key));
@@ -98,14 +114,14 @@ export function MonthlyReportView({
         return {
           key,
           label,
-          patients: pts,
+          patients: monthPatients,
           totalPaid,
           totalDebt,
           totalBilled: totalPaid + totalDebt,
           materialCost,
           rentAmount,
           netProfit,
-          caseCount: pts.length,
+          caseCount: monthPatients.length,
           visitCount,
         };
       });
@@ -357,15 +373,14 @@ export function MonthlyReportView({
                     <div className="border-t border-slate-100 dark:border-slate-800">
                       <div className="divide-y divide-slate-100 dark:divide-slate-800/60">
                         {bucket.patients
-                          .sort((a, b) => (b.date || "").localeCompare(a.date || ""))
+                          .sort((a, b) => b.monthPaid - a.monthPaid || (b.date || "").localeCompare(a.date || ""))
                           .map((p) => {
-                            const debt = calculateDebt(p.totalAmount, p.paidAmount, p.debtAmount);
                             return (
                               <button
                                 key={p.id}
                                 type="button"
                                 onClick={() => onViewHistory(p)}
-                                className="w-full flex items-center gap-3 px-4 py-3 hover:bg-indigo-50/50 dark:hover:bg-indigo-950/20 transition-colors cursor-pointer text-left"
+                                className="w-full flex items-center gap-3 px-4 py-3 hover:bg-indigo-50/50 dark:hover:bg-indigo-950/20 transition-colors cursor-pointer text-left rtl:text-right"
                               >
                                 <PatientAvatar gender={p.gender} size="sm" />
                                 <div className="flex-1 min-w-0">
@@ -373,16 +388,16 @@ export function MonthlyReportView({
                                     {p.name}
                                   </p>
                                   <p className="text-[10px] text-slate-400 dark:text-slate-500">
-                                    {p.date} • {p.history?.length ?? 0} visits
+                                    {p.monthVisits} {p.monthVisits === 1 ? t.visit : t.visits} ({bucket.label})
                                   </p>
                                 </div>
-                                <div className="text-right flex-shrink-0">
-                                  <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400">
-                                    {formatIQD(p.paidAmount ?? 0)}
+                                <div className="text-right rtl:text-left flex-shrink-0">
+                                  <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400 font-mono">
+                                    {formatIQD(p.monthPaid)}
                                   </p>
-                                  {debt > 0 && (
-                                    <p className="text-[10px] font-semibold text-rose-500">
-                                      Owes {formatIQD(debt)}
+                                  {p.monthDebt > 0 && (
+                                    <p className="text-[10px] font-semibold text-rose-500 font-mono">
+                                      {t.owesLabel} {formatIQD(p.monthDebt)}
                                     </p>
                                   )}
                                 </div>
