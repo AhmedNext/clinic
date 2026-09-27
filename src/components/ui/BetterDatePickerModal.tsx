@@ -66,8 +66,6 @@ export function BetterDatePickerModal({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isOpen, onClose]);
 
-  if (!isOpen) return null;
-
   // Month navigation
   const prevMonth = () => {
     if (viewMonth === 0) {
@@ -179,6 +177,8 @@ export function BetterDatePickerModal({
     onSaveDate(selectedDate);
     onClose();
   };
+
+  if (!isOpen) return null;
 
   return (
     <div

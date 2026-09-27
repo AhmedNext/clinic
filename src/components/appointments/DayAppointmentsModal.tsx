@@ -18,6 +18,7 @@ import { Appointment, AppointmentStatus } from "@/types/appointment";
 import { Patient, getWhatsAppUrl } from "@/types/patient";
 import { useLanguage } from "@/context/LanguageContext";
 import { formatStaticDate, WEEKDAY_NAMES } from "@/utils/date";
+import { CircleClockPickerModal } from "@/components/ui/CircleClockPickerModal";
 
 interface DayAppointmentsModalProps {
   isOpen: boolean;
@@ -68,6 +69,7 @@ export function DayAppointmentsModal({
   const [patientName, setPatientName] = useState("");
   const [phone, setPhone] = useState("");
   const [time, setTime] = useState("10:00 AM");
+  const [isClockPickerOpen, setIsClockPickerOpen] = useState(false);
   const [treatment, setTreatment] = useState("");
   const [notes, setNotes] = useState("");
   const [showAddForm, setShowAddForm] = useState(appointments.length === 0);
@@ -279,18 +281,36 @@ export function DayAppointmentsModal({
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                      {t.time}
-                    </label>
-                    <div className="relative">
-                      <Clock className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
+                        {t.time}
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => setIsClockPickerOpen(true)}
+                        className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer"
+                      >
+                        {t.circleClock}
+                      </button>
+                    </div>
+                    <div className="relative flex items-center">
+                      <div className="absolute inset-y-0 left-0 rtl:left-auto rtl:right-0 pl-3 rtl:pl-0 rtl:pr-3 flex items-center pointer-events-none text-slate-400">
+                        <Clock className="w-4 h-4" />
+                      </div>
                       <input
                         type="text"
                         placeholder={t.timePlaceholder}
                         value={time}
                         onChange={(e) => setTime(e.target.value)}
-                        className="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                        className="w-full pl-9 rtl:pl-20 rtl:pr-9 pr-20 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
                       />
+                      <button
+                        type="button"
+                        onClick={() => setIsClockPickerOpen(true)}
+                        className="absolute right-1.5 rtl:right-auto rtl:left-1.5 px-2.5 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 hover:bg-indigo-100 text-xs font-bold cursor-pointer"
+                      >
+                        {t.clockBtn}
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -532,6 +552,15 @@ export function DayAppointmentsModal({
           </button>
         </div>
       </div>
+
+      {/* Circle Clock Picker Modal (Analog Clock Dial) */}
+      <CircleClockPickerModal
+        isOpen={isClockPickerOpen}
+        initialTime={time}
+        patientName={patientName || "Appointment"}
+        onClose={() => setIsClockPickerOpen(false)}
+        onSaveTime={(newTime) => setTime(newTime)}
+      />
     </div>
   );
 }

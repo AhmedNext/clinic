@@ -92,8 +92,6 @@ export function CircleClockPickerModal({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isOpen, onClose]);
 
-  if (!isOpen) return null;
-
   // Clock geometry constants
   const CLOCK_SIZE = 240; // px
   const CENTER = CLOCK_SIZE / 2; // 120
@@ -158,6 +156,8 @@ export function CircleClockPickerModal({
       setPeriod(m[3].toUpperCase() as "AM" | "PM");
     }
   };
+
+  if (!isOpen) return null;
 
   return (
     <div
