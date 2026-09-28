@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
-import Image from "next/image";
+import { ClinicLogo } from "@/components/ClinicLogo";
 import dynamic from "next/dynamic";
 import { Patient, Gender, calculateDebt, formatIQD, PatientHistoryEntry } from "@/types/patient";
 import { ToothRecord } from "@/types/dental";
@@ -668,15 +668,8 @@ export default function DashboardPage() {
       <div className="min-h-screen w-full flex flex-col items-center justify-center bg-slate-950 text-white relative overflow-hidden">
         <div className="absolute w-72 h-72 bg-indigo-600/20 rounded-full blur-3xl pointer-events-none" />
         <div className="relative w-16 h-16 rounded-2xl p-0.5 bg-gradient-to-tr from-indigo-500 via-violet-500 to-cyan-400 shadow-xl shadow-indigo-500/30 ring-4 ring-white/10 mb-4 animate-pulse">
-          <div className="w-full h-full rounded-[14px] bg-slate-900 overflow-hidden relative flex items-end justify-center">
-            <Image
-              src="/dr.png"
-              alt={clinicSettings.clinicName || "Clinic Logo"}
-              width={64}
-              height={64}
-              priority
-              className="w-full h-full object-cover object-top scale-115"
-            />
+          <div className="w-full h-full rounded-[14px] bg-slate-900 overflow-hidden relative flex items-center justify-center p-2.5">
+            <ClinicLogo className="w-full h-full drop-shadow-md" />
           </div>
         </div>
         <h2 className="text-base font-bold text-white tracking-tight">
@@ -687,7 +680,7 @@ export default function DashboardPage() {
     );
   }
 
-  // If not logged in, show Dr. Qayssar Login Screen
+  // If not logged in, show Clinic Login Screen
   if (!isAuthenticated) {
     return <LoginScreen onSuccess={() => {}} />;
   }

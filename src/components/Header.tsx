@@ -1,7 +1,6 @@
 "use client";
 
-import React from "react";
-import Image from "next/image";
+import { ClinicLogo } from "./ClinicLogo";
 import { Plus, Users, CalendarClock, ShieldCheck, LogOut, TrendingUp, Package, Sparkles, UserPlus, Building2 } from "lucide-react";
 import { ThemeToggle } from "./ThemeToggle";
 import { LanguageToggle } from "./LanguageToggle";
@@ -57,14 +56,7 @@ export function Header({
               >
                 <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl p-0.5 bg-gradient-to-tr from-indigo-500 via-violet-500 to-cyan-400 shadow-md shadow-indigo-500/25 ring-2 ring-indigo-500/20 transition-all duration-300 group-hover:scale-105">
                   <div className="w-full h-full rounded-[10px] sm:rounded-[14px] bg-gradient-to-b from-slate-800 to-slate-950 overflow-hidden relative flex items-end justify-center">
-                    <Image
-                      src="/dr.png"
-                      alt={settings.clinicName || "Clinic Logo"}
-                      width={48}
-                      height={48}
-                      priority
-                      className="w-full h-full object-cover object-top scale-115 drop-shadow-sm"
-                    />
+                    <ClinicLogo className="w-full h-full p-0.5 drop-shadow-sm" />
                   </div>
                 </div>
                 <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 sm:w-3 sm:h-3 bg-emerald-500 border-2 border-white dark:border-slate-950 rounded-full shadow-xs ring-1 ring-emerald-400/50 flex items-center justify-center">

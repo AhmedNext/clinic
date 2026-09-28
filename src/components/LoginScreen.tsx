@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import Image from "next/image";
+import { ClinicLogo } from "./ClinicLogo";
 import { Lock, Mail, ShieldCheck, ArrowRight, Eye, EyeOff, AlertCircle } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
 import { useLanguage } from "@/context/LanguageContext";
@@ -71,19 +71,12 @@ export function LoginScreen({ onSuccess }: LoginModalProps) {
             {/* Ambient outer glow */}
             <div className="absolute -inset-1.5 bg-gradient-to-tr from-indigo-500 via-violet-500 to-cyan-400 rounded-3xl blur-md opacity-70 group-hover:opacity-100 transition duration-700 animate-pulse" />
 
-            {/* Doctor Photo Frame */}
+            {/* Clinic Logo Frame */}
             <div className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-3xl p-1 bg-gradient-to-tr from-indigo-500 via-violet-500 to-cyan-400 shadow-2xl ring-4 ring-white/10">
-              <div className="w-full h-full rounded-[20px] bg-gradient-to-b from-slate-800 via-indigo-950 to-slate-950 overflow-hidden relative flex items-end justify-center">
-                {/* Radial spotlight behind doctor */}
+              <div className="w-full h-full rounded-[20px] bg-gradient-to-b from-slate-800 via-indigo-950 to-slate-950 overflow-hidden relative flex items-center justify-center p-3">
+                {/* Radial spotlight behind logo */}
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(99,102,241,0.45)_0%,_transparent_75%)]" />
-                <Image
-                  src="/dr.png"
-                  alt="Clinic Portal"
-                  width={140}
-                  height={140}
-                  priority
-                  className="w-full h-full object-cover object-top scale-115 drop-shadow-[0_8px_16px_rgba(0,0,0,0.6)] transition-transform duration-500 group-hover:scale-120"
-                />
+                <ClinicLogo className="w-full h-full relative z-10 drop-shadow-[0_8px_16px_rgba(0,0,0,0.6)] transition-transform duration-500 group-hover:scale-110" />
               </div>
             </div>
 

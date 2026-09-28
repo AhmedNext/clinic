@@ -16,9 +16,9 @@ export const metadata: Metadata = {
   title: "Dental Clinic — Cases & Odontogram",
   description: "Professional clinical management and 3D dental chart system",
   icons: {
-    icon: "/dr.png",
-    shortcut: "/dr.png",
-    apple: "/dr.png",
+    icon: "/clinic-logo.svg",
+    shortcut: "/clinic-logo.svg",
+    apple: "/clinic-logo.svg",
   },
 };
 
