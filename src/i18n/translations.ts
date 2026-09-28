@@ -231,6 +231,17 @@ export interface Translations {
   recordedMonthsHistory: string;
   allTimeRentTotal: string;
   noRentRecorded: string;
+
+  // Roles & Permissions
+  roleDoctor: string;
+  roleSecretary: string;
+  roleDoctorBadge: string;
+  roleSecretaryBadge: string;
+  roleDoctorDesc: string;
+  roleSecretaryDesc: string;
+  switchRolePreview: string;
+  receptionistTitle: string;
+  doctorTitle: string;
 }
 
 export const translations: Record<Language, Translations> = {
@@ -465,6 +476,17 @@ export const translations: Record<Language, Translations> = {
     recordedMonthsHistory: "Recorded Rent History",
     allTimeRentTotal: "All-Time Rent Total",
     noRentRecorded: "No monthly rent recorded yet",
+
+    // Roles & Permissions
+    roleDoctor: "Doctor",
+    roleSecretary: "Receptionist",
+    roleDoctorBadge: "Doctor / دکتۆر",
+    roleSecretaryBadge: "Receptionist / سکرتێر",
+    roleDoctorDesc: "Full administrative & financial access",
+    roleSecretaryDesc: "Appointments & patient admissions",
+    switchRolePreview: "Role Preview",
+    receptionistTitle: "Reception Desk",
+    doctorTitle: "Dr. Qayssar Dental",
   },
 
   ar: {
@@ -698,6 +720,17 @@ export const translations: Record<Language, Translations> = {
     recordedMonthsHistory: "سجل الإيجارات المسجلة",
     allTimeRentTotal: "إجمالي الإيجارات الكلي",
     noRentRecorded: "لم يتم تسجيل أي إيجار شهري بعد",
+
+    // Roles & Permissions
+    roleDoctor: "دكتور",
+    roleSecretary: "سكرتير",
+    roleDoctorBadge: "دكتور / Doctor",
+    roleSecretaryBadge: "سكرتير / Receptionist",
+    roleDoctorDesc: "صلاحيات إدارية ومالية كاملة",
+    roleSecretaryDesc: "إدارة المواعيد واستقبال المرضى",
+    switchRolePreview: "معاينة الدور",
+    receptionistTitle: "مكتب الاستقبال",
+    doctorTitle: "عيادة د. قيصر للأسنان",
   },
 
   ku: {
@@ -931,6 +964,17 @@ export const translations: Record<Language, Translations> = {
     recordedMonthsHistory: "مێژووی کرێیە تۆمارکراوەکان",
     allTimeRentTotal: "کۆی گشتی هەموو کرێیەکان",
     noRentRecorded: "تا ئێستا هیچ کرێیەکی مانگانە تۆمار نەکراوە",
+
+    // Roles & Permissions
+    roleDoctor: "دکتۆر",
+    roleSecretary: "سکرتێر",
+    roleDoctorBadge: "دکتۆر / Doctor",
+    roleSecretaryBadge: "سکرتێر / Receptionist",
+    roleDoctorDesc: "دەسەڵاتی تەواوی ئیداری و دارایی",
+    roleSecretaryDesc: "بەڕێوەبردنی نۆرە و پێشوازی نەخۆشەکان",
+    switchRolePreview: "بینینی ڕۆڵ",
+    receptionistTitle: "مێزی پێشوازی",
+    doctorTitle: "نۆرینگەی د. قەیسەر بۆ ددان",
   },
 };
 

@@ -5,6 +5,7 @@ import Image from "next/image";
 import { Lock, Mail, ShieldCheck, ArrowRight, Eye, EyeOff, AlertCircle } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
 import { useLanguage } from "@/context/LanguageContext";
+import { useAuth } from "@/context/AuthContext";
 import { LanguageToggle } from "./LanguageToggle";
 
 interface LoginModalProps {
@@ -13,6 +14,7 @@ interface LoginModalProps {
 
 export function LoginScreen({ onSuccess }: LoginModalProps) {
   const { t } = useLanguage();
+  const { enableOfflineAccess } = useAuth();
   const [email, setEmail] = useState("qaissarsalah3@gmail.com");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -175,7 +177,10 @@ export function LoginScreen({ onSuccess }: LoginModalProps) {
         <div className="mt-5 pt-4 border-t border-white/10 text-center space-y-2">
           <button
             type="button"
-            onClick={onSuccess}
+            onClick={() => {
+              enableOfflineAccess();
+              onSuccess();
+            }}
             className="w-full py-2 px-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-indigo-300 hover:text-white text-xs font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer group"
           >
             <span>{t.offlineCacheAccess}</span>

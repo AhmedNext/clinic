@@ -2,10 +2,11 @@
 
 import React from "react";
 import Image from "next/image";
-import { Plus, Users, CalendarClock, ShieldCheck, LogOut, TrendingUp, Package } from "lucide-react";
+import { Plus, Users, CalendarClock, ShieldCheck, LogOut, TrendingUp, Package, Sparkles } from "lucide-react";
 import { ThemeToggle } from "./ThemeToggle";
 import { LanguageToggle } from "./LanguageToggle";
 import { useLanguage } from "@/context/LanguageContext";
+import { useAuth } from "@/context/AuthContext";
 
 interface HeaderProps {
   activeTab: "patients" | "appointments" | "materials" | "reports";
@@ -27,6 +28,9 @@ export function Header({
   onSignOut,
 }: HeaderProps) {
   const { t } = useLanguage();
+  const { isDoctor, userName, badgeLabel, setRoleOverride, roleOverride, signOut } = useAuth();
+
+  const handleSignOutClick = onSignOut || signOut;
 
   return (
     <>
@@ -34,7 +38,7 @@ export function Header({
       <header className="sticky top-0 z-40 w-full border-b border-slate-200/80 dark:border-slate-800/80 bg-white/90 dark:bg-slate-950/90 backdrop-blur-md transition-colors shadow-2xs">
         <div className="w-full px-3 sm:px-6 xl:px-10">
           <div className="h-14 sm:h-16 flex items-center justify-between gap-2 sm:gap-4">
-            {/* Logo & Brand */}
+            {/* Logo, Brand & Role Badge */}
             <div className="flex items-center gap-2 sm:gap-3 min-w-0">
               <div className="relative group cursor-pointer flex-shrink-0">
                 <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl p-0.5 bg-gradient-to-tr from-indigo-500 via-violet-500 to-cyan-400 shadow-md shadow-indigo-500/25 ring-2 ring-indigo-500/20 transition-all duration-300 group-hover:scale-105">
@@ -55,41 +59,51 @@ export function Header({
               </div>
 
               <div className="min-w-0">
-                <div className="flex items-center gap-1.5 sm:gap-2">
+                <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap sm:flex-nowrap">
                   <h1 className="text-sm sm:text-base lg:text-lg font-black text-slate-900 dark:text-slate-100 tracking-tight leading-none truncate">
-                    Dr.Qayssar<span className="hidden sm:inline"> Dental</span>
+                    {userName}
                   </h1>
-                  {/* Verified & Cloud Badges as sleek icons on mobile */}
+
+                  {/* Role Badge (e.g. 'دکتۆر / Doctor' or 'سکرتێر / Receptionist') */}
                   <span
-                    title={t.clinicPro}
-                    className="w-5 h-5 rounded-md bg-indigo-50 dark:bg-indigo-950/70 border border-indigo-200/60 dark:border-indigo-800/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center flex-shrink-0 sm:hidden"
+                    title={isDoctor ? t.roleDoctorDesc : t.roleSecretaryDesc}
+                    className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] sm:text-[11px] font-bold border shadow-2xs whitespace-nowrap flex-shrink-0 transition-all ${
+                      isDoctor
+                        ? "bg-indigo-50 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 border-indigo-200/90 dark:border-indigo-800"
+                        : "bg-amber-50 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 border-amber-200/90 dark:border-amber-800"
+                    }`}
                   >
-                    <ShieldCheck className="w-3.5 h-3.5 stroke-[2.5]" />
+                    <span
+                      className={`w-1.5 h-1.5 rounded-full ${
+                        isDoctor ? "bg-indigo-500" : "bg-amber-500"
+                      } animate-pulse`}
+                    />
+                    <span>{badgeLabel}</span>
                   </span>
-                  <span
-                    title={t.activeCloud}
-                    className="w-5 h-5 rounded-md bg-emerald-50 dark:bg-emerald-950/70 border border-emerald-200/60 dark:border-emerald-800/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center flex-shrink-0 sm:hidden"
-                  >
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                  </span>
-                  {/* Desktop text badges */}
-                  <span className="hidden md:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 flex-shrink-0">
-                    <ShieldCheck className="w-3 h-3 text-indigo-500" />
-                    {t.clinicPro}
-                  </span>
+
+                  {/* Doctor verified badge on desktop */}
+                  {isDoctor && (
+                    <span className="hidden lg:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 flex-shrink-0">
+                      <ShieldCheck className="w-3 h-3 text-indigo-500" />
+                      {t.clinicPro}
+                    </span>
+                  )}
+
+                  {/* Live cloud sync indicator */}
                   <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 flex-shrink-0">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                     {t.activeCloud}
                   </span>
                 </div>
                 <p className="hidden sm:block text-[11px] text-slate-400 dark:text-slate-500 font-medium truncate mt-0.5">
-                  {t.clinicSubtitle}
+                  {isDoctor ? t.clinicSubtitle : t.roleSecretaryDesc}
                 </p>
               </div>
             </div>
 
-            {/* Desktop Center Navigation Tabs (hidden on mobile, shown on sm+) */}
+            {/* Desktop Center Navigation Tabs (Materials & Reports hidden for Secretary) */}
             <nav className="hidden sm:flex items-center p-1 rounded-2xl bg-slate-100/90 dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800 shadow-2xs">
+              {/* Tab: Patients (Allowed for both Doctor and Secretary) */}
               <button
                 type="button"
                 onClick={() => onTabChange("patients")}
@@ -121,6 +135,7 @@ export function Header({
                 </span>
               </button>
 
+              {/* Tab: Appointments (Allowed for both Doctor and Secretary) */}
               <button
                 type="button"
                 onClick={() => onTabChange("appointments")}
@@ -152,57 +167,78 @@ export function Header({
                 </span>
               </button>
 
-              <button
-                type="button"
-                onClick={() => onTabChange("materials")}
-                title={t.tabMaterials}
-                aria-label={t.tabMaterials}
-                className={`relative flex items-center gap-1.5 px-2.5 sm:px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
-                  activeTab === "materials"
-                    ? "bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-xs"
-                    : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
-                }`}
-              >
-                <div className="relative flex items-center justify-center">
-                  <Package className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
+              {/* Tab: Materials (Doctor Only - MUST HIDE for Secretary) */}
+              {isDoctor && (
+                <button
+                  type="button"
+                  onClick={() => onTabChange("materials")}
+                  title={t.tabMaterials}
+                  aria-label={t.tabMaterials}
+                  className={`relative flex items-center gap-1.5 px-2.5 sm:px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                    activeTab === "materials"
+                      ? "bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-xs"
+                      : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
+                  }`}
+                >
+                  <div className="relative flex items-center justify-center">
+                    <Package className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
+                    {materialCount > 0 && (
+                      <span className="sm:hidden absolute -top-1.5 -right-2 rtl:-right-auto rtl:-left-2 px-1 min-w-[14px] h-[14px] flex items-center justify-center rounded-full text-[8.5px] font-black bg-indigo-600 text-white ring-2 ring-white dark:ring-slate-900 shadow-xs">
+                        {materialCount > 99 ? "99+" : materialCount}
+                      </span>
+                    )}
+                  </div>
+                  <span className="hidden sm:inline">{t.tabMaterials}</span>
                   {materialCount > 0 && (
-                    <span className="sm:hidden absolute -top-1.5 -right-2 rtl:-right-auto rtl:-left-2 px-1 min-w-[14px] h-[14px] flex items-center justify-center rounded-full text-[8.5px] font-black bg-indigo-600 text-white ring-2 ring-white dark:ring-slate-900 shadow-xs">
-                      {materialCount > 99 ? "99+" : materialCount}
+                    <span
+                      className={`hidden sm:inline-flex px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
+                        activeTab === "materials"
+                          ? "bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400"
+                          : "bg-slate-200/80 dark:bg-slate-800 text-slate-600 dark:text-slate-400"
+                      }`}
+                    >
+                      {materialCount}
                     </span>
                   )}
-                </div>
-                <span className="hidden sm:inline">{t.tabMaterials}</span>
-                {materialCount > 0 && (
-                  <span
-                    className={`hidden sm:inline-flex px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
-                      activeTab === "materials"
-                        ? "bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400"
-                        : "bg-slate-200/80 dark:bg-slate-800 text-slate-600 dark:text-slate-400"
-                    }`}
-                  >
-                    {materialCount}
-                  </span>
-                )}
-              </button>
+                </button>
+              )}
 
-              <button
-                type="button"
-                onClick={() => onTabChange("reports")}
-                title={t.tabReports}
-                aria-label={t.tabReports}
-                className={`relative flex items-center gap-1.5 px-2.5 sm:px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
-                  activeTab === "reports"
-                    ? "bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-xs"
-                    : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
-                }`}
-              >
-                <TrendingUp className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
-                <span className="hidden sm:inline">{t.tabReports}</span>
-              </button>
+              {/* Tab: Reports (Doctor Only - MUST HIDE for Secretary) */}
+              {isDoctor && (
+                <button
+                  type="button"
+                  onClick={() => onTabChange("reports")}
+                  title={t.tabReports}
+                  aria-label={t.tabReports}
+                  className={`relative flex items-center gap-1.5 px-2.5 sm:px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                    activeTab === "reports"
+                      ? "bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-xs"
+                      : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
+                  }`}
+                >
+                  <TrendingUp className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
+                  <span className="hidden sm:inline">{t.tabReports}</span>
+                </button>
+              )}
             </nav>
 
-            {/* Right Controls: Logo-First Buttons */}
+            {/* Right Controls: Role Preview Switcher, Add Patient, Language, Theme, Logout */}
             <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
+              {/* Quick Role Switcher Preview for easy testing & demo */}
+              <button
+                type="button"
+                onClick={() => setRoleOverride(isDoctor ? "secretary" : "doctor")}
+                title={`${t.switchRolePreview}: ${isDoctor ? t.roleSecretary : t.roleDoctor}`}
+                className={`hidden md:inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold border transition-all cursor-pointer shadow-2xs ${
+                  roleOverride
+                    ? "bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-200 border-amber-300 dark:border-amber-700 ring-2 ring-amber-400/30"
+                    : "bg-slate-100/90 dark:bg-slate-900/90 text-slate-600 dark:text-slate-300 border-slate-200/90 dark:border-slate-800 hover:bg-slate-200/70 dark:hover:bg-slate-800"
+                }`}
+              >
+                <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                <span>{isDoctor ? t.roleSecretary : t.roleDoctor}</span>
+              </button>
+
               {activeTab === "patients" && (
                 <>
                   {/* Mobile Quick Add Icon */}
@@ -228,9 +264,9 @@ export function Header({
               <LanguageToggle />
               <ThemeToggle />
 
-              {onSignOut && (
+              {handleSignOutClick && (
                 <button
-                  onClick={onSignOut}
+                  onClick={handleSignOutClick}
                   title={t.signOutTooltip}
                   className="hidden sm:flex w-9 h-9 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-400 hover:text-rose-500 hover:border-rose-200 dark:hover:border-rose-900/50 hover:bg-rose-50/50 dark:hover:bg-rose-950/20 transition-all cursor-pointer items-center justify-center flex-shrink-0"
                 >
@@ -242,14 +278,18 @@ export function Header({
         </div>
       </header>
 
-      {/* Mobile Floating Island Bottom Navigation (Mobbin iOS Inspired - Icons Only) */}
-      <div className="sm:hidden fixed bottom-3 inset-x-4 max-w-[280px] mx-auto z-40">
+      {/* Mobile Floating Island Bottom Navigation (Mobbin iOS Inspired) */}
+      <div
+        className={`sm:hidden fixed bottom-3 inset-x-4 ${
+          isDoctor ? "max-w-[280px]" : "max-w-[170px]"
+        } mx-auto z-40 transition-all`}
+      >
         <nav
           aria-label="Mobile Navigation"
           className="w-full bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl border border-slate-200/80 dark:border-slate-800/80 rounded-2xl shadow-2xl shadow-indigo-950/20 p-1.5 ring-1 ring-black/5 dark:ring-white/5"
         >
-          <div className="grid grid-cols-4 items-center gap-1">
-            {/* Tab 1: Patients */}
+          <div className={`grid ${isDoctor ? "grid-cols-4" : "grid-cols-2"} items-center gap-1`}>
+            {/* Tab 1: Patients (Doctor & Secretary) */}
             <button
               type="button"
               onClick={() => onTabChange("patients")}
@@ -275,7 +315,7 @@ export function Header({
               </div>
             </button>
 
-            {/* Tab 2: Appointments */}
+            {/* Tab 2: Appointments (Doctor & Secretary) */}
             <button
               type="button"
               onClick={() => onTabChange("appointments")}
@@ -301,52 +341,56 @@ export function Header({
               </div>
             </button>
 
-            {/* Tab 3: Materials */}
-            <button
-              type="button"
-              onClick={() => onTabChange("materials")}
-              title={t.tabMaterials}
-              aria-label={t.tabMaterials}
-              className={`relative flex items-center justify-center py-2.5 px-1.5 rounded-xl transition-all duration-200 cursor-pointer ${
-                activeTab === "materials"
-                  ? "bg-gradient-to-b from-indigo-50 to-indigo-100/70 dark:from-indigo-950/80 dark:to-indigo-900/40 text-indigo-600 dark:text-indigo-400 shadow-2xs"
-                  : "text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
-              }`}
-            >
-              <div className="relative flex items-center justify-center">
-                <Package
-                  className={`w-5 h-5 transition-transform duration-200 ${
-                    activeTab === "materials" ? "scale-110 stroke-[2.4]" : "stroke-[2]"
-                  }`}
-                />
-                {materialCount > 0 && (
-                  <span className="absolute -top-1.5 -right-2 rtl:-right-auto rtl:-left-2 px-1 min-w-[15px] h-[15px] flex items-center justify-center rounded-full text-[9px] font-black bg-indigo-600 text-white ring-2 ring-white dark:ring-slate-900 shadow-xs">
-                    {materialCount > 99 ? "99+" : materialCount}
-                  </span>
-                )}
-              </div>
-            </button>
+            {/* Tab 3: Materials (Doctor Only) */}
+            {isDoctor && (
+              <button
+                type="button"
+                onClick={() => onTabChange("materials")}
+                title={t.tabMaterials}
+                aria-label={t.tabMaterials}
+                className={`relative flex items-center justify-center py-2.5 px-1.5 rounded-xl transition-all duration-200 cursor-pointer ${
+                  activeTab === "materials"
+                    ? "bg-gradient-to-b from-indigo-50 to-indigo-100/70 dark:from-indigo-950/80 dark:to-indigo-900/40 text-indigo-600 dark:text-indigo-400 shadow-2xs"
+                    : "text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+                }`}
+              >
+                <div className="relative flex items-center justify-center">
+                  <Package
+                    className={`w-5 h-5 transition-transform duration-200 ${
+                      activeTab === "materials" ? "scale-110 stroke-[2.4]" : "stroke-[2]"
+                    }`}
+                  />
+                  {materialCount > 0 && (
+                    <span className="absolute -top-1.5 -right-2 rtl:-right-auto rtl:-left-2 px-1 min-w-[15px] h-[15px] flex items-center justify-center rounded-full text-[9px] font-black bg-indigo-600 text-white ring-2 ring-white dark:ring-slate-900 shadow-xs">
+                      {materialCount > 99 ? "99+" : materialCount}
+                    </span>
+                  )}
+                </div>
+              </button>
+            )}
 
-            {/* Tab 4: Reports */}
-            <button
-              type="button"
-              onClick={() => onTabChange("reports")}
-              title={t.tabReports}
-              aria-label={t.tabReports}
-              className={`relative flex items-center justify-center py-2.5 px-1.5 rounded-xl transition-all duration-200 cursor-pointer ${
-                activeTab === "reports"
-                  ? "bg-gradient-to-b from-indigo-50 to-indigo-100/70 dark:from-indigo-950/80 dark:to-indigo-900/40 text-indigo-600 dark:text-indigo-400 shadow-2xs"
-                  : "text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
-              }`}
-            >
-              <div className="relative flex items-center justify-center">
-                <TrendingUp
-                  className={`w-5 h-5 transition-transform duration-200 ${
-                    activeTab === "reports" ? "scale-110 stroke-[2.4]" : "stroke-[2]"
-                  }`}
-                />
-              </div>
-            </button>
+            {/* Tab 4: Reports (Doctor Only) */}
+            {isDoctor && (
+              <button
+                type="button"
+                onClick={() => onTabChange("reports")}
+                title={t.tabReports}
+                aria-label={t.tabReports}
+                className={`relative flex items-center justify-center py-2.5 px-1.5 rounded-xl transition-all duration-200 cursor-pointer ${
+                  activeTab === "reports"
+                    ? "bg-gradient-to-b from-indigo-50 to-indigo-100/70 dark:from-indigo-950/80 dark:to-indigo-900/40 text-indigo-600 dark:text-indigo-400 shadow-2xs"
+                    : "text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+                }`}
+              >
+                <div className="relative flex items-center justify-center">
+                  <TrendingUp
+                    className={`w-5 h-5 transition-transform duration-200 ${
+                      activeTab === "reports" ? "scale-110 stroke-[2.4]" : "stroke-[2]"
+                    }`}
+                  />
+                </div>
+              </button>
+            )}
           </div>
         </nav>
       </div>

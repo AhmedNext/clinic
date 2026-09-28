@@ -17,6 +17,7 @@ import { formatStaticDate } from "@/utils/date";
 import { CircleClockPickerModal } from "./ui/CircleClockPickerModal";
 import { BetterDatePickerModal } from "./ui/BetterDatePickerModal";
 import { useLanguage } from "@/context/LanguageContext";
+import { useAuth } from "@/context/AuthContext";
 
 interface PatientCardProps {
   patient: Patient;
@@ -38,6 +39,7 @@ export const PatientCard = React.memo(function PatientCard({
   onUpdatePatient,
 }: PatientCardProps) {
   const { t } = useLanguage();
+  const { isDoctor } = useAuth();
   const [isClockPickerOpen, setIsClockPickerOpen] = useState(false);
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
 
@@ -221,21 +223,28 @@ export const PatientCard = React.memo(function PatientCard({
         </div>
       </div>
 
-      {/* Action Row: Dental Chart + Phone / WhatsApp Contact */}
+      {/* Action Row: Dental Chart (Doctor Only) + Phone / WhatsApp Contact */}
       <div className="flex items-center justify-between gap-2 pt-1 border-t border-slate-100 dark:border-slate-800/80">
-        {/* 3D Dental Chart Trigger */}
-        <button
-          type="button"
-          onClick={() => onOpenDentalChart(patient)}
-          className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-slate-100/80 hover:bg-indigo-50 dark:bg-slate-800/80 dark:hover:bg-indigo-950/50 text-slate-700 dark:text-slate-200 hover:text-indigo-600 dark:hover:text-indigo-400 border border-slate-200/70 dark:border-slate-700/80 transition-all cursor-pointer active:scale-95"
-        >
-          <span>🦷</span>
-          <span className="text-[11px]">
-            {(patient.teeth?.length ?? 0) > 0
-              ? `${patient.teeth!.length} ${t.teethCount}`
-              : t.dentalChartBtn}
+        {/* 3D Dental Chart Trigger - Doctor Only */}
+        {isDoctor ? (
+          <button
+            type="button"
+            onClick={() => onOpenDentalChart(patient)}
+            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-slate-100/80 hover:bg-indigo-50 dark:bg-slate-800/80 dark:hover:bg-indigo-950/50 text-slate-700 dark:text-slate-200 hover:text-indigo-600 dark:hover:text-indigo-400 border border-slate-200/70 dark:border-slate-700/80 transition-all cursor-pointer active:scale-95"
+          >
+            <span>🦷</span>
+            <span className="text-[11px]">
+              {(patient.teeth?.length ?? 0) > 0
+                ? `${patient.teeth!.length} ${t.teethCount}`
+                : t.dentalChartBtn}
+            </span>
+          </button>
+        ) : (
+          <span className="text-[11px] font-semibold text-slate-400 dark:text-slate-500 flex items-center gap-1">
+            <span>🦷</span>
+            <span>{(patient.teeth?.length ?? 0) > 0 ? `${patient.teeth!.length} ${t.teethCount}` : ""}</span>
           </span>
-        </button>
+        )}
 
         {/* Phone & WhatsApp Contact buttons */}
         {patient.phone ? (

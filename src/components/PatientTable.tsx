@@ -6,6 +6,7 @@ import { PatientAvatar } from "./PatientAvatar";
 import { Calendar, Clock, Trash2, FileText, Pencil, History, Phone, Check } from "lucide-react";
 import { formatStaticDate } from "@/utils/date";
 import { useLanguage } from "@/context/LanguageContext";
+import { useAuth } from "@/context/AuthContext";
 
 interface PatientTableProps {
   patients: Patient[];
@@ -25,6 +26,7 @@ export const PatientTable = React.memo(function PatientTable({
   onSettleDebt,
 }: PatientTableProps) {
   const { t } = useLanguage();
+  const { isDoctor } = useAuth();
   const formatDate = (dateString: string) => formatStaticDate(dateString);
 
   return (
@@ -145,20 +147,27 @@ export const PatientTable = React.memo(function PatientTable({
                 </div>
               </div>
 
-              {/* Bottom row: Dental Chart + WhatsApp/Phone */}
+              {/* Bottom row: Dental Chart (Doctor Only) + WhatsApp/Phone */}
               <div className="flex items-center justify-between gap-2 pt-1 border-t border-slate-100 dark:border-slate-800/80">
-                <button
-                  type="button"
-                  onClick={() => onOpenDentalChart(patient)}
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-semibold bg-slate-100/80 hover:bg-indigo-50 dark:bg-slate-800/80 dark:hover:bg-indigo-950/50 text-slate-700 dark:text-slate-200 hover:text-indigo-600 dark:hover:text-indigo-400 border border-slate-200/70 dark:border-slate-700/80 transition-all cursor-pointer active:scale-95"
-                >
-                  <span>🦷</span>
-                  <span className="text-[11px]">
-                    {patient.teeth && patient.teeth.length > 0
-                      ? `${patient.teeth.length} ${t.teethCount}`
-                      : t.dentalChartBtn}
+                {isDoctor ? (
+                  <button
+                    type="button"
+                    onClick={() => onOpenDentalChart(patient)}
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-semibold bg-slate-100/80 hover:bg-indigo-50 dark:bg-slate-800/80 dark:hover:bg-indigo-950/50 text-slate-700 dark:text-slate-200 hover:text-indigo-600 dark:hover:text-indigo-400 border border-slate-200/70 dark:border-slate-700/80 transition-all cursor-pointer active:scale-95"
+                  >
+                    <span>🦷</span>
+                    <span className="text-[11px]">
+                      {patient.teeth && patient.teeth.length > 0
+                        ? `${patient.teeth.length} ${t.teethCount}`
+                        : t.dentalChartBtn}
+                    </span>
+                  </button>
+                ) : (
+                  <span className="text-[11px] font-semibold text-slate-400 dark:text-slate-500 flex items-center gap-1">
+                    <span>🦷</span>
+                    <span>{patient.teeth && patient.teeth.length > 0 ? `${patient.teeth.length} ${t.teethCount}` : ""}</span>
                   </span>
-                </button>
+                )}
 
                 {patient.phone ? (
                   <div className="flex items-center gap-1.5">
@@ -207,7 +216,7 @@ export const PatientTable = React.memo(function PatientTable({
                 <th scope="col" className="py-3 px-3 w-[70px]">{t.age}</th>
                 <th scope="col" className="py-3 px-3 w-[240px]">{t.phone}</th>
                 <th scope="col" className="py-3 px-3 w-[130px]">{t.date}</th>
-                <th scope="col" className="py-3 px-3 w-[120px]">{t.dentalChartBtn}</th>
+                {isDoctor && <th scope="col" className="py-3 px-3 w-[120px]">{t.dentalChartBtn}</th>}
                 <th scope="col" className="py-3 px-3 w-[160px]">{t.paidLabel}</th>
                 <th scope="col" className="py-3 px-3">{t.notes}</th>
                 <th scope="col" className="py-3 pl-3 pr-5 rtl:pl-5 rtl:pr-3 w-[110px] text-right rtl:text-left">{t.actions}</th>
@@ -322,22 +331,24 @@ export const PatientTable = React.memo(function PatientTable({
                       )}
                     </td>
 
-                    {/* 3D Dental Chart */}
-                    <td className="py-3.5 px-3">
-                      <button
-                        type="button"
-                        onClick={() => onOpenDentalChart(patient)}
-                        title={t.dentalChartBtn}
-                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-semibold transition-all cursor-pointer border border-indigo-200 dark:border-indigo-900/60 bg-indigo-50/70 hover:bg-indigo-100 dark:bg-indigo-950/40 dark:hover:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 shadow-2xs whitespace-nowrap"
-                      >
-                        <span className="text-sm">🦷</span>
-                        <span>
-                          {patient.teeth && patient.teeth.length > 0
-                            ? `${patient.teeth.length} ${t.teethCount}`
-                            : t.dentalChartBtn}
-                        </span>
-                      </button>
-                    </td>
+                    {/* 3D Dental Chart (Doctor Only) */}
+                    {isDoctor && (
+                      <td className="py-3.5 px-3">
+                        <button
+                          type="button"
+                          onClick={() => onOpenDentalChart(patient)}
+                          title={t.dentalChartBtn}
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-semibold transition-all cursor-pointer border border-indigo-200 dark:border-indigo-900/60 bg-indigo-50/70 hover:bg-indigo-100 dark:bg-indigo-950/40 dark:hover:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 shadow-2xs whitespace-nowrap"
+                        >
+                          <span className="text-sm">🦷</span>
+                          <span>
+                            {patient.teeth && patient.teeth.length > 0
+                              ? `${patient.teeth.length} ${t.teethCount}`
+                              : t.dentalChartBtn}
+                          </span>
+                        </button>
+                      </td>
+                    )}
 
                     {/* Payment & Debt */}
                     <td className="py-3.5 px-3 text-xs">

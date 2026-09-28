@@ -29,6 +29,7 @@ export const viewport: Viewport = {
 };
 
 import { LanguageProvider } from "@/context/LanguageContext";
+import { AuthProvider } from "@/context/AuthContext";
 
 export default function RootLayout({
   children,
@@ -42,7 +43,9 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col font-sans overflow-x-hidden">
-        <LanguageProvider>{children}</LanguageProvider>
+        <LanguageProvider>
+          <AuthProvider>{children}</AuthProvider>
+        </LanguageProvider>
       </body>
     </html>
   );

@@ -45,6 +45,7 @@ import {
 import { createClient } from "@/utils/supabase/client";
 import { LoginScreen } from "@/components/LoginScreen";
 import { useLanguage } from "@/context/LanguageContext";
+import { useAuth } from "@/context/AuthContext";
 import { formatMonthName as formatStaticMonthName } from "@/utils/date";
 
 // Lazy-load heavy modals & auxiliary tabs to shrink initial bundle by 65%+
@@ -83,8 +84,7 @@ const MonthlyRentModal = dynamic(
 
 export default function DashboardPage() {
   const { t, language } = useLanguage();
-  const [sessionChecked, setSessionChecked] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const { sessionChecked, isAuthenticated, isDoctor, isSecretary, signOut } = useAuth();
 
   const [activeTab, setActiveTab] = useState<"patients" | "appointments" | "materials" | "reports">("patients");
   
@@ -112,24 +112,12 @@ export default function DashboardPage() {
   const [notification, setNotification] = useState<string | null>(null);
   const [addPatientInitialDate, setAddPatientInitialDate] = useState<string | null>(null);
 
-  const supabase = useMemo(() => createClient(), []);
-
-  // Check persistent session on mount
+  // Role Access Guard: if secretary, restrict activeTab to patients or appointments
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setIsAuthenticated(Boolean(session));
-      setSessionChecked(true);
-    });
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setIsAuthenticated(Boolean(session));
-      setSessionChecked(true);
-    });
-
-    return () => subscription.unsubscribe();
-  }, [supabase]);
+    if (!isDoctor && (activeTab === "materials" || activeTab === "reports")) {
+      setActiveTab("patients");
+    }
+  }, [isDoctor, activeTab]);
 
   // Load from Supabase when authenticated
   useEffect(() => {
@@ -138,16 +126,26 @@ export default function DashboardPage() {
     async function loadData() {
       setIsLoading(true);
       try {
-        const [dbPatients, dbApts, dbMaterials, dbRent] = await Promise.all([
-          fetchPatientsFromDB(),
-          fetchAppointmentsFromDB(),
-          fetchMaterialsFromDB(),
-          fetchRentFromDB(),
-        ]);
-        setPatients(dbPatients);
-        setAppointments(dbApts);
-        setMaterials(dbMaterials);
-        setRentMap(dbRent);
+        if (isDoctor) {
+          const [dbPatients, dbApts, dbMaterials, dbRent] = await Promise.all([
+            fetchPatientsFromDB(),
+            fetchAppointmentsFromDB(),
+            fetchMaterialsFromDB(),
+            fetchRentFromDB(),
+          ]);
+          setPatients(dbPatients);
+          setAppointments(dbApts);
+          setMaterials(dbMaterials);
+          setRentMap(dbRent);
+        } else {
+          // Secretary only needs patients and appointments
+          const [dbPatients, dbApts] = await Promise.all([
+            fetchPatientsFromDB(),
+            fetchAppointmentsFromDB(),
+          ]);
+          setPatients(dbPatients);
+          setAppointments(dbApts);
+        }
       } catch (err) {
         console.error("Supabase fetch error:", err);
       } finally {
@@ -156,13 +154,10 @@ export default function DashboardPage() {
     }
 
     loadData();
-  }, [isAuthenticated]);
-
-
+  }, [isAuthenticated, isDoctor]);
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    setIsAuthenticated(false);
+    await signOut();
   };
 
   const showToast = (message: string) => {
@@ -680,7 +675,7 @@ export default function DashboardPage() {
 
   // If not logged in, show Dr. Qayssar Login Screen
   if (!isAuthenticated) {
-    return <LoginScreen onSuccess={() => setIsAuthenticated(true)} />;
+    return <LoginScreen onSuccess={() => {}} />;
   }
 
   return (
@@ -711,7 +706,7 @@ export default function DashboardPage() {
               setIsModalOpen(true);
             }}
           />
-        ) : activeTab === "materials" ? (
+        ) : activeTab === "materials" && isDoctor ? (
           /* ================= CLINIC MATERIALS & EXPENSES TAB ================= */
           <MaterialsView
             materials={materials}
@@ -719,7 +714,7 @@ export default function DashboardPage() {
             onUpdateMaterial={handleUpdateMaterial}
             onDeleteMaterial={handleDeleteMaterial}
           />
-        ) : activeTab === "reports" ? (
+        ) : activeTab === "reports" && isDoctor ? (
           /* ================= MONTHLY REPORTS TAB ================= */
           <>
             <div className="flex items-center justify-between mb-4">
@@ -743,7 +738,8 @@ export default function DashboardPage() {
               rentMap={rentMap}
               selectedMonth={monthFilter}
               monthSubtitle={monthFilter === "all" ? undefined : formatMonthName(monthFilter)}
-              onOpenRentModal={() => setIsRentModalOpen(true)}
+              appointmentCount={appointments.length}
+              onOpenRentModal={() => isDoctor && setIsRentModalOpen(true)}
             />
 
             {/* Filter and Control Toolbar (Mobbin-style segmented controls) */}
@@ -1066,21 +1062,23 @@ export default function DashboardPage() {
 
       {/* 3D Dental Chart Modal */}
       <DentalChartModal
-        isOpen={Boolean(dentalPatient)}
+        isOpen={Boolean(dentalPatient && isDoctor)}
         patient={dentalPatient}
         onClose={() => setDentalPatient(null)}
         onSaveTeeth={handleSaveTeeth}
         clinicMaterials={materials}
       />
 
-      {/* Variable Monthly Clinic Rent Modal */}
-      <MonthlyRentModal
-        isOpen={isRentModalOpen}
-        onClose={() => setIsRentModalOpen(false)}
-        rentMap={rentMap}
-        availableMonths={availableMonths}
-        onSaveRent={handleSaveRent}
-      />
+      {/* Variable Monthly Clinic Rent Modal (Doctor Only) */}
+      {isDoctor && (
+        <MonthlyRentModal
+          isOpen={isRentModalOpen}
+          onClose={() => setIsRentModalOpen(false)}
+          rentMap={rentMap}
+          availableMonths={availableMonths}
+          onSaveRent={handleSaveRent}
+        />
+      )}
 
       {/* Toast Notification */}
       {notification && (
