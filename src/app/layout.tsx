@@ -31,6 +31,7 @@ export const viewport: Viewport = {
 import { LanguageProvider } from "@/context/LanguageContext";
 import { AuthProvider } from "@/context/AuthContext";
 import { ClinicSettingsProvider } from "@/context/ClinicSettingsContext";
+import { Analytics } from "@vercel/analytics/next";
 
 export default function RootLayout({
   children,
@@ -49,6 +50,7 @@ export default function RootLayout({
             <ClinicSettingsProvider>{children}</ClinicSettingsProvider>
           </AuthProvider>
         </LanguageProvider>
+        <Analytics />
       </body>
     </html>
   );
