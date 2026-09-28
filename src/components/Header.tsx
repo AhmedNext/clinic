@@ -2,11 +2,12 @@
 
 import React from "react";
 import Image from "next/image";
-import { Plus, Users, CalendarClock, ShieldCheck, LogOut, TrendingUp, Package, Sparkles } from "lucide-react";
+import { Plus, Users, CalendarClock, ShieldCheck, LogOut, TrendingUp, Package, Sparkles, UserPlus, Building2 } from "lucide-react";
 import { ThemeToggle } from "./ThemeToggle";
 import { LanguageToggle } from "./LanguageToggle";
 import { useLanguage } from "@/context/LanguageContext";
 import { useAuth } from "@/context/AuthContext";
+import { useClinicSettings } from "@/context/ClinicSettingsContext";
 
 interface HeaderProps {
   activeTab: "patients" | "appointments" | "materials" | "reports";
@@ -15,6 +16,8 @@ interface HeaderProps {
   patientCount: number;
   appointmentCount: number;
   materialCount?: number;
+  onOpenStaffModal?: () => void;
+  onOpenClinicSettings?: () => void;
   onSignOut?: () => void;
 }
 
@@ -25,12 +28,19 @@ export function Header({
   patientCount,
   appointmentCount,
   materialCount = 0,
+  onOpenStaffModal,
+  onOpenClinicSettings,
   onSignOut,
 }: HeaderProps) {
   const { t } = useLanguage();
   const { isDoctor, userName, badgeLabel, setRoleOverride, roleOverride, signOut } = useAuth();
+  const { settings } = useClinicSettings();
 
   const handleSignOutClick = onSignOut || signOut;
+
+  const displayName = isDoctor
+    ? settings.clinicName || userName || t.doctorTitle
+    : userName || t.receptionistTitle;
 
   return (
     <>
@@ -40,12 +50,16 @@ export function Header({
           <div className="h-14 sm:h-16 flex items-center justify-between gap-2 sm:gap-4">
             {/* Logo, Brand & Role Badge */}
             <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-              <div className="relative group cursor-pointer flex-shrink-0">
+              <div
+                onClick={isDoctor ? onOpenClinicSettings : undefined}
+                className={`relative group flex-shrink-0 ${isDoctor ? "cursor-pointer" : ""}`}
+                title={isDoctor ? t.clinicSettings : undefined}
+              >
                 <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl p-0.5 bg-gradient-to-tr from-indigo-500 via-violet-500 to-cyan-400 shadow-md shadow-indigo-500/25 ring-2 ring-indigo-500/20 transition-all duration-300 group-hover:scale-105">
                   <div className="w-full h-full rounded-[10px] sm:rounded-[14px] bg-gradient-to-b from-slate-800 to-slate-950 overflow-hidden relative flex items-end justify-center">
                     <Image
                       src="/dr.png"
-                      alt="Dr. Qayssar Dental"
+                      alt={settings.clinicName || "Clinic Logo"}
                       width={48}
                       height={48}
                       priority
@@ -61,7 +75,7 @@ export function Header({
               <div className="min-w-0">
                 <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap sm:flex-nowrap">
                   <h1 className="text-sm sm:text-base lg:text-lg font-black text-slate-900 dark:text-slate-100 tracking-tight leading-none truncate">
-                    {userName}
+                    {displayName}
                   </h1>
 
                   {/* Role Badge (e.g. 'دکتۆر / Doctor' or 'سکرتێر / Receptionist') */}
@@ -96,7 +110,11 @@ export function Header({
                   </span>
                 </div>
                 <p className="hidden sm:block text-[11px] text-slate-400 dark:text-slate-500 font-medium truncate mt-0.5">
-                  {isDoctor ? t.clinicSubtitle : t.roleSecretaryDesc}
+                  {isDoctor
+                    ? settings.doctorName
+                      ? `${settings.doctorName} • ${t.clinicSubtitle}`
+                      : t.clinicSubtitle
+                    : t.roleSecretaryDesc}
                 </p>
               </div>
             </div>
@@ -222,14 +240,39 @@ export function Header({
               )}
             </nav>
 
-            {/* Right Controls: Role Preview Switcher, Add Patient, Language, Theme, Logout */}
+            {/* Right Controls: Staff Management, Clinic Settings, Add Patient, Role Preview, Language, Theme, Logout */}
             <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
-              {/* Quick Role Switcher Preview for easy testing & demo */}
+              {/* Doctor Control: Staff & Secretary Management */}
+              {isDoctor && onOpenStaffModal && (
+                <button
+                  type="button"
+                  onClick={onOpenStaffModal}
+                  title={t.manageStaff}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold border border-amber-200/90 dark:border-amber-800/80 bg-amber-50/80 dark:bg-amber-950/50 hover:bg-amber-100 dark:hover:bg-amber-900/60 text-amber-700 dark:text-amber-300 shadow-2xs transition-all cursor-pointer"
+                >
+                  <UserPlus className="w-3.5 h-3.5 text-amber-500" />
+                  <span className="hidden md:inline">{t.manageStaff}</span>
+                </button>
+              )}
+
+              {/* Doctor Control: Clinic Settings (White-label customization) */}
+              {isDoctor && onOpenClinicSettings && (
+                <button
+                  type="button"
+                  onClick={onOpenClinicSettings}
+                  title={t.clinicSettings}
+                  className="hidden sm:flex w-9 h-9 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50/50 dark:hover:bg-indigo-950/30 transition-all cursor-pointer items-center justify-center flex-shrink-0"
+                >
+                  <Building2 className="w-4 h-4" />
+                </button>
+              )}
+
+              {/* Quick Role Switcher Preview */}
               <button
                 type="button"
                 onClick={() => setRoleOverride(isDoctor ? "secretary" : "doctor")}
                 title={`${t.switchRolePreview}: ${isDoctor ? t.roleSecretary : t.roleDoctor}`}
-                className={`hidden md:inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold border transition-all cursor-pointer shadow-2xs ${
+                className={`hidden lg:inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold border transition-all cursor-pointer shadow-2xs ${
                   roleOverride
                     ? "bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-200 border-amber-300 dark:border-amber-700 ring-2 ring-amber-400/30"
                     : "bg-slate-100/90 dark:bg-slate-900/90 text-slate-600 dark:text-slate-300 border-slate-200/90 dark:border-slate-800 hover:bg-slate-200/70 dark:hover:bg-slate-800"
@@ -278,7 +321,7 @@ export function Header({
         </div>
       </header>
 
-      {/* Mobile Floating Island Bottom Navigation (Mobbin iOS Inspired) */}
+      {/* Mobile Floating Island Bottom Navigation */}
       <div
         className={`sm:hidden fixed bottom-3 inset-x-4 ${
           isDoctor ? "max-w-[280px]" : "max-w-[170px]"

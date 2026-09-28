@@ -9,7 +9,7 @@ export function ThemeToggle() {
 
   useEffect(() => {
     setMounted(true);
-    const savedTheme = localStorage.getItem("qaissar_theme") as "light" | "dark" | null;
+    const savedTheme = (localStorage.getItem("clinic_theme") || localStorage.getItem("qaissar_theme")) as "light" | "dark" | null;
     if (savedTheme) {
       setTheme(savedTheme);
       if (savedTheme === "dark") {
@@ -32,7 +32,7 @@ export function ThemeToggle() {
   const toggleTheme = () => {
     const nextTheme = theme === "light" ? "dark" : "light";
     setTheme(nextTheme);
-    localStorage.setItem("qaissar_theme", nextTheme);
+    localStorage.setItem("clinic_theme", nextTheme);
     if (nextTheme === "dark") {
       document.documentElement.classList.add("dark");
     } else {

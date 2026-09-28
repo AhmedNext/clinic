@@ -242,6 +242,24 @@ export interface Translations {
   switchRolePreview: string;
   receptionistTitle: string;
   doctorTitle: string;
+
+  // Staff & Clinic Settings
+  manageStaff: string;
+  addSecretary: string;
+  secretaryName: string;
+  secretaryEmail: string;
+  secretaryPassword: string;
+  createSecretaryAccount: string;
+  activeStaff: string;
+  noStaffYet: string;
+  secretaryCreatedSuccess: string;
+  clinicSettings: string;
+  clinicName: string;
+  doctorName: string;
+  clinicPhone: string;
+  clinicAddress: string;
+  settingsSaved: string;
+  editClinicProfile: string;
 }
 
 export const translations: Record<Language, Translations> = {
@@ -259,7 +277,7 @@ export const translations: Record<Language, Translations> = {
     addPatient: "Add Patient",
     clinicPro: "Clinic Pro",
     activeCloud: "Active Cloud",
-    clinicSubtitle: "Dr. Qayssar Salah • Clinic & Odontogram",
+    clinicSubtitle: "Clinic & Odontogram Suite",
     autoBookAppointment: "Auto-schedule in appointments calendar",
     bookPatientCase: "Add & Book Patient Case",
     signOut: "Sign out",
@@ -313,13 +331,13 @@ export const translations: Record<Language, Translations> = {
     markDebtPaid: "Paid ✓",
 
     // Login Screen
-    clinicPortalTitle: "Dr. Qayssar Dental",
+    clinicPortalTitle: "Dental Clinic Portal",
     clinicPortalSubtitle: "Private Clinical Management & Odontogram Suite",
     doctorEmail: "Doctor Email",
     password: "Password",
     unlockDashboard: "Unlock Clinic Dashboard",
     offlineCacheAccess: "Enter Clinic Workspace (Offline Cache)",
-    offlineCacheDesc: "Protected by Row-Level Security • Dr. Qayssar Salah Clinic",
+    offlineCacheDesc: "Protected by Row-Level Security • Clinic Cloud System",
     verifyingSession: "Verifying clinic session...",
 
     // Modals & General
@@ -486,7 +504,25 @@ export const translations: Record<Language, Translations> = {
     roleSecretaryDesc: "Appointments & patient admissions",
     switchRolePreview: "Role Preview",
     receptionistTitle: "Reception Desk",
-    doctorTitle: "Dr. Qayssar Dental",
+    doctorTitle: "Doctor / Clinic Admin",
+
+    // Staff & Clinic Settings
+    manageStaff: "Manage Staff",
+    addSecretary: "Add Secretary",
+    secretaryName: "Secretary Name",
+    secretaryEmail: "Secretary Email",
+    secretaryPassword: "Password",
+    createSecretaryAccount: "Create Account in Supabase",
+    activeStaff: "Active Receptionists",
+    noStaffYet: "No secretaries added yet",
+    secretaryCreatedSuccess: "Secretary account created successfully! They can now log in.",
+    clinicSettings: "Clinic Settings",
+    clinicName: "Clinic Name",
+    doctorName: "Doctor Name",
+    clinicPhone: "Clinic Phone",
+    clinicAddress: "Clinic Address",
+    settingsSaved: "Settings saved successfully",
+    editClinicProfile: "Edit Clinic Profile",
   },
 
   ar: {
@@ -503,7 +539,7 @@ export const translations: Record<Language, Translations> = {
     addPatient: "إضافة مريض",
     clinicPro: "عيادة احترافية",
     activeCloud: "متصل سحابياً",
-    clinicSubtitle: "د. قيصر صلاح • إدارة العيادة ومخطط الأسنان",
+    clinicSubtitle: "نظام إدارة العيادة ومخطط الأسنان",
     autoBookAppointment: "حجز موعد في جدول المواعيد تلقائياً",
     bookPatientCase: "إضافة وحجز ملف مريض",
     signOut: "تسجيل الخروج",
@@ -557,13 +593,13 @@ export const translations: Record<Language, Translations> = {
     markDebtPaid: "تسديد ✓",
 
     // Login Screen
-    clinicPortalTitle: "عيادة د. قيصر للأسنان",
+    clinicPortalTitle: "بوابة عيادة الأسنان",
     clinicPortalSubtitle: "النظام الإلكتروني الخاص بإدارة العيادة والأسنان",
     doctorEmail: "بريد الطبيب",
     password: "كلمة المرور",
     unlockDashboard: "دخول نظام العيادة",
     offlineCacheAccess: "الدخول ببيانات العيادة المحفوظة (بدون إنترنت)",
-    offlineCacheDesc: "محمي بنظام أمان البيانات • عيادة د. قيصر صلاح",
+    offlineCacheDesc: "محمي بنظام أمان البيانات • نظام العيادة السحابي",
     verifyingSession: "جاري التحقق من جلسة العيادة...",
 
     // Modals & General
@@ -730,7 +766,25 @@ export const translations: Record<Language, Translations> = {
     roleSecretaryDesc: "إدارة المواعيد واستقبال المرضى",
     switchRolePreview: "معاينة الدور",
     receptionistTitle: "مكتب الاستقبال",
-    doctorTitle: "عيادة د. قيصر للأسنان",
+    doctorTitle: "طبيب العيادة / مسؤول",
+
+    // Staff & Clinic Settings
+    manageStaff: "إدارة الكادر",
+    addSecretary: "إضافة سكرتير",
+    secretaryName: "اسم السكرتير",
+    secretaryEmail: "بريد السكرتير",
+    secretaryPassword: "كلمة المرور",
+    createSecretaryAccount: "إنشاء الحساب في سوبابيس",
+    activeStaff: "موظفو الاستقبال النشطون",
+    noStaffYet: "لم يتم إضافة سكرتير بعد",
+    secretaryCreatedSuccess: "تم إنشاء حساب السكرتير بنجاح! يمكنه الآن تسجيل الدخول.",
+    clinicSettings: "إعدادات العيادة",
+    clinicName: "اسم العيادة",
+    doctorName: "اسم الطبيب",
+    clinicPhone: "هاتف العيادة",
+    clinicAddress: "عنوان العيادة",
+    settingsSaved: "تم حفظ الإعدادات بنجاح",
+    editClinicProfile: "تعديل بيانات العيادة",
   },
 
   ku: {
@@ -747,7 +801,7 @@ export const translations: Record<Language, Translations> = {
     addPatient: "نەخۆشی نوێ",
     clinicPro: "نۆرینگەی تایبەت",
     activeCloud: "کلاودی چالاک",
-    clinicSubtitle: "د. قەیسەر سەڵاح • نۆرینگەی ددان و چارەسەر",
+    clinicSubtitle: "سیستەمی نۆرینگە و خشتەی ددان",
     autoBookAppointment: "تۆمارکردنی نۆرە لە خشتەی نۆرەکان بە خۆکار",
     bookPatientCase: "زیادکردن و حجزکردنی نەخۆش",
     signOut: "دەرچوون",
@@ -801,13 +855,13 @@ export const translations: Record<Language, Translations> = {
     markDebtPaid: "دانەوە ✓",
 
     // Login Screen
-    clinicPortalTitle: "نۆرینگەی ددانی د. قەیسەر",
+    clinicPortalTitle: "سیستەمی نۆرینگەی ددان",
     clinicPortalSubtitle: "سیستەمی پێشکەوتووی بەڕێوەبردنی نۆرینگە و چارەسەری ددان",
     doctorEmail: "ئیمەیڵی دکتۆر",
     password: "وشەی نهێنی",
     unlockDashboard: "چوونەژوورەوە بۆ نۆرینگە",
     offlineCacheAccess: "چوونەژوورەوە بە کاشی نۆرینگە (بێ ئینتەرنێت)",
-    offlineCacheDesc: "پارێزراوە بە سیستەمی پاراستن • نۆرینگەی د. قەیسەر سەڵاح",
+    offlineCacheDesc: "پارێزراوە بە سیستەمی پاراستن • سیستەمی سحابی نۆرینگە",
     verifyingSession: "پشکنینی هەژماری نۆرینگە...",
 
     // Modals & General
@@ -974,7 +1028,25 @@ export const translations: Record<Language, Translations> = {
     roleSecretaryDesc: "بەڕێوەبردنی نۆرە و پێشوازی نەخۆشەکان",
     switchRolePreview: "بینینی ڕۆڵ",
     receptionistTitle: "مێزی پێشوازی",
-    doctorTitle: "نۆرینگەی د. قەیسەر بۆ ددان",
+    doctorTitle: "دکتۆری نۆرینگە / بەڕێوەبەر",
+
+    // Staff & Clinic Settings
+    manageStaff: "بەڕێوەبردنی کارمەندان",
+    addSecretary: "زیادکردنی سکرتێر",
+    secretaryName: "ناوی سکرتێر",
+    secretaryEmail: "ئیمەیڵی سکرتێر",
+    secretaryPassword: "وشەی نهێنی",
+    createSecretaryAccount: "دروستکردنی هەژمار لە سوبابەیس",
+    activeStaff: "کارمەندانی پێشوازی چالاک",
+    noStaffYet: "تا ئێستا هیچ سکرتێرێک زیاد نەکراوە",
+    secretaryCreatedSuccess: "هەژماری سکرتێر بە سەرکەوتوویی دروستکرا! ئێستا دەتوانێت بچێتە ژوورەوە.",
+    clinicSettings: "ڕێکخستنەکانی نۆرینگە",
+    clinicName: "ناوی نۆرینگە",
+    doctorName: "ناوی دکتۆر",
+    clinicPhone: "تەلەفۆنی نۆرینگە",
+    clinicAddress: "ناونیشانی نۆرینگە",
+    settingsSaved: "ڕێکخستنەکان بە سەرکەوتوویی پاشەکەوت کران",
+    editClinicProfile: "دەستکاریکردنی زانیاری نۆرینگە",
   },
 };
 

@@ -73,11 +73,12 @@ export function getWhatsAppNumber(phone?: string): string {
   return digits;
 }
 
-export function getWhatsAppUrl(phone?: string, patientName?: string): string {
+export function getWhatsAppUrl(phone?: string, patientName?: string, clinicName?: string): string {
   const num = getWhatsAppNumber(phone);
   if (!num) return "#";
+  const clinic = clinicName?.trim() || "Dental Clinic";
   const msg = encodeURIComponent(
-    `Hello ${patientName || ""}, from Qaissar Dental Clinic. Regarding your dental appointment:`
+    `Hello ${patientName || ""}, from ${clinic}. Regarding your dental appointment:`
   );
   return `https://wa.me/${num}?text=${msg}`;
 }

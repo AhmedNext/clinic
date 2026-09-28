@@ -46,6 +46,7 @@ import { createClient } from "@/utils/supabase/client";
 import { LoginScreen } from "@/components/LoginScreen";
 import { useLanguage } from "@/context/LanguageContext";
 import { useAuth } from "@/context/AuthContext";
+import { useClinicSettings } from "@/context/ClinicSettingsContext";
 import { formatMonthName as formatStaticMonthName } from "@/utils/date";
 
 // Lazy-load heavy modals & auxiliary tabs to shrink initial bundle by 65%+
@@ -81,10 +82,19 @@ const MonthlyRentModal = dynamic(
   () => import("@/components/MonthlyRentModal").then((m) => m.MonthlyRentModal),
   { ssr: false }
 );
+const StaffModal = dynamic(
+  () => import("@/components/StaffModal").then((m) => m.StaffModal),
+  { ssr: false }
+);
+const ClinicSettingsModal = dynamic(
+  () => import("@/components/ClinicSettingsModal").then((m) => m.ClinicSettingsModal),
+  { ssr: false }
+);
 
 export default function DashboardPage() {
   const { t, language } = useLanguage();
   const { sessionChecked, isAuthenticated, isDoctor, isSecretary, signOut } = useAuth();
+  const { settings: clinicSettings } = useClinicSettings();
 
   const [activeTab, setActiveTab] = useState<"patients" | "appointments" | "materials" | "reports">("patients");
   
@@ -98,6 +108,8 @@ export default function DashboardPage() {
   // Modals state
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isRentModalOpen, setIsRentModalOpen] = useState(false);
+  const [isStaffModalOpen, setIsStaffModalOpen] = useState(false);
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [editingPatient, setEditingPatient] = useState<Patient | null>(null);
   const [historyPatient, setHistoryPatient] = useState<Patient | null>(null);
   const [dentalPatient, setDentalPatient] = useState<Patient | null>(null);
@@ -659,7 +671,7 @@ export default function DashboardPage() {
           <div className="w-full h-full rounded-[14px] bg-slate-900 overflow-hidden relative flex items-end justify-center">
             <Image
               src="/dr.png"
-              alt="Dr. Qayssar"
+              alt={clinicSettings.clinicName || "Clinic Logo"}
               width={64}
               height={64}
               priority
@@ -667,7 +679,9 @@ export default function DashboardPage() {
             />
           </div>
         </div>
-        <h2 className="text-base font-bold text-white tracking-tight">Dr.Qayssar Dental Clinic</h2>
+        <h2 className="text-base font-bold text-white tracking-tight">
+          {clinicSettings.clinicName || t.clinicPortalTitle}
+        </h2>
         <p className="text-xs text-slate-400 font-medium mt-1">{t.verifyingSession}</p>
       </div>
     );
@@ -688,6 +702,8 @@ export default function DashboardPage() {
         patientCount={patients.length}
         appointmentCount={appointments.length}
         materialCount={materials.length}
+        onOpenStaffModal={() => setIsStaffModalOpen(true)}
+        onOpenClinicSettings={() => setIsSettingsModalOpen(true)}
         onSignOut={handleSignOut}
       />
 
@@ -1077,6 +1093,22 @@ export default function DashboardPage() {
           rentMap={rentMap}
           availableMonths={availableMonths}
           onSaveRent={handleSaveRent}
+        />
+      )}
+
+      {/* Staff & Secretary Management Modal (Doctor Only) */}
+      {isDoctor && (
+        <StaffModal
+          isOpen={isStaffModalOpen}
+          onClose={() => setIsStaffModalOpen(false)}
+        />
+      )}
+
+      {/* Clinic Settings & White-label Customization Modal (Doctor Only) */}
+      {isDoctor && (
+        <ClinicSettingsModal
+          isOpen={isSettingsModalOpen}
+          onClose={() => setIsSettingsModalOpen(false)}
         />
       )}
 

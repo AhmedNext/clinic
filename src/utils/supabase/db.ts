@@ -106,14 +106,14 @@ export function mapAppointmentToRow(apt: Appointment): any {
 }
 
 // Cache keys for instant 0ms loads
-const LOCAL_STORAGE_PATIENTS_KEY = "dr_qayssar_patients_cache";
-const LOCAL_STORAGE_APPOINTMENTS_KEY = "dr_qayssar_appointments_cache";
-const LOCAL_STORAGE_MATERIALS_KEY = "dr_qayssar_materials_cache";
+const LOCAL_STORAGE_PATIENTS_KEY = "clinic_patients_cache";
+const LOCAL_STORAGE_APPOINTMENTS_KEY = "clinic_appointments_cache";
+const LOCAL_STORAGE_MATERIALS_KEY = "clinic_materials_cache";
 
 export function getCachedPatients(): Patient[] {
   if (typeof window === "undefined") return [];
   try {
-    const cached = localStorage.getItem(LOCAL_STORAGE_PATIENTS_KEY);
+    const cached = localStorage.getItem(LOCAL_STORAGE_PATIENTS_KEY) || localStorage.getItem("dr_qayssar_patients_cache");
     return cached ? JSON.parse(cached) : [];
   } catch {
     return [];
@@ -123,7 +123,7 @@ export function getCachedPatients(): Patient[] {
 export function getCachedAppointments(): Appointment[] {
   if (typeof window === "undefined") return [];
   try {
-    const cached = localStorage.getItem(LOCAL_STORAGE_APPOINTMENTS_KEY);
+    const cached = localStorage.getItem(LOCAL_STORAGE_APPOINTMENTS_KEY) || localStorage.getItem("dr_qayssar_appointments_cache");
     return cached ? JSON.parse(cached) : [];
   } catch {
     return [];
@@ -133,7 +133,7 @@ export function getCachedAppointments(): Appointment[] {
 export function getCachedMaterials(): ClinicMaterial[] {
   if (typeof window === "undefined") return [];
   try {
-    const cached = localStorage.getItem(LOCAL_STORAGE_MATERIALS_KEY);
+    const cached = localStorage.getItem(LOCAL_STORAGE_MATERIALS_KEY) || localStorage.getItem("dr_qayssar_materials_cache");
     if (!cached) return [];
     const parsed = JSON.parse(cached);
     return Array.isArray(parsed)
@@ -385,7 +385,7 @@ export async function deleteMaterialFromDB(id: string): Promise<void> {
 }
 
 // ================= CLINIC MONTHLY RENT API =================
-const LOCAL_STORAGE_RENT_KEY = "dr_qayssar_rent_cache";
+const LOCAL_STORAGE_RENT_KEY = "clinic_rent_cache";
 
 export async function fetchRentFromDB(): Promise<Record<string, number>> {
   try {

@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Dr.Qayssar Dental Clinic — Cases & Odontogram",
-  description: "Personal patient case tracking and 3D dental chart management dashboard",
+  title: "Dental Clinic — Cases & Odontogram",
+  description: "Professional clinical management and 3D dental chart system",
   icons: {
     icon: "/dr.png",
     shortcut: "/dr.png",
@@ -30,6 +30,7 @@ export const viewport: Viewport = {
 
 import { LanguageProvider } from "@/context/LanguageContext";
 import { AuthProvider } from "@/context/AuthContext";
+import { ClinicSettingsProvider } from "@/context/ClinicSettingsContext";
 
 export default function RootLayout({
   children,
@@ -44,7 +45,9 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col font-sans overflow-x-hidden">
         <LanguageProvider>
-          <AuthProvider>{children}</AuthProvider>
+          <AuthProvider>
+            <ClinicSettingsProvider>{children}</ClinicSettingsProvider>
+          </AuthProvider>
         </LanguageProvider>
       </body>
     </html>

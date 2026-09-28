@@ -6,6 +6,7 @@ import { Lock, Mail, ShieldCheck, ArrowRight, Eye, EyeOff, AlertCircle } from "l
 import { createClient } from "@/utils/supabase/client";
 import { useLanguage } from "@/context/LanguageContext";
 import { useAuth } from "@/context/AuthContext";
+import { useClinicSettings } from "@/context/ClinicSettingsContext";
 import { LanguageToggle } from "./LanguageToggle";
 
 interface LoginModalProps {
@@ -15,7 +16,8 @@ interface LoginModalProps {
 export function LoginScreen({ onSuccess }: LoginModalProps) {
   const { t } = useLanguage();
   const { enableOfflineAccess } = useAuth();
-  const [email, setEmail] = useState("qaissarsalah3@gmail.com");
+  const { settings } = useClinicSettings();
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -76,7 +78,7 @@ export function LoginScreen({ onSuccess }: LoginModalProps) {
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(99,102,241,0.45)_0%,_transparent_75%)]" />
                 <Image
                   src="/dr.png"
-                  alt="Dr. Qayssar Dental"
+                  alt="Clinic Portal"
                   width={140}
                   height={140}
                   priority
@@ -93,7 +95,7 @@ export function LoginScreen({ onSuccess }: LoginModalProps) {
           </div>
 
           <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white flex items-center justify-center gap-2">
-            <span>{t.clinicPortalTitle}</span>
+            <span>{settings.clinicName || t.clinicPortalTitle}</span>
             <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-indigo-500/25 text-indigo-300 border border-indigo-400/30 shadow-xs">
               <ShieldCheck className="w-3.5 h-3.5 text-indigo-400" />
               Pro

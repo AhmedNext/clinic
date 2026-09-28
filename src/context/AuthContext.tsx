@@ -12,7 +12,7 @@ const AuthContext = createContext<AuthContextType>({
   role: "doctor",
   isDoctor: true,
   isSecretary: false,
-  userName: "Dr. Qayssar",
+  userName: "Doctor",
   sessionChecked: false,
   isAuthenticated: false,
   signOut: async () => {},

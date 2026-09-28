@@ -100,3 +100,41 @@ REVOKE ALL ON public.clinic_materials FROM anon;
 GRANT ALL ON public.patients TO authenticated;
 GRANT ALL ON public.appointments TO authenticated;
 GRANT ALL ON public.clinic_materials TO authenticated;
+
+-- ========================================================
+-- 5. CLINIC SETTINGS TABLE (White-label Clinic & Doctor profile)
+-- ========================================================
+CREATE TABLE IF NOT EXISTS public.clinic_settings (
+  id TEXT PRIMARY KEY DEFAULT 'primary',
+  clinic_name TEXT,
+  doctor_name TEXT,
+  phone TEXT,
+  address TEXT,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- ========================================================
+-- 6. CLINIC STAFF TABLE (Receptionists & Staff members)
+-- ========================================================
+CREATE TABLE IF NOT EXISTS public.clinic_staff (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  email TEXT NOT NULL,
+  role TEXT NOT NULL DEFAULT 'secretary',
+  created_at BIGINT,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+ALTER TABLE public.clinic_settings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.clinic_staff ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Allow authenticated users full access to clinic_settings" ON public.clinic_settings;
+CREATE POLICY "Allow authenticated users full access to clinic_settings"
+  ON public.clinic_settings FOR ALL TO authenticated USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow authenticated users full access to clinic_staff" ON public.clinic_staff;
+CREATE POLICY "Allow authenticated users full access to clinic_staff"
+  ON public.clinic_staff FOR ALL TO authenticated USING (true) WITH CHECK (true);
+
+GRANT ALL ON public.clinic_settings TO authenticated;
+GRANT ALL ON public.clinic_staff TO authenticated;
