@@ -83,3 +83,16 @@ body {
   -webkit-backdrop-filter: blur(16px);
 }
 
+@keyframes shrinkWidth {
+  from {
+    width: 100%;
+  }
+  to {
+    width: 0%;
+  }
+}
+
+.animate-shrink-width {
+  animation: shrinkWidth 7s linear forwards;
+}
+

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { ClinicLogo } from "@/components/ClinicLogo";
 import dynamic from "next/dynamic";
 import { Patient, Gender, calculateDebt, formatIQD, PatientHistoryEntry } from "@/types/patient";
@@ -24,6 +24,9 @@ import {
   Users,
   Package,
   TrendingUp,
+  RotateCcw,
+  Trash2,
+  X,
 } from "lucide-react";
 
 import {
@@ -115,6 +118,28 @@ export default function DashboardPage() {
   const [sortOrder, setSortOrder] = useState<"desc" | "asc">("desc"); // 'desc' = newest first
   const [notification, setNotification] = useState<string | null>(null);
   const [addPatientInitialDate, setAddPatientInitialDate] = useState<string | null>(null);
+
+  // Undo Delete State & Pending Timer
+  interface UndoDeletePatientState {
+    patient: Patient;
+    index: number;
+  }
+  const [undoPatientState, setUndoPatientState] = useState<UndoDeletePatientState | null>(null);
+  const pendingDeleteTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Flush pending patient deletion if user leaves or refreshes before timer expires
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      if (undoPatientState && pendingDeleteTimeoutRef.current) {
+        clearTimeout(pendingDeleteTimeoutRef.current);
+        deletePatientFromDB(undoPatientState.patient.id).catch(console.error);
+      }
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [undoPatientState]);
 
   // Role Access Guard: if secretary, restrict activeTab to patients or appointments
   useEffect(() => {
@@ -243,17 +268,76 @@ export default function DashboardPage() {
   };
 
   const handleDeletePatient = async (id: string) => {
-    const target = patients.find((p) => p.id === id);
-    setPatients((prev) => prev.filter((p) => p.id !== id));
-    if (target) {
-      showToast(`Removed case for "${target.name}"`);
+    // If a previous delete was waiting for undo, commit it immediately
+    if (undoPatientState && pendingDeleteTimeoutRef.current) {
+      clearTimeout(pendingDeleteTimeoutRef.current);
+      pendingDeleteTimeoutRef.current = null;
+      deletePatientFromDB(undoPatientState.patient.id).catch(console.error);
     }
 
+    const patientIndex = patients.findIndex((p) => p.id === id);
+    const target = patients[patientIndex];
+    if (!target) return;
+
+    // Optimistically remove from state immediately
+    setPatients((prev) => prev.filter((p) => p.id !== id));
+
+    // Set undo state
+    setUndoPatientState({ patient: target, index: patientIndex });
+
+    // Schedule final permanent DB deletion after 7 seconds
+    pendingDeleteTimeoutRef.current = setTimeout(async () => {
+      try {
+        await deletePatientFromDB(id);
+      } catch (e) {
+        console.error("Failed to delete patient from Supabase:", e);
+      }
+      setUndoPatientState(null);
+      pendingDeleteTimeoutRef.current = null;
+    }, 7000);
+  };
+
+  const handleUndoDeletePatient = async () => {
+    if (!undoPatientState) return;
+
+    if (pendingDeleteTimeoutRef.current) {
+      clearTimeout(pendingDeleteTimeoutRef.current);
+      pendingDeleteTimeoutRef.current = null;
+    }
+
+    const restoredPatient = undoPatientState.patient;
+    const insertIndex = Math.min(undoPatientState.index, patients.length);
+
+    setPatients((prev) => {
+      const next = [...prev];
+      next.splice(insertIndex, 0, restoredPatient);
+      return next;
+    });
+
+    setUndoPatientState(null);
+
+    // Re-save to local cache and Supabase to guarantee data consistency
     try {
-      await deletePatientFromDB(id);
+      await upsertPatientToDB(restoredPatient);
+      showToast(`✓ ${restoredPatient.name}: ${t.patientRestored}`);
     } catch (e) {
-      console.error("Failed to delete patient from Supabase:", e);
-      showToast("⚠️ Failed to delete from cloud");
+      console.error("Failed to restore patient:", e);
+    }
+  };
+
+  const handleDismissUndo = async () => {
+    if (pendingDeleteTimeoutRef.current) {
+      clearTimeout(pendingDeleteTimeoutRef.current);
+      pendingDeleteTimeoutRef.current = null;
+    }
+    if (undoPatientState) {
+      const id = undoPatientState.patient.id;
+      setUndoPatientState(null);
+      try {
+        await deletePatientFromDB(id);
+      } catch (e) {
+        console.error("Failed to delete patient from Supabase:", e);
+      }
     }
   };
 
@@ -1059,6 +1143,55 @@ export default function DashboardPage() {
       {notification && (
         <div className="fixed bottom-20 sm:bottom-5 right-4 rtl:right-auto rtl:left-4 sm:right-5 sm:rtl:left-5 z-50 px-4 py-2.5 rounded-2xl bg-slate-900 text-white dark:bg-white dark:text-slate-900 text-xs font-semibold shadow-2xl border border-slate-700 dark:border-slate-200 animate-in fade-in slide-in-from-bottom-2 duration-200">
           {notification}
+        </div>
+      )}
+
+      {/* Floating Undo Delete Toast */}
+      {undoPatientState && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[92vw] max-w-md animate-in fade-in slide-in-from-bottom-5 duration-300">
+          <div className="relative overflow-hidden rounded-2xl bg-slate-900/95 dark:bg-slate-900/95 text-white shadow-2xl border border-slate-700/80 backdrop-blur-md p-3.5 sm:p-4">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="p-2 rounded-xl bg-rose-500/20 text-rose-400 border border-rose-500/30 flex-shrink-0">
+                  <Trash2 className="w-4 h-4" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[11px] text-slate-300 truncate">
+                    {t.patientDeleted}
+                  </p>
+                  <p className="text-sm font-bold text-white truncate">
+                    {undoPatientState.patient.name}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <button
+                  type="button"
+                  onClick={handleUndoDeletePatient}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white font-bold text-xs shadow-md shadow-emerald-500/20 active:scale-95 transition-all cursor-pointer"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  <span>{t.undo}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleDismissUndo}
+                  title="Dismiss"
+                  aria-label="Dismiss"
+                  className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            {/* Countdown animated progress bar */}
+            <div className="absolute bottom-0 left-0 right-0 h-1 bg-slate-800/80 overflow-hidden">
+              <div className="h-full bg-gradient-to-r from-emerald-400 via-teal-400 to-indigo-500 animate-shrink-width" />
+            </div>
+          </div>
         </div>
       )}
     </div>

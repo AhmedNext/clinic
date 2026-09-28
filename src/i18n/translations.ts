@@ -268,6 +268,11 @@ export interface Translations {
   clinicAddress: string;
   settingsSaved: string;
   editClinicProfile: string;
+
+  // Undo Delete
+  undo: string;
+  patientDeleted: string;
+  patientRestored: string;
 }
 
 export const translations: Record<Language, Translations> = {
@@ -539,6 +544,11 @@ export const translations: Record<Language, Translations> = {
     clinicAddress: "Clinic Address",
     settingsSaved: "Settings saved successfully",
     editClinicProfile: "Edit Clinic Profile",
+
+    // Undo Delete
+    undo: "Undo",
+    patientDeleted: "Patient record deleted",
+    patientRestored: "Patient record restored successfully",
   },
 
   ar: {
@@ -809,6 +819,11 @@ export const translations: Record<Language, Translations> = {
     clinicAddress: "عنوان العيادة",
     settingsSaved: "تم حفظ الإعدادات بنجاح",
     editClinicProfile: "تعديل بيانات العيادة",
+
+    // Undo Delete
+    undo: "تراجع",
+    patientDeleted: "تم حذف ملف المريض",
+    patientRestored: "تمت استعادة المريض بنجاح",
   },
 
   ku: {
@@ -1079,6 +1094,11 @@ export const translations: Record<Language, Translations> = {
     clinicAddress: "ناونیشانی نۆرینگە",
     settingsSaved: "ڕێکخستنەکان بە سەرکەوتوویی پاشەکەوت کران",
     editClinicProfile: "دەستکاریکردنی زانیاری نۆرینگە",
+
+    // Undo Delete
+    undo: "گەڕاندنەوە",
+    patientDeleted: "نەخۆش سڕایەوە",
+    patientRestored: "نەخۆشەکە بە سەرکەوتوویی گەڕێندرایەوە",
   },
 };
 
