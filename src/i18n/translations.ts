@@ -115,6 +115,15 @@ export interface Translations {
   hideTeethChart: string;
   teethChartSubtext: string;
   editPatient: string;
+  totalTreatmentPrice: string;
+  amountPaidToday: string;
+  paidInFullBtn: string;
+  unpaidBtn: string;
+  remainingDebt: string;
+  autoCalculated: string;
+  manualDebtOverride: string;
+  syncedFromDentalChart: string;
+  noRemainingDebt: string;
 
   // Patient History & Treatments Modal
   patientHistoryAndTreatments: string;
@@ -419,6 +428,15 @@ export const translations: Record<Language, Translations> = {
     hideTeethChart: "Hide Teeth Chart",
     teethChartSubtext: "Mark treated teeth, fillings, root canals, or extractions for this case",
     editPatient: "Edit Patient Case",
+    totalTreatmentPrice: "Total Treatment Fee",
+    amountPaidToday: "Amount Paid Today",
+    paidInFullBtn: "⚡ Paid in Full",
+    unpaidBtn: "Unpaid (0)",
+    remainingDebt: "Remaining Debt",
+    autoCalculated: "Auto-calculated",
+    manualDebtOverride: "Custom Debt Override",
+    syncedFromDentalChart: "Synced from Dental Chart",
+    noRemainingDebt: "Fully Settled (No Debt)",
 
     // Patient History & Treatments Modal
     patientHistoryAndTreatments: "Patient History & Treatments",
@@ -722,6 +740,15 @@ export const translations: Record<Language, Translations> = {
     hideTeethChart: "إخفاء مخطط الأسنان",
     teethChartSubtext: "تحديد الأسنان المعالجة، الحشوات، علاج الجذور، أو القلع لهذه الحالة",
     editPatient: "تعديل بيانات المريض",
+    totalTreatmentPrice: "كلفة العلاج الإجمالية",
+    amountPaidToday: "المبلغ المدفوع اليوم",
+    paidInFullBtn: "⚡ دفع بالكامل",
+    unpaidBtn: "لم يدفع (0)",
+    remainingDebt: "المتبقي بذمته (الدين)",
+    autoCalculated: "محسوب تلقائياً",
+    manualDebtOverride: "تعديل يدوي للمتبقي",
+    syncedFromDentalChart: "مربوط بمخطط الأسنان",
+    noRemainingDebt: "تم التسديد بالكامل (لا ديون)",
 
     // Patient History & Treatments Modal
     patientHistoryAndTreatments: "السجل العلاجي والزيارات",
@@ -1025,6 +1052,15 @@ export const translations: Record<Language, Translations> = {
     hideTeethChart: "شاردنەوەی خشتەی ددان",
     teethChartSubtext: "دیاریکردنی ددانە چارەسەرکراوەکان، پڕکردنەوە، دەماربڕین، یان کێشان",
     editPatient: "دەستکاری زانیاری نەخۆش",
+    totalTreatmentPrice: "کۆی گشتی تێچووی چارەسەر",
+    amountPaidToday: "بڕی دراو ئەمڕۆ",
+    paidInFullBtn: "⚡ هەمووی دراوە",
+    unpaidBtn: "نەدراوە (0)",
+    remainingDebt: "قەرزی ماوە",
+    autoCalculated: "خۆکارانە دەرهێنراوە",
+    manualDebtOverride: "دەستکاریکردنی دەستی بۆ ماوە",
+    syncedFromDentalChart: "بەستراوەتەوە بە نەخشەی ددان",
+    noRemainingDebt: "بەتەواوی دراوە (هیچ قەرزێک نییە)",
 
     // Patient History & Treatments Modal
     patientHistoryAndTreatments: "مێژووی نەخۆش و چارەسەرەکان",
