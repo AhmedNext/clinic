@@ -12,8 +12,6 @@ export interface AuthContextType {
   sessionChecked: boolean;
   isAuthenticated: boolean;
   signOut: () => Promise<void>;
-  roleOverride: UserRole | null;
-  setRoleOverride: (role: UserRole | null) => void;
   badgeLabel: string;
   enableOfflineAccess: () => void;
 }

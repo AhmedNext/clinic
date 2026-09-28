@@ -16,15 +16,13 @@ const AuthContext = createContext<AuthContextType>({
   sessionChecked: false,
   isAuthenticated: false,
   signOut: async () => {},
-  roleOverride: null,
-  setRoleOverride: () => {},
   badgeLabel: "دکتۆر / Doctor",
   enableOfflineAccess: () => {},
 });
 
 /**
- * Extracts role from Supabase Auth user metadata (user.user_metadata.role).
- * Default fallback to 'doctor' if no role is explicitly set.
+ * Extracts role strictly from Supabase Auth user metadata (user.user_metadata.role).
+ * Defaults fallback to 'doctor' only if no role is explicitly set.
  */
 export function extractRoleFromUser(user: User | null | undefined): UserRole {
   if (!user) return "doctor";
@@ -54,16 +52,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [sessionChecked, setSessionChecked] = useState(false);
-  const [roleOverride, setRoleOverrideState] = useState<UserRole | null>(null);
   const [offlineAccess, setOfflineAccess] = useState(false);
 
-  // Load preview override from sessionStorage if exists
+  // Clear any legacy role overrides on mount
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const savedOverride = sessionStorage.getItem("clinic_role_override") as UserRole | null;
-      if (savedOverride === "doctor" || savedOverride === "secretary") {
-        setRoleOverrideState(savedOverride);
-      }
+      sessionStorage.removeItem("clinic_role_override");
     }
   }, []);
 
@@ -86,36 +80,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => subscription.unsubscribe();
   }, [supabase]);
 
-  const setRoleOverride = useCallback((newOverride: UserRole | null) => {
-    setRoleOverrideState(newOverride);
-    if (typeof window !== "undefined") {
-      if (newOverride) {
-        sessionStorage.setItem("clinic_role_override", newOverride);
-      } else {
-        sessionStorage.removeItem("clinic_role_override");
-      }
-    }
-  }, []);
-
   const enableOfflineAccess = useCallback(() => {
     setOfflineAccess(true);
   }, []);
 
   const signOut = useCallback(async () => {
+    if (typeof window !== "undefined") {
+      sessionStorage.removeItem("clinic_role_override");
+    }
     await supabase.auth.signOut();
     setSession(null);
     setUser(null);
     setOfflineAccess(false);
-    setRoleOverride(null);
-  }, [supabase, setRoleOverride]);
+  }, [supabase]);
 
-  // Determine actual role from user metadata with fallback to 'doctor'
-  const actualRole: UserRole = useMemo(() => {
+  // Strict role derived from authenticated user metadata
+  const role: UserRole = useMemo(() => {
     return extractRoleFromUser(user);
   }, [user]);
 
-  // Effective role applies override if set (e.g., doctor previewing receptionist view)
-  const role: UserRole = roleOverride || actualRole;
   const isDoctor = role === "doctor";
   const isSecretary = role === "secretary";
 
@@ -146,8 +129,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       sessionChecked,
       isAuthenticated,
       signOut,
-      roleOverride,
-      setRoleOverride,
       badgeLabel,
       enableOfflineAccess,
     }),
@@ -161,8 +142,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       sessionChecked,
       isAuthenticated,
       signOut,
-      roleOverride,
-      setRoleOverride,
       badgeLabel,
       enableOfflineAccess,
     ]
