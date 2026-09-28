@@ -103,32 +103,77 @@ export interface PatientMonthlyStats {
 export function getPatientMonthlyStats(patient: Patient, monthKey: string): PatientMonthlyStats {
   const history = patient.history || [];
   const monthHistory = history.filter((h) => h.date && h.date.startsWith(monthKey));
+  const hasHistoryInMonth = monthHistory.length > 0;
+  const matchesDate = Boolean(patient.date && patient.date.startsWith(monthKey));
 
-  if (history.length > 0) {
-    const hasHistoryInMonth = monthHistory.length > 0;
-    const historyTotalPaid = history.reduce((s, h) => s + (h.paid ?? 0), 0);
+  const totalPatientPaid =
+    typeof patient.paidAmount === "number" && !isNaN(patient.paidAmount)
+      ? Math.max(0, patient.paidAmount)
+      : 0;
 
-    // If history entries have explicit payments logged or visits occurred in this month
-    if (historyTotalPaid > 0 || hasHistoryInMonth) {
-      const monthPaid = monthHistory.reduce((s, h) => s + (h.paid ?? 0), 0);
-      const monthDebt = monthHistory.reduce((s, h) => s + (h.debt ?? 0), 0);
+  const currentPatientDebt = calculateDebt(
+    patient.totalAmount,
+    patient.paidAmount,
+    patient.debtAmount
+  );
+
+  // If there are no history entries at all
+  if (history.length === 0) {
+    if (matchesDate) {
       return {
-        paid: monthPaid,
-        debt: monthDebt,
-        visits: monthHistory.length,
-        hasActivity: hasHistoryInMonth,
+        paid: totalPatientPaid,
+        debt: currentPatientDebt,
+        visits: 1,
+        hasActivity: true,
       };
     }
+    return { paid: 0, debt: 0, visits: 0, hasActivity: false };
   }
 
-  // Fallback for initial/legacy patients without multiple history entries:
-  const matchesDate = Boolean(patient.date && patient.date.startsWith(monthKey));
-  if (matchesDate) {
-    const debt = calculateDebt(patient.totalAmount, patient.paidAmount, patient.debtAmount);
+  // If there is only 1 history entry, or all history entries belong to this same month:
+  const allHistoryInThisMonth = history.every(
+    (h) => h.date && h.date.startsWith(monthKey)
+  );
+  if (allHistoryInThisMonth && (hasHistoryInMonth || matchesDate)) {
     return {
-      paid: patient.paidAmount ?? 0,
-      debt,
-      visits: Math.max(1, history.length),
+      paid: totalPatientPaid,
+      debt: currentPatientDebt,
+      visits: Math.max(1, monthHistory.length),
+      hasActivity: true,
+    };
+  }
+
+  // Multi-month case:
+  const historyTotalPaid = history.reduce((s, h) => s + (h.paid ?? 0), 0);
+
+  if (historyTotalPaid > 0) {
+    let monthPaid = monthHistory.reduce((s, h) => s + (h.paid ?? 0), 0);
+
+    // If patient profile has a surplus paidAmount (e.g. updated via EditModal or SettleDebt),
+    // allocate the surplus to the patient's primary/latest consultation month:
+    if (totalPatientPaid > historyTotalPaid && matchesDate) {
+      monthPaid += totalPatientPaid - historyTotalPaid;
+    }
+
+    const monthDebt = monthHistory.reduce((s, h) => s + (h.debt ?? 0), 0);
+    // Ensure month debt doesn't exceed current remaining patient debt if all settled
+    const effectiveDebt =
+      currentPatientDebt === 0 ? 0 : Math.min(monthDebt, currentPatientDebt);
+
+    return {
+      paid: monthPaid,
+      debt: effectiveDebt,
+      visits: monthHistory.length,
+      hasActivity: hasHistoryInMonth || (matchesDate && totalPatientPaid > 0),
+    };
+  }
+
+  // Fallback: If history entries exist but have 0 paid logged
+  if (matchesDate) {
+    return {
+      paid: totalPatientPaid,
+      debt: currentPatientDebt,
+      visits: Math.max(1, monthHistory.length),
       hasActivity: true,
     };
   }
@@ -136,7 +181,8 @@ export function getPatientMonthlyStats(patient: Patient, monthKey: string): Pati
   return {
     paid: 0,
     debt: 0,
-    visits: 0,
-    hasActivity: false,
+    visits: monthHistory.length,
+    hasActivity: hasHistoryInMonth,
   };
 }
+

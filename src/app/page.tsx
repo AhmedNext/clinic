@@ -413,7 +413,21 @@ export default function DashboardPage() {
     const updated = patients.map((p) => {
       if (p.id !== patientId) return p;
       const history = (p.history || []).filter((h) => h.id !== entryId);
-      const updatedPatient: Patient = { ...p, history };
+      const historyPaid = history.reduce((sum, h) => sum + (h.paid || 0), 0);
+      const historyDebt = history.reduce((sum, h) => sum + (h.debt || 0), 0);
+      const sortedHistory = [...history].sort((a, b) =>
+        (b.date || "").localeCompare(a.date || "")
+      );
+      const latestDate = sortedHistory[0]?.date || p.date;
+
+      const updatedPatient: Patient = {
+        ...p,
+        date: latestDate,
+        paidAmount: history.length > 0 ? historyPaid : p.paidAmount,
+        debtAmount: history.length > 0 ? historyDebt : p.debtAmount,
+        totalAmount: history.length > 0 ? historyPaid + historyDebt : p.totalAmount,
+        history,
+      };
       targetUpdatedPatient = updatedPatient;
       setHistoryPatient(updatedPatient);
       return updatedPatient;
@@ -461,9 +475,9 @@ export default function DashboardPage() {
       const updatedPatient: Patient = {
         ...p,
         date: latestDate,
-        paidAmount: historyPaid > 0 ? historyPaid : p.paidAmount,
-        debtAmount: historyDebt > 0 ? historyDebt : p.debtAmount,
-        totalAmount: (historyPaid > 0 ? historyPaid : (p.paidAmount ?? 0)) + (historyDebt > 0 ? historyDebt : (p.debtAmount ?? 0)),
+        paidAmount: historyPaid,
+        debtAmount: historyDebt,
+        totalAmount: historyPaid + historyDebt,
         history,
       };
 

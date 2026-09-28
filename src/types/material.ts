@@ -17,4 +17,13 @@ export type ClinicExpense = ClinicMaterial;
 export type NewClinicMaterial = Omit<ClinicMaterial, "id" | "createdAt">;
 export type NewClinicExpense = NewClinicMaterial;
 
+export const EXPENSE_CATEGORIES: ExpenseCategory[] = [
+  "materials",
+  "rent",
+  "utilities",
+  "lab",
+  "other",
+];
+
 export const DEFAULT_CLINIC_MATERIALS: ClinicMaterial[] = [];
+
