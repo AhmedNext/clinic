@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo, useRef } from "react";
-import { ClinicMaterial, NewClinicMaterial } from "@/types/material";
+import { ClinicMaterial, NewClinicMaterial, ExpenseCategory } from "@/types/material";
 import { formatIQD } from "@/types/patient";
 import { useLanguage } from "@/context/LanguageContext";
 import {
@@ -16,6 +16,11 @@ import {
   Receipt,
   Sparkles,
   Pencil,
+  ChevronDown,
+  Building2,
+  Zap,
+  FlaskConical,
+  Package,
 } from "lucide-react";
 
 interface MaterialsViewProps {
@@ -25,11 +30,6 @@ interface MaterialsViewProps {
   onDeleteMaterial: (id: string) => Promise<void>;
 }
 
-/**
- * Format raw number/string into comma-separated thousands
- * e.g. 95000 -> "95,000", 110000 -> "110,000"
- * Also normalizes Eastern Arabic numerals if typed/pasted
- */
 function formatNumberWithCommas(val: number | string): string {
   if (val === undefined || val === null || val === "") return "";
   const raw = String(val)
@@ -51,20 +51,24 @@ export function MaterialsView({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<ClinicMaterial | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const costInputRef = useRef<HTMLInputElement>(null);
 
-  // Exactly 3 fields for the doctor:
+  // Form fields:
   // 1. DATE
-  // 2. SUPPLIER / MATERIAL
-  // 3. TOTAL MONEY SPENT
+  // 2. CATEGORY (materials, rent, utilities, lab, other)
+  // 3. DESCRIPTION / PAYEE
+  // 4. TOTAL MONEY SPENT (IQD)
   const [formDate, setFormDate] = useState(() => new Date().toISOString().substring(0, 10));
+  const [formCategory, setFormCategory] = useState<ExpenseCategory>("materials");
   const [formSupplier, setFormSupplier] = useState("");
   const [formCostPrice, setFormCostPrice] = useState("");
 
   const handleOpenAdd = () => {
     setEditingItem(null);
     setFormDate(new Date().toISOString().substring(0, 10));
+    setFormCategory("materials");
     setFormSupplier("");
     setFormCostPrice("");
     setIsModalOpen(true);
@@ -73,6 +77,8 @@ export function MaterialsView({
   const handleOpenEdit = (item: ClinicMaterial) => {
     setEditingItem(item);
     setFormDate(item.date || new Date().toISOString().substring(0, 10));
+    const cat = (item.category as ExpenseCategory) || "materials";
+    setFormCategory(cat);
     setFormSupplier(item.supplier || "");
     setFormCostPrice(formatNumberWithCommas(item.costPrice));
     setIsModalOpen(true);
@@ -86,7 +92,6 @@ export function MaterialsView({
     const formatted = formatNumberWithCommas(input.value);
     setFormCostPrice(formatted);
 
-    // Keep cursor properly positioned relative to digits
     requestAnimationFrame(() => {
       if (!costInputRef.current) return;
       let targetIndex = 0;
@@ -114,12 +119,14 @@ export function MaterialsView({
         await onUpdateMaterial({
           ...editingItem,
           date: formDate || new Date().toISOString().substring(0, 10),
+          category: formCategory,
           supplier: formSupplier.trim(),
           costPrice: amount,
         });
       } else {
         await onAddMaterial({
           date: formDate || new Date().toISOString().substring(0, 10),
+          category: formCategory,
           supplier: formSupplier.trim(),
           costPrice: amount,
         });
@@ -127,7 +134,7 @@ export function MaterialsView({
       setIsModalOpen(false);
       setEditingItem(null);
     } catch (err) {
-      console.error("Save material error:", err);
+      console.error("Save expense error:", err);
     } finally {
       setIsSubmitting(false);
     }
@@ -138,10 +145,14 @@ export function MaterialsView({
     return materials.reduce((sum, m) => sum + (m.costPrice || 0), 0);
   }, [materials]);
 
-  // Filter by Supplier search
+  // Filter by Supplier search and Category
   const filteredMaterials = useMemo(() => {
     return materials
       .filter((item) => {
+        const itemCat = (item.category as string) || "materials";
+        if (selectedCategory !== "all" && itemCat !== selectedCategory) {
+          return false;
+        }
         if (!searchQuery.trim()) return true;
         const q = searchQuery.toLowerCase();
         return (
@@ -150,7 +161,44 @@ export function MaterialsView({
         );
       })
       .sort((a, b) => (b.date || "").localeCompare(a.date || ""));
-  }, [materials, searchQuery]);
+  }, [materials, searchQuery, selectedCategory]);
+
+  const getCategoryBadge = (category?: string) => {
+    const cat = (category as ExpenseCategory) || "materials";
+    switch (cat) {
+      case "rent":
+        return {
+          label: t.categoryRent,
+          icon: <Building2 className="w-3 h-3 text-violet-600 dark:text-violet-400" />,
+          className: "bg-violet-50 dark:bg-violet-950/60 text-violet-700 dark:text-violet-300 border-violet-200/80 dark:border-violet-800/60",
+        };
+      case "utilities":
+        return {
+          label: t.categoryUtilities,
+          icon: <Zap className="w-3 h-3 text-amber-600 dark:text-amber-400" />,
+          className: "bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border-amber-200/80 dark:border-amber-800/60",
+        };
+      case "lab":
+        return {
+          label: t.categoryLab,
+          icon: <FlaskConical className="w-3 h-3 text-cyan-600 dark:text-cyan-400" />,
+          className: "bg-cyan-50 dark:bg-cyan-950/60 text-cyan-700 dark:text-cyan-300 border-cyan-200/80 dark:border-cyan-800/60",
+        };
+      case "other":
+        return {
+          label: t.categoryOther,
+          icon: <Package className="w-3 h-3 text-slate-600 dark:text-slate-400" />,
+          className: "bg-slate-100 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 border-slate-200/80 dark:border-slate-700/60",
+        };
+      case "materials":
+      default:
+        return {
+          label: t.categoryMaterials,
+          icon: <Boxes className="w-3 h-3 text-indigo-600 dark:text-indigo-400" />,
+          className: "bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border-indigo-200/80 dark:border-indigo-800/60",
+        };
+    }
+  };
 
   return (
     <div className="w-full space-y-5 animate-in fade-in duration-200">
@@ -175,17 +223,17 @@ export function MaterialsView({
           className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-2xl bg-amber-600 hover:bg-amber-500 text-white text-xs sm:text-sm font-bold shadow-sm shadow-amber-600/25 active:scale-95 transition-all cursor-pointer"
         >
           <Plus className="w-4 h-4" />
-          <span>+ {t.materials}</span>
+          <span>+ {t.addMaterialExpense}</span>
         </button>
       </div>
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        {/* Card 1: Total Money Spent */}
+        {/* Card 1: Total Expenses */}
         <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-amber-200/80 dark:border-amber-900/50 shadow-2xs">
           <div className="flex items-center justify-between text-slate-400 mb-1.5">
             <span className="text-[11px] font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400">
-              {t.totalMaterialSpendCard}
+              {t.totalExpenses}
             </span>
             <div className="w-7 h-7 rounded-xl bg-amber-100 dark:bg-amber-900/60 text-amber-700 dark:text-amber-300 flex items-center justify-center">
               <DollarSign className="w-3.5 h-3.5" />
@@ -199,7 +247,7 @@ export function MaterialsView({
           </p>
         </div>
 
-        {/* Card 2: Total Recorded Purchases */}
+        {/* Card 2: Total Recorded Receipts */}
         <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-2xs">
           <div className="flex items-center justify-between text-slate-400 mb-1.5">
             <span className="text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
@@ -217,7 +265,7 @@ export function MaterialsView({
           </p>
         </div>
 
-        {/* Card 3: Quick Explanation */}
+        {/* Card 3: Live Net Profit Impact */}
         <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-2xs">
           <div className="flex items-center justify-between text-slate-400 mb-1.5">
             <span className="text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
@@ -233,16 +281,44 @@ export function MaterialsView({
         </div>
       </div>
 
-      {/* Search Bar */}
-      <div className="relative max-w-md">
-        <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-        <input
-          type="text"
-          placeholder={t.searchMaterials}
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs sm:text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500/20 shadow-2xs"
-        />
+      {/* Filter and Search Bar */}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+        {/* Search Bar */}
+        <div className="relative flex-1 max-w-md">
+          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+          <input
+            type="text"
+            placeholder={t.searchMaterials}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs sm:text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500/20 shadow-2xs"
+          />
+        </div>
+
+        {/* Category Filter Pills */}
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
+          {[
+            { id: "all", label: t.all },
+            { id: "materials", label: t.categoryMaterials },
+            { id: "rent", label: t.categoryRent },
+            { id: "utilities", label: t.categoryUtilities },
+            { id: "lab", label: t.categoryLab },
+            { id: "other", label: t.categoryOther },
+          ].map((cat) => (
+            <button
+              key={cat.id}
+              type="button"
+              onClick={() => setSelectedCategory(cat.id)}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer border ${
+                selectedCategory === cat.id
+                  ? "bg-amber-600 text-white border-amber-600 shadow-2xs"
+                  : "bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border-slate-200/90 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50"
+              }`}
+            >
+              {cat.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Expenses Table */}
@@ -272,68 +348,82 @@ export function MaterialsView({
               <thead>
                 <tr className="border-b border-slate-100 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40 text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                   <th className="py-3 px-4">{t.date}</th>
+                  <th className="py-3 px-4">{t.category}</th>
                   <th className="py-3 px-4">{t.supplierMaterialCol}</th>
                   <th className="py-3 px-4 text-right">{t.totalMoneySpentCol}</th>
                   <th className="py-3 px-4 text-right">{t.actions}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 text-xs">
-                {filteredMaterials.map((item) => (
-                  <tr
-                    key={item.id}
-                    className="hover:bg-slate-50/60 dark:hover:bg-slate-800/30 transition-colors"
-                  >
-                    {/* Date */}
-                    <td className="py-3 px-4 whitespace-nowrap">
-                      <div className="inline-flex items-center gap-1.5 font-medium text-slate-700 dark:text-slate-300">
-                        <Calendar className="w-3.5 h-3.5 text-slate-400" />
-                        <span>{item.date}</span>
-                      </div>
-                    </td>
+                {filteredMaterials.map((item) => {
+                  const badge = getCategoryBadge(item.category);
+                  return (
+                    <tr
+                      key={item.id}
+                      className="hover:bg-slate-50/60 dark:hover:bg-slate-800/30 transition-colors"
+                    >
+                      {/* Date */}
+                      <td className="py-3 px-4 whitespace-nowrap">
+                        <div className="inline-flex items-center gap-1.5 font-medium text-slate-700 dark:text-slate-300">
+                          <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                          <span>{item.date}</span>
+                        </div>
+                      </td>
 
-                    {/* Supplier */}
-                    <td className="py-3 px-4 font-bold text-slate-900 dark:text-slate-100">
-                      <div className="flex items-center gap-2">
-                        <Store className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />
-                        <span>{item.supplier}</span>
-                      </div>
-                    </td>
-
-                    {/* Total Money Spent */}
-                    <td className="py-3 px-4 text-right font-mono font-bold text-sm text-amber-700 dark:text-amber-400 whitespace-nowrap">
-                      {formatIQD(item.costPrice)}
-                    </td>
-
-                    {/* Actions */}
-                    <td className="py-3 px-4 text-right whitespace-nowrap">
-                      <div className="inline-flex items-center gap-1">
-                        {onUpdateMaterial && (
-                          <button
-                            onClick={() => handleOpenEdit(item)}
-                            title={t.edit}
-                            className="p-1.5 rounded-lg text-slate-400 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/50 transition-colors cursor-pointer"
-                          >
-                            <Pencil className="w-4 h-4" />
-                          </button>
-                        )}
-                        <button
-                          onClick={() => onDeleteMaterial(item.id)}
-                          title={t.delete}
-                          className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/50 transition-colors cursor-pointer"
+                      {/* Category Badge */}
+                      <td className="py-3 px-4 whitespace-nowrap">
+                        <span
+                          className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold border shadow-2xs ${badge.className}`}
                         >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                          {badge.icon}
+                          <span>{badge.label}</span>
+                        </span>
+                      </td>
+
+                      {/* Description / Supplier */}
+                      <td className="py-3 px-4 font-bold text-slate-900 dark:text-slate-100">
+                        <div className="flex items-center gap-2">
+                          <Store className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />
+                          <span>{item.supplier}</span>
+                        </div>
+                      </td>
+
+                      {/* Total Money Spent */}
+                      <td className="py-3 px-4 text-right font-mono font-bold text-sm text-amber-700 dark:text-amber-400 whitespace-nowrap">
+                        {formatIQD(item.costPrice)}
+                      </td>
+
+                      {/* Actions */}
+                      <td className="py-3 px-4 text-right whitespace-nowrap">
+                        <div className="inline-flex items-center gap-1">
+                          {onUpdateMaterial && (
+                            <button
+                              onClick={() => handleOpenEdit(item)}
+                              title={t.edit}
+                              className="p-1.5 rounded-lg text-slate-400 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/50 transition-colors cursor-pointer"
+                            >
+                              <Pencil className="w-4 h-4" />
+                            </button>
+                          )}
+                          <button
+                            onClick={() => onDeleteMaterial(item.id)}
+                            title={t.delete}
+                            className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/50 transition-colors cursor-pointer"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
         </div>
       )}
 
-      {/* ================= MODAL: EXACTLY 3 FIELDS ================= */}
+      {/* ================= MODAL: ADD / EDIT EXPENSE ================= */}
       {isModalOpen && (
         <div
           className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-950/70 backdrop-blur-xs animate-in fade-in duration-150"
@@ -386,10 +476,33 @@ export function MaterialsView({
                 </div>
               </div>
 
-              {/* Field 2: SUPPLIER */}
+              {/* Field 2: CATEGORY DROPDOWN */}
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">
-                  2. {t.supplierMaterialName} *
+                  2. {t.category} *
+                </label>
+                <div className="relative">
+                  <select
+                    value={formCategory}
+                    onChange={(e) => setFormCategory(e.target.value as ExpenseCategory)}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all font-medium appearance-none cursor-pointer"
+                  >
+                    <option value="materials">🦷 {t.categoryMaterials}</option>
+                    <option value="rent">🏢 {t.categoryRent}</option>
+                    <option value="utilities">⚡ {t.categoryUtilities}</option>
+                    <option value="lab">🔬 {t.categoryLab}</option>
+                    <option value="other">📦 {t.categoryOther}</option>
+                  </select>
+                  <div className="absolute inset-y-0 right-0 rtl:right-auto rtl:left-0 pr-3.5 rtl:pr-0 rtl:pl-3.5 flex items-center pointer-events-none text-slate-400">
+                    <ChevronDown className="w-4 h-4" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Field 3: DESCRIPTION / PAYEE */}
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">
+                  3. {t.supplierMaterialName} *
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
@@ -406,11 +519,11 @@ export function MaterialsView({
                 </div>
               </div>
 
-              {/* Field 3: TOTAL MONEY SPENT */}
+              {/* Field 4: TOTAL MONEY SPENT */}
               <div>
                 <div className="flex items-center justify-between mb-1.5">
                   <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">
-                    3. {t.totalMoneySpent} (IQD) *
+                    4. {t.totalMoneySpent} (IQD) *
                   </label>
                   {formCostPrice && (
                     <span className="text-[11px] font-mono font-bold text-amber-600 dark:text-amber-400">

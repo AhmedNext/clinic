@@ -1,19 +1,16 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
-import { Patient, calculateDebt, formatIQD, getPatientMonthlyStats } from "@/types/patient";
+import { Patient, formatIQD, getPatientMonthlyStats } from "@/types/patient";
 import { ClinicMaterial } from "@/types/material";
 import {
   Calendar,
-  Users,
   ChevronDown,
   ChevronRight,
-  AlertCircle,
   CheckCircle,
-  Building2,
   Boxes,
   Sparkles,
-  Settings,
+  AlertCircle,
 } from "lucide-react";
 import { PatientAvatar } from "./PatientAvatar";
 import { useLanguage } from "@/context/LanguageContext";
@@ -40,8 +37,7 @@ interface MonthBucket {
   totalPaid: number;
   totalDebt: number;
   totalBilled: number;
-  materialCost: number;
-  rentAmount: number;
+  expenseCost: number;
   netProfit: number;
   caseCount: number;
   visitCount: number;
@@ -50,15 +46,13 @@ interface MonthBucket {
 export function MonthlyReportView({
   patients,
   materials = [],
-  rentMap = {},
   onViewHistory,
-  onOpenRentModal,
 }: MonthlyReportViewProps) {
   const { t, language } = useLanguage();
   const [expandedMonth, setExpandedMonth] = useState<string | null>(null);
 
   const monthBuckets: MonthBucket[] = useMemo(() => {
-    // Collect all unique months from patient dates, history entries, rent, and materials
+    // Collect all unique months from patient dates, history entries, and expenses
     const monthKeys = new Set<string>();
 
     patients.forEach((p) => {
@@ -68,7 +62,6 @@ export function MonthlyReportView({
       });
     });
 
-    Object.keys(rentMap).forEach((ym) => monthKeys.add(ym));
     materials.forEach((m) => {
       if (m.date) monthKeys.add(m.date.substring(0, 7));
     });
@@ -96,19 +89,15 @@ export function MonthlyReportView({
           }
         });
 
-        // Material spend in this month
-        const monthMaterials = materials.filter((m) => m.date?.startsWith(key));
-        const materialCost = monthMaterials.reduce(
+        // Expenses in this month (All categories combined: materials, rent, utilities, lab, other)
+        const monthExpenses = materials.filter((m) => m.date?.startsWith(key));
+        const expenseCost = monthExpenses.reduce(
           (s, m) => s + (m.costPrice || 0),
           0
         );
 
-        // Rent in this month
-        const rentAmount = rentMap[key] || 0;
-
-        // Net Profit = Income - Materials - Rent
-        const netProfit = totalPaid - materialCost - rentAmount;
-
+        // Net Profit = Monthly Income - Monthly Total Expenses
+        const netProfit = totalPaid - expenseCost;
         const label = formatMonthName(key, language);
 
         return {
@@ -118,20 +107,18 @@ export function MonthlyReportView({
           totalPaid,
           totalDebt,
           totalBilled: totalPaid + totalDebt,
-          materialCost,
-          rentAmount,
+          expenseCost,
           netProfit,
           caseCount: monthPatients.length,
           visitCount,
         };
       });
-  }, [patients, materials, rentMap, language]);
+  }, [patients, materials, language]);
 
   const grandPaid = monthBuckets.reduce((s, b) => s + b.totalPaid, 0);
   const grandDebt = monthBuckets.reduce((s, b) => s + b.totalDebt, 0);
-  const grandMaterials = monthBuckets.reduce((s, b) => s + b.materialCost, 0);
-  const grandRent = monthBuckets.reduce((s, b) => s + b.rentAmount, 0);
-  const grandNetProfit = grandPaid - grandMaterials - grandRent;
+  const grandExpenses = monthBuckets.reduce((s, b) => s + b.expenseCost, 0);
+  const grandNetProfit = grandPaid - grandExpenses;
   const maxIncome = Math.max(...monthBuckets.map((b) => b.totalPaid), 1);
 
   const toggleMonth = (key: string) => {
@@ -160,52 +147,21 @@ export function MonthlyReportView({
           </p>
         </div>
 
-        {/* Material Spend */}
+        {/* Total Expenses */}
         <div className="p-4 sm:p-5 rounded-2xl border border-amber-200/70 dark:border-amber-900/50 bg-gradient-to-br from-amber-50 to-amber-100/50 dark:from-amber-950/30 dark:to-amber-900/10 shadow-xs">
           <div className="flex items-center justify-between mb-2">
             <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-amber-700 dark:text-amber-300">
-              {t.materialSpend}
+              {t.totalExpenses}
             </span>
             <div className="p-1.5 rounded-lg bg-amber-200/60 dark:bg-amber-800/40 text-amber-700 dark:text-amber-300">
               <Boxes className="w-4 h-4" />
             </div>
           </div>
           <div className="text-xl sm:text-2xl font-black text-amber-700 dark:text-amber-400 tracking-tight font-mono">
-            {formatIQD(grandMaterials)}
+            {formatIQD(grandExpenses)}
           </div>
           <p className="text-[10px] sm:text-xs text-amber-600/70 dark:text-amber-400/60 mt-1">
             {t.expensesLogged}
-          </p>
-        </div>
-
-        {/* Clinic Rent */}
-        <div className="p-4 sm:p-5 rounded-2xl border border-blue-200/70 dark:border-blue-900/50 bg-gradient-to-br from-blue-50 to-blue-100/50 dark:from-blue-950/30 dark:to-blue-900/10 shadow-xs">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-blue-700 dark:text-blue-300">
-              {t.clinicRent}
-            </span>
-            <div className="flex items-center gap-1">
-              {onOpenRentModal && (
-                <button
-                  type="button"
-                  onClick={onOpenRentModal}
-                  title={t.adjustMonthRent}
-                  className="px-2 py-0.5 rounded-md bg-blue-200/70 hover:bg-blue-300 dark:bg-blue-800/50 dark:hover:bg-blue-700/60 text-blue-800 dark:text-blue-200 text-[10px] font-bold inline-flex items-center gap-1 cursor-pointer transition-colors"
-                >
-                  <Settings className="w-3 h-3" />
-                  <span>{t.adjust}</span>
-                </button>
-              )}
-              <div className="p-1.5 rounded-lg bg-blue-200/60 dark:bg-blue-800/40 text-blue-700 dark:text-blue-300">
-                <Building2 className="w-4 h-4" />
-              </div>
-            </div>
-          </div>
-          <div className="text-xl sm:text-2xl font-black text-blue-700 dark:text-blue-400 tracking-tight font-mono">
-            {formatIQD(grandRent)}
-          </div>
-          <p className="text-[10px] sm:text-xs text-blue-600/70 dark:text-blue-400/60 mt-1">
-            {t.clinicRent}
           </p>
         </div>
 
@@ -213,7 +169,7 @@ export function MonthlyReportView({
         <div className="p-4 sm:p-5 rounded-2xl border border-indigo-200/70 dark:border-indigo-900/50 bg-gradient-to-br from-indigo-50 to-indigo-100/50 dark:from-indigo-950/30 dark:to-indigo-900/10 shadow-xs">
           <div className="flex items-center justify-between mb-2">
             <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-indigo-700 dark:text-indigo-300">
-              {t.netWorth}
+              {t.netProfit}
             </span>
             <div className="p-1.5 rounded-lg bg-indigo-200/60 dark:bg-indigo-800/40 text-indigo-700 dark:text-indigo-300">
               <Sparkles className="w-4 h-4" />
@@ -232,6 +188,24 @@ export function MonthlyReportView({
             {t.incomeMinusExpenses}
           </p>
         </div>
+
+        {/* Unpaid Debts */}
+        <div className="p-4 sm:p-5 rounded-2xl border border-rose-200/70 dark:border-rose-900/50 bg-gradient-to-br from-rose-50 to-rose-100/50 dark:from-rose-950/30 dark:to-rose-900/10 shadow-xs">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-rose-700 dark:text-rose-300">
+              {t.unpaidDebts}
+            </span>
+            <div className="p-1.5 rounded-lg bg-rose-200/60 dark:bg-rose-800/40 text-rose-700 dark:text-rose-300">
+              <AlertCircle className="w-4 h-4" />
+            </div>
+          </div>
+          <div className="text-xl sm:text-2xl font-black text-rose-700 dark:text-rose-400 tracking-tight font-mono">
+            {formatIQD(grandDebt)}
+          </div>
+          <p className="text-[10px] sm:text-xs text-rose-600/70 dark:text-rose-400/60 mt-1">
+            {t.patientOwes}
+          </p>
+        </div>
       </div>
 
       {/* ── Monthly Breakdown ── */}
@@ -241,16 +215,6 @@ export function MonthlyReportView({
             <Calendar className="w-4 h-4 text-indigo-500" />
             {t.monthlyReports}
           </h2>
-          {onOpenRentModal && (
-            <button
-              type="button"
-              onClick={onOpenRentModal}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-300 shadow-xs transition-colors cursor-pointer"
-            >
-              <Building2 className="w-3.5 h-3.5 text-blue-500" />
-              <span>{t.adjustMonthRent}</span>
-            </button>
-          )}
         </div>
 
         {monthBuckets.length === 0 ? (
@@ -303,7 +267,7 @@ export function MonthlyReportView({
 
                       {/* Net Profit Pill */}
                       <div className="flex items-center gap-2">
-                        <span className="text-xs text-slate-400 font-medium">{t.netWorth}:</span>
+                        <span className="text-xs text-slate-400 font-medium">{t.netProfit}:</span>
                         <span
                           className={`text-sm font-black px-2.5 py-1 rounded-xl font-mono ${
                             bucket.netProfit >= 0
@@ -324,44 +288,34 @@ export function MonthlyReportView({
                       />
                     </div>
 
-                    {/* Financial metrics breakdown row */}
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                    {/* Financial metrics breakdown row: 3 Clean KPIs */}
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
                       {/* Income */}
-                      <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800/60">
+                      <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800/60">
                         <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 block mb-0.5">
                           {t.totalIncome}
                         </span>
-                        <span className="font-bold text-slate-800 dark:text-slate-200 font-mono">
+                        <span className="font-bold text-slate-800 dark:text-slate-200 font-mono text-sm">
                           {formatIQD(bucket.totalPaid)}
                         </span>
                       </div>
 
-                      {/* Materials */}
-                      <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800/60">
+                      {/* Total Expenses */}
+                      <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800/60">
                         <span className="text-[10px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 block mb-0.5">
-                          {t.materialSpend}
+                          {t.totalExpenses}
                         </span>
-                        <span className="font-bold text-slate-800 dark:text-slate-200 font-mono">
-                          {formatIQD(bucket.materialCost)}
-                        </span>
-                      </div>
-
-                      {/* Rent */}
-                      <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800/60">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400 block mb-0.5">
-                          {t.clinicRent}
-                        </span>
-                        <span className="font-bold text-slate-800 dark:text-slate-200 font-mono">
-                          {formatIQD(bucket.rentAmount)}
+                        <span className="font-bold text-slate-800 dark:text-slate-200 font-mono text-sm">
+                          {formatIQD(bucket.expenseCost)}
                         </span>
                       </div>
 
                       {/* Debts */}
-                      <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800/60">
+                      <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800/60">
                         <span className="text-[10px] font-bold uppercase tracking-wider text-rose-600 dark:text-rose-400 block mb-0.5">
                           {t.unpaidDebts}
                         </span>
-                        <span className="font-bold text-slate-800 dark:text-slate-200 font-mono">
+                        <span className="font-bold text-slate-800 dark:text-slate-200 font-mono text-sm">
                           {formatIQD(bucket.totalDebt)}
                         </span>
                       </div>

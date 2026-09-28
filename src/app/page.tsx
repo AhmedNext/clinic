@@ -36,8 +36,6 @@ import {
   fetchMaterialsFromDB,
   upsertMaterialToDB,
   deleteMaterialFromDB,
-  fetchRentFromDB,
-  saveRentToDB,
   getCachedPatients,
   getCachedAppointments,
   getCachedMaterials,
@@ -78,10 +76,6 @@ const MaterialsView = dynamic(
   () => import("@/components/materials/MaterialsView").then((m) => m.MaterialsView),
   { ssr: false }
 );
-const MonthlyRentModal = dynamic(
-  () => import("@/components/MonthlyRentModal").then((m) => m.MonthlyRentModal),
-  { ssr: false }
-);
 const StaffModal = dynamic(
   () => import("@/components/StaffModal").then((m) => m.StaffModal),
   { ssr: false }
@@ -102,12 +96,10 @@ export default function DashboardPage() {
   const [patients, setPatients] = useState<Patient[]>(() => getCachedPatients());
   const [appointments, setAppointments] = useState<Appointment[]>(() => getCachedAppointments());
   const [materials, setMaterials] = useState<ClinicMaterial[]>(() => getCachedMaterials());
-  const [rentMap, setRentMap] = useState<Record<string, number>>({});
   const [isLoading, setIsLoading] = useState(false);
 
   // Modals state
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isRentModalOpen, setIsRentModalOpen] = useState(false);
   const [isStaffModalOpen, setIsStaffModalOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [editingPatient, setEditingPatient] = useState<Patient | null>(null);
@@ -139,16 +131,14 @@ export default function DashboardPage() {
       setIsLoading(true);
       try {
         if (isDoctor) {
-          const [dbPatients, dbApts, dbMaterials, dbRent] = await Promise.all([
+          const [dbPatients, dbApts, dbMaterials] = await Promise.all([
             fetchPatientsFromDB(),
             fetchAppointmentsFromDB(),
             fetchMaterialsFromDB(),
-            fetchRentFromDB(),
           ]);
           setPatients(dbPatients);
           setAppointments(dbApts);
           setMaterials(dbMaterials);
-          setRentMap(dbRent);
         } else {
           // Secretary only needs patients and appointments
           const [dbPatients, dbApts] = await Promise.all([
@@ -566,33 +556,8 @@ export default function DashboardPage() {
     }
   };
 
-  // Variable Monthly Clinic Rent Handler
-  const handleSaveRent = async (month: string, amount: number) => {
-    setRentMap((prev) => {
-      const next = { ...prev };
-      if (amount <= 0) {
-        delete next[month];
-      } else {
-        next[month] = amount;
-      }
-      return next;
-    });
 
-    if (amount <= 0) {
-      showToast(`Removed rent for ${month}`);
-    } else {
-      showToast(`Rent for ${month} set to ${formatIQD(amount)}`);
-    }
-
-    try {
-      await saveRentToDB(month, amount);
-    } catch (err) {
-      console.error("Failed to save rent to Supabase:", err);
-      showToast("⚠️ Failed to sync rent to cloud");
-    }
-  };
-
-  // Extract available months from patient dates, history, rent, and materials
+  // Extract available months from patient dates, history, and expenses
   const availableMonths = useMemo(() => {
     const set = new Set<string>();
     // Fallback: current month
@@ -609,13 +574,12 @@ export default function DashboardPage() {
       });
     });
 
-    Object.keys(rentMap).forEach((ym) => set.add(ym));
     materials.forEach((m) => {
       if (m.date && m.date.length >= 7) set.add(m.date.substring(0, 7));
     });
 
     return Array.from(set).sort((a, b) => b.localeCompare(a));
-  }, [patients, rentMap, materials]);
+  }, [patients, materials]);
 
   const formatMonthName = (yearMonth: string) => {
     return formatStaticMonthName(yearMonth, language);
@@ -732,23 +696,19 @@ export default function DashboardPage() {
             <MonthlyReportView
               patients={patients}
               materials={materials}
-              rentMap={rentMap}
               onViewHistory={(patient) => setHistoryPatient(patient)}
-              onOpenRentModal={() => setIsRentModalOpen(true)}
             />
           </>
         ) : (
           /* ================= PATIENTS CASES TAB ================= */
           <>
-            {/* Quick Stats Overview (shows income, materials spend, clinic rent, net profit, debts) */}
+            {/* Quick Stats Overview (shows income, total expenses, net profit, debts) */}
             <StatsOverview
               patients={monthFilter === "all" ? patients : filteredAndSortedPatients}
               materials={materials}
-              rentMap={rentMap}
               selectedMonth={monthFilter}
               monthSubtitle={monthFilter === "all" ? undefined : formatMonthName(monthFilter)}
               appointmentCount={appointments.length}
-              onOpenRentModal={() => isDoctor && setIsRentModalOpen(true)}
             />
 
             {/* Filter and Control Toolbar (Mobbin-style segmented controls) */}
@@ -1078,16 +1038,6 @@ export default function DashboardPage() {
         clinicMaterials={materials}
       />
 
-      {/* Variable Monthly Clinic Rent Modal (Doctor Only) */}
-      {isDoctor && (
-        <MonthlyRentModal
-          isOpen={isRentModalOpen}
-          onClose={() => setIsRentModalOpen(false)}
-          rentMap={rentMap}
-          availableMonths={availableMonths}
-          onSaveRent={handleSaveRent}
-        />
-      )}
 
       {/* Staff & Secretary Management Modal (Doctor Only) */}
       {isDoctor && (

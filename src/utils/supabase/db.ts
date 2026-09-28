@@ -262,13 +262,23 @@ export async function deleteAppointmentFromDB(id: string): Promise<void> {
 
 // ================= MATERIAL & EXPENSES API =================
 export function mapRowToMaterial(row: any): ClinicMaterial {
-  const supplier = row.supplier || row.name || "Clinic Supplier";
+  const supplier = row.supplier || row.name || "Clinic Expense";
+  let cat: string = "materials";
+  if (row.category) {
+    const c = String(row.category).toLowerCase().trim();
+    if (c === "rent") cat = "rent";
+    else if (c === "utilities" || c.includes("util") || c.includes("bill") || c.includes("electric")) cat = "utilities";
+    else if (c === "lab" || c.includes("lab")) cat = "lab";
+    else if (c === "other") cat = "other";
+    else cat = "materials";
+  }
   return {
     id: row.id,
     date: row.purchase_date || (row.date ? row.date : new Date().toISOString().substring(0, 10)),
     supplier,
     name: supplier,
     costPrice: row.cost_price !== null && row.cost_price !== undefined ? Number(row.cost_price) : 0,
+    category: cat,
     patientPrice: row.patient_price ? Number(row.patient_price) : 0,
     notes: row.notes ?? undefined,
     createdAt: row.created_at ? Number(row.created_at) : Date.now(),
@@ -281,7 +291,7 @@ export function mapMaterialToRow(mat: ClinicMaterial): any {
     id: mat.id,
     name: mat.supplier,
     supplier: mat.supplier,
-    category: "General",
+    category: mat.category || "materials",
     unit: "Item",
     quantity: 1,
     min_quantity: 0,
@@ -299,12 +309,10 @@ export async function fetchMaterialsFromDB(): Promise<ClinicMaterial[]> {
     const { data, error } = await getSupabase()
       .from("clinic_materials")
       .select("*")
-      .neq("category", "Rent")
       .order("created_at", { ascending: false });
 
     if (!error && data) {
       const parsed = data
-        .filter((row) => row.category !== "Rent")
         .map(mapRowToMaterial)
         .filter((m) => !["mat-1", "mat-2", "mat-3", "mat-4", "mat-5", "mat-6"].includes(m.id));
 

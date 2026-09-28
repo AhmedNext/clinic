@@ -1,8 +1,11 @@
+export type ExpenseCategory = "materials" | "rent" | "utilities" | "lab" | "other";
+
 export interface ClinicMaterial {
   id: string;
-  date: string;       // 1. Date of purchase (YYYY-MM-DD)
-  supplier: string;   // 2. Supplier / Material description
+  date: string;       // 1. Date of expense (YYYY-MM-DD)
+  supplier: string;   // 2. Supplier / Description / Payee
   costPrice: number;  // 3. Total money spent (IQD)
+  category?: ExpenseCategory | string; // 4. Category
   name?: string;      // Alias for supplier in dental chart
   patientPrice?: number;
   notes?: string;
@@ -10,7 +13,8 @@ export interface ClinicMaterial {
   updatedAt?: number;
 }
 
+export type ClinicExpense = ClinicMaterial;
 export type NewClinicMaterial = Omit<ClinicMaterial, "id" | "createdAt">;
+export type NewClinicExpense = NewClinicMaterial;
 
 export const DEFAULT_CLINIC_MATERIALS: ClinicMaterial[] = [];
-
