@@ -36,26 +36,7 @@ CREATE TABLE IF NOT EXISTS public.appointments (
 );
 
 -- ========================================================
--- 3. ENABLE ROW LEVEL SECURITY & OPEN READ/WRITE FOR ANON
--- ========================================================
-ALTER TABLE public.patients ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.appointments ENABLE ROW LEVEL SECURITY;
-
--- Allow public read/write with anon key
-DROP POLICY IF EXISTS "Public access to patients" ON public.patients;
-CREATE POLICY "Public access to patients" ON public.patients
-  FOR ALL
-  USING (true)
-  WITH CHECK (true);
-
-DROP POLICY IF EXISTS "Public access to appointments" ON public.appointments;
-CREATE POLICY "Public access to appointments" ON public.appointments
-  FOR ALL
-  USING (true)
-  WITH CHECK (true);
-
--- ========================================================
--- 4. CLINIC MATERIALS & INVENTORY TABLE
+-- 3. CLINIC MATERIALS & INVENTORY TABLE (Includes Clinic Rent)
 -- ========================================================
 CREATE TABLE IF NOT EXISTS public.clinic_materials (
   id TEXT PRIMARY KEY,
@@ -74,10 +55,48 @@ CREATE TABLE IF NOT EXISTS public.clinic_materials (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
+-- ========================================================
+-- 4. ENABLE ROW LEVEL SECURITY & RESTRICT TO AUTHENTICATED USERS
+-- ========================================================
+ALTER TABLE public.patients ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.appointments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.clinic_materials ENABLE ROW LEVEL SECURITY;
 
+-- Drop legacy/insecure public policies
+DROP POLICY IF EXISTS "Public access to patients" ON public.patients;
+DROP POLICY IF EXISTS "Public access to appointments" ON public.appointments;
 DROP POLICY IF EXISTS "Public access to clinic_materials" ON public.clinic_materials;
-CREATE POLICY "Public access to clinic_materials" ON public.clinic_materials
+
+-- Allow ONLY authenticated users (logged-in clinic account) full access
+DROP POLICY IF EXISTS "Allow authenticated users full access to patients" ON public.patients;
+CREATE POLICY "Allow authenticated users full access to patients"
+  ON public.patients
   FOR ALL
+  TO authenticated
   USING (true)
   WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow authenticated users full access to appointments" ON public.appointments;
+CREATE POLICY "Allow authenticated users full access to appointments"
+  ON public.appointments
+  FOR ALL
+  TO authenticated
+  USING (true)
+  WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow authenticated users full access to clinic_materials" ON public.clinic_materials;
+CREATE POLICY "Allow authenticated users full access to clinic_materials"
+  ON public.clinic_materials
+  FOR ALL
+  TO authenticated
+  USING (true)
+  WITH CHECK (true);
+
+-- Revoke all permissions from anon role and grant to authenticated
+REVOKE ALL ON public.patients FROM anon;
+REVOKE ALL ON public.appointments FROM anon;
+REVOKE ALL ON public.clinic_materials FROM anon;
+
+GRANT ALL ON public.patients TO authenticated;
+GRANT ALL ON public.appointments TO authenticated;
+GRANT ALL ON public.clinic_materials TO authenticated;
