@@ -5,7 +5,6 @@ import { ClinicLogo } from "./ClinicLogo";
 import { Lock, Mail, ShieldCheck, ArrowRight, Eye, EyeOff, AlertCircle } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
 import { useLanguage } from "@/context/LanguageContext";
-import { useAuth } from "@/context/AuthContext";
 import { useClinicSettings } from "@/context/ClinicSettingsContext";
 import { LanguageToggle } from "./LanguageToggle";
 
@@ -15,7 +14,6 @@ interface LoginModalProps {
 
 export function LoginScreen({ onSuccess }: LoginModalProps) {
   const { t } = useLanguage();
-  const { enableOfflineAccess } = useAuth();
   const { settings } = useClinicSettings();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -168,23 +166,6 @@ export function LoginScreen({ onSuccess }: LoginModalProps) {
           </div>
         </form>
 
-        {/* Offline / Cached Clinic Access Shortcut */}
-        <div className="mt-5 pt-4 border-t border-white/10 text-center space-y-2">
-          <button
-            type="button"
-            onClick={() => {
-              enableOfflineAccess();
-              onSuccess();
-            }}
-            className="w-full py-2 px-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-indigo-300 hover:text-white text-xs font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer group"
-          >
-            <span>{t.offlineCacheAccess}</span>
-            <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 rtl:group-hover:-translate-x-0.5 rtl:rotate-180 transition-transform" />
-          </button>
-          <p className="text-[11px] text-slate-400">
-            🔒 {t.offlineCacheDesc}
-          </p>
-        </div>
       </div>
     </div>
   );

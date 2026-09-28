@@ -13,5 +13,4 @@ export interface AuthContextType {
   isAuthenticated: boolean;
   signOut: () => Promise<void>;
   badgeLabel: string;
-  enableOfflineAccess: () => void;
 }

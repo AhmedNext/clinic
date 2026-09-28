@@ -17,7 +17,6 @@ const AuthContext = createContext<AuthContextType>({
   isAuthenticated: false,
   signOut: async () => {},
   badgeLabel: "دکتۆر / Doctor",
-  enableOfflineAccess: () => {},
 });
 
 /**
@@ -52,7 +51,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [sessionChecked, setSessionChecked] = useState(false);
-  const [offlineAccess, setOfflineAccess] = useState(false);
 
   // Clear any legacy role overrides on mount
   useEffect(() => {
@@ -80,10 +78,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => subscription.unsubscribe();
   }, [supabase]);
 
-  const enableOfflineAccess = useCallback(() => {
-    setOfflineAccess(true);
-  }, []);
-
   const signOut = useCallback(async () => {
     if (typeof window !== "undefined") {
       sessionStorage.removeItem("clinic_role_override");
@@ -91,7 +85,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await supabase.auth.signOut();
     setSession(null);
     setUser(null);
-    setOfflineAccess(false);
   }, [supabase]);
 
   // Strict role derived from authenticated user metadata
@@ -116,7 +109,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Badge label (e.g. 'دکتۆر / Doctor' or 'سکرتێر / Receptionist')
   const badgeLabel = isSecretary ? t.roleSecretaryBadge : t.roleDoctorBadge;
 
-  const isAuthenticated = Boolean(session) || offlineAccess;
+  const isAuthenticated = Boolean(session);
 
   const contextValue = useMemo(
     () => ({
@@ -130,7 +123,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       isAuthenticated,
       signOut,
       badgeLabel,
-      enableOfflineAccess,
     }),
     [
       user,
@@ -143,7 +135,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       isAuthenticated,
       signOut,
       badgeLabel,
-      enableOfflineAccess,
     ]
   );
 
