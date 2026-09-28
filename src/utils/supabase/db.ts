@@ -256,6 +256,40 @@ export async function upsertPatientToDB(patient: Patient, userId?: string | null
   }
 }
 
+export async function batchUpsertPatientsToDB(
+  newPatients: Patient[],
+  userId?: string | null,
+  onProgress?: (processed: number, total: number) => void
+): Promise<void> {
+  if (newPatients.length === 0) return;
+
+  // Update local cache immediately
+  if (typeof window !== "undefined") {
+    const cached = getCachedPatients(userId);
+    const existingMap = new Map(cached.map((p) => [p.id, p]));
+    newPatients.forEach((p) => existingMap.set(p.id, p));
+    const merged = Array.from(existingMap.values()).sort((a, b) =>
+      (b.date || "").localeCompare(a.date || "")
+    );
+    setCachedPatients(merged, userId);
+  }
+
+  // Chunk in batches of 50 for Supabase upsert
+  const CHUNK_SIZE = 50;
+  for (let i = 0; i < newPatients.length; i += CHUNK_SIZE) {
+    const chunk = newPatients.slice(i, i + CHUNK_SIZE);
+    const rows = chunk.map((p) => mapPatientToRow(p, userId));
+    const { error } = await getSupabase().from("patients").upsert(rows);
+    if (error) {
+      console.error("Batch upsert patients error:", error);
+      throw error;
+    }
+    if (onProgress) {
+      onProgress(Math.min(i + CHUNK_SIZE, newPatients.length), newPatients.length);
+    }
+  }
+}
+
 export async function deletePatientFromDB(id: string, userId?: string | null): Promise<void> {
   if (typeof window !== "undefined") {
     const cached = getCachedPatients(userId);

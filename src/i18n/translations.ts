@@ -310,6 +310,22 @@ export interface Translations {
   thankYouClinic: string;
   printNow: string;
   allergiesAlert: string;
+
+  // Database Import & Export
+  importDatabase: string;
+  importDatabaseDesc: string;
+  exportDatabase: string;
+  exportDatabaseDesc: string;
+  downloadCsvTemplate: string;
+  uploadCsvFile: string;
+  dragDropCsv: string;
+  browseFile: string;
+  previewImportData: string;
+  confirmImport: string;
+  importingPatients: string;
+  importSuccess: string;
+  noFileSelected: string;
+  patientsFoundInCsv: string;
 }
 
 export const translations: Record<Language, Translations> = {
@@ -623,6 +639,22 @@ export const translations: Record<Language, Translations> = {
     thankYouClinic: "Thank you for trusting our clinic with your dental care.",
     printNow: "Print Document",
     allergiesAlert: "Allergies / Medical Alert",
+
+    // Database Import & Export
+    importDatabase: "Import Database (CSV)",
+    importDatabaseDesc: "Upload your existing patients list from a CSV file into the clinic",
+    exportDatabase: "Export Database (CSV)",
+    exportDatabaseDesc: "Download a full backup of all patients in CSV format",
+    downloadCsvTemplate: "Download Sample Template (.CSV)",
+    uploadCsvFile: "Upload CSV File",
+    dragDropCsv: "Drag & drop your CSV file here, or click to browse",
+    browseFile: "Browse File",
+    previewImportData: "Preview Patients to Import",
+    confirmImport: "Import Patients into Clinic",
+    importingPatients: "Importing patients into cloud...",
+    importSuccess: "Database imported successfully!",
+    noFileSelected: "Please select a CSV file first.",
+    patientsFoundInCsv: "patients detected in file",
   },
 
   ar: {
@@ -935,6 +967,22 @@ export const translations: Record<Language, Translations> = {
     thankYouClinic: "شكراً لثقتكم بعيادتنا لرعاية أسنانكم.",
     printNow: "طباعة المستند",
     allergiesAlert: "تنبيه الحساسية / السيرة المرضية",
+
+    // Database Import & Export
+    importDatabase: "استيراد قاعدة البيانات (CSV)",
+    importDatabaseDesc: "رفع واستيراد قائمة مرضاك الحالية من ملف CSV إلى النظام مباشرة",
+    exportDatabase: "تصدير قاعدة البيانات (CSV)",
+    exportDatabaseDesc: "تحميل نسخة احتياطية كاملة لجميع المرضى بصيغة CSV",
+    downloadCsvTemplate: "تحميل نموذج CSV التجريبي",
+    uploadCsvFile: "رفع ملف CSV",
+    dragDropCsv: "اسحب وأفلت ملف CSV هنا، أو انقر للاختيار",
+    browseFile: "اختيار ملف",
+    previewImportData: "معاينة المرضى قبل الاستيراد",
+    confirmImport: "استيراد المرضى إلى العيادة",
+    importingPatients: "جاري حفظ واستيراد المرضى إلى السحابة...",
+    importSuccess: "تم استيراد قاعدة البيانات بنجاح!",
+    noFileSelected: "يرجى اختيار ملف CSV أولاً.",
+    patientsFoundInCsv: "مريض تم العثور عليهم في الملف",
   },
 
   ku: {
@@ -1247,6 +1295,22 @@ export const translations: Record<Language, Translations> = {
     thankYouClinic: "سوپاس بۆ متمانەکردنتان بە نۆرینگەکەمان بۆ چارەسەری دەم و ددانتان.",
     printNow: "چاپکردنی بەڵگەنامە",
     allergiesAlert: "هەستیاری / هۆشداری پزیشکی",
+
+    // Database Import & Export
+    importDatabase: "هاوردەکردنی بنکەی داتا (CSV)",
+    importDatabaseDesc: "بەرزکردنەوەی لیستی نەخۆشەکان لە فایلی CSV بۆ ناو سیستەم",
+    exportDatabase: "هەناردەکردنی بنکەی داتا (CSV)",
+    exportDatabaseDesc: "داگرتنی کۆپییەکی یەدەگی هەموو نەخۆشەکان بە فۆرماتی CSV",
+    downloadCsvTemplate: "داگرتنی فایلی نموونەیی CSV",
+    uploadCsvFile: "بەرزکردنەوەی فایلی CSV",
+    dragDropCsv: "فایلی CSV ڕابکێشە ئێرە، یان کلیک بکە بۆ دیاریکردن",
+    browseFile: "دیاریکردنی فایل",
+    previewImportData: "پێشبینینی نەخۆشەکان پێش هاوردەکردن",
+    confirmImport: "هاوردەکردنی نەخۆشەکان بۆ نۆرینگە",
+    importingPatients: "پاشەکەوتکردنی نەخۆشەکان لە کلاود...",
+    importSuccess: "بنکەی داتا بە سەرکەوتوویی هاوردە کرا!",
+    noFileSelected: "تکایە سەرەتا فایلێکی CSV هەڵبژێرە.",
+    patientsFoundInCsv: "نەخۆش دۆزرایەوە لە فایلەکەدا",
   },
 };
 

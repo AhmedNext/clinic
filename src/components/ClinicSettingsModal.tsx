@@ -1,16 +1,17 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { X, Building2, User, Phone, MapPin, Check, Sparkles } from "lucide-react";
+import { X, Building2, User, Phone, MapPin, Check, Sparkles, Database } from "lucide-react";
 import { useClinicSettings } from "@/context/ClinicSettingsContext";
 import { useLanguage } from "@/context/LanguageContext";
 
 interface ClinicSettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onOpenImportDatabase?: () => void;
 }
 
-export function ClinicSettingsModal({ isOpen, onClose }: ClinicSettingsModalProps) {
+export function ClinicSettingsModal({ isOpen, onClose, onOpenImportDatabase }: ClinicSettingsModalProps) {
   const { t } = useLanguage();
   const { settings, updateSettings } = useClinicSettings();
 
@@ -139,6 +140,26 @@ export function ClinicSettingsModal({ isOpen, onClose }: ClinicSettingsModalProp
               />
             </div>
           </div>
+
+          {/* Database Import & Export Section */}
+          {onOpenImportDatabase && (
+            <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
+              <button
+                type="button"
+                onClick={() => {
+                  onClose();
+                  onOpenImportDatabase();
+                }}
+                className="w-full flex items-center justify-between p-3 rounded-2xl border border-emerald-200/80 dark:border-emerald-800/80 bg-emerald-50/60 dark:bg-emerald-950/40 hover:bg-emerald-100/70 dark:hover:bg-emerald-900/50 text-emerald-800 dark:text-emerald-300 text-xs font-bold transition-all cursor-pointer"
+              >
+                <div className="flex items-center gap-2.5">
+                  <Database className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                  <span>{t.importDatabase}</span>
+                </div>
+                <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold">CSV</span>
+              </button>
+            </div>
+          )}
 
           <div className="pt-2">
             <button

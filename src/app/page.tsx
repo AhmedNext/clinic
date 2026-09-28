@@ -27,11 +27,13 @@ import {
   RotateCcw,
   Trash2,
   X,
+  Database,
 } from "lucide-react";
 
 import {
   fetchPatientsFromDB,
   upsertPatientToDB,
+  batchUpsertPatientsToDB,
   deletePatientFromDB,
   fetchAppointmentsFromDB,
   upsertAppointmentToDB,
@@ -99,6 +101,10 @@ const DentalPrescriptionModal = dynamic(
   () => import("@/components/print/DentalPrescriptionModal").then((m) => m.DentalPrescriptionModal),
   { ssr: false }
 );
+const ImportDatabaseModal = dynamic(
+  () => import("@/components/ImportDatabaseModal").then((m) => m.ImportDatabaseModal),
+  { ssr: false }
+);
 
 export default function DashboardPage() {
   const { t, language } = useLanguage();
@@ -126,6 +132,7 @@ export default function DashboardPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isStaffModalOpen, setIsStaffModalOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [editingPatient, setEditingPatient] = useState<Patient | null>(null);
   const [historyPatient, setHistoryPatient] = useState<Patient | null>(null);
   const [dentalPatient, setDentalPatient] = useState<Patient | null>(null);
@@ -299,6 +306,24 @@ export default function DashboardPage() {
     } catch (e) {
       console.error("Failed to update patient in Supabase:", e);
       showToast("⚠️ Failed to save to cloud");
+    }
+  };
+
+  const handleImportPatients = async (importedPatients: Patient[]) => {
+    try {
+      await batchUpsertPatientsToDB(importedPatients, clinicOwnerId);
+      setPatients((prev) => {
+        const existingIds = new Set(prev.map((p) => p.id));
+        const filteredNew = importedPatients.filter((p) => !existingIds.has(p.id));
+        return [...filteredNew, ...prev].sort((a, b) =>
+          (b.date || "").localeCompare(a.date || "")
+        );
+      });
+      showToast(`✓ ${t.importSuccess} (${importedPatients.length})`);
+    } catch (e) {
+      console.error("Batch import error:", e);
+      showToast("⚠️ Failed to import some patient records to cloud");
+      throw e;
     }
   };
 
@@ -804,6 +829,7 @@ export default function DashboardPage() {
         materialCount={materials.length}
         onOpenStaffModal={() => setIsStaffModalOpen(true)}
         onOpenClinicSettings={() => setIsSettingsModalOpen(true)}
+        onOpenImportDatabase={() => setIsImportModalOpen(true)}
         onSignOut={handleSignOut}
       />
 
@@ -1065,13 +1091,24 @@ export default function DashboardPage() {
                       Clear Filters
                     </button>
                   ) : (
-                    <button
-                      onClick={() => setIsModalOpen(true)}
-                      className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white shadow-xs cursor-pointer"
-                    >
-                      <UserPlus className="w-4 h-4" />
-                      <span>{t.addPatient}</span>
-                    </button>
+                    <div className="flex flex-wrap items-center justify-center gap-3">
+                      <button
+                        onClick={() => setIsModalOpen(true)}
+                        className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white shadow-xs cursor-pointer"
+                      >
+                        <UserPlus className="w-4 h-4" />
+                        <span>{t.addPatient}</span>
+                      </button>
+                      {isDoctor && (
+                        <button
+                          onClick={() => setIsImportModalOpen(true)}
+                          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold border border-emerald-300 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 shadow-xs cursor-pointer"
+                        >
+                          <Database className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                          <span>{t.importDatabase}</span>
+                        </button>
+                      )}
+                    </div>
                   )}
                 </div>
               </div>
@@ -1215,6 +1252,17 @@ export default function DashboardPage() {
         <ClinicSettingsModal
           isOpen={isSettingsModalOpen}
           onClose={() => setIsSettingsModalOpen(false)}
+          onOpenImportDatabase={() => setIsImportModalOpen(true)}
+        />
+      )}
+
+      {/* Database Import & Export CSV Modal (Doctor Only) */}
+      {isDoctor && (
+        <ImportDatabaseModal
+          isOpen={isImportModalOpen}
+          onClose={() => setIsImportModalOpen(false)}
+          existingPatients={patients}
+          onImportPatients={handleImportPatients}
         />
       )}
 

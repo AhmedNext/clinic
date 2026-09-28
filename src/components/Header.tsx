@@ -1,7 +1,7 @@
 "use client";
 
 import { ClinicLogo } from "./ClinicLogo";
-import { Plus, Users, CalendarClock, ShieldCheck, LogOut, TrendingUp, Package, UserPlus, Building2 } from "lucide-react";
+import { Plus, Users, CalendarClock, ShieldCheck, LogOut, TrendingUp, Package, UserPlus, Building2, Database } from "lucide-react";
 import { ThemeToggle } from "./ThemeToggle";
 import { LanguageToggle } from "./LanguageToggle";
 import { useLanguage } from "@/context/LanguageContext";
@@ -17,6 +17,7 @@ interface HeaderProps {
   materialCount?: number;
   onOpenStaffModal?: () => void;
   onOpenClinicSettings?: () => void;
+  onOpenImportDatabase?: () => void;
   onSignOut?: () => void;
 }
 
@@ -29,6 +30,7 @@ export function Header({
   materialCount = 0,
   onOpenStaffModal,
   onOpenClinicSettings,
+  onOpenImportDatabase,
   onSignOut,
 }: HeaderProps) {
   const { t } = useLanguage();
@@ -256,6 +258,20 @@ export function Header({
                   className="hidden sm:flex w-9 h-9 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50/50 dark:hover:bg-indigo-950/30 transition-all cursor-pointer items-center justify-center flex-shrink-0"
                 >
                   <Building2 className="w-4 h-4" />
+                </button>
+              )}
+
+              {/* Doctor Control: Import Database / CSV */}
+              {isDoctor && onOpenImportDatabase && (
+                <button
+                  type="button"
+                  onClick={onOpenImportDatabase}
+                  title={t.importDatabase}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold border border-emerald-200/90 dark:border-emerald-800/80 bg-emerald-50/80 dark:bg-emerald-950/50 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 shadow-2xs transition-all cursor-pointer flex-shrink-0"
+                >
+                  <Database className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                  <span className="hidden xl:inline">{t.importDatabase}</span>
+                  <span className="hidden sm:inline xl:hidden">CSV</span>
                 </button>
               )}
 
