@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start -H 0.0.0.0",
     "lint": "eslint",
-    "test": "tsx --test tests/**/*.test.ts"
+    "test": "tsx --test tests/**/*.test.ts",
+    "import-patients": "tsx scripts/import-csv.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",

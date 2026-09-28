@@ -1,0 +1,4 @@
+patient_name,phone,date,time,treatment,status,notes
+Ahmed Salah,07701234567,2026-10-01,10:30 AM,Crown Cementation,scheduled,Bring temporary crown
+Sara Karim,07509876543,2026-10-01,11:30 AM,Follow-up Check,scheduled,Check gum healing
+Zana Baxtyar,07801112233,2026-10-02,04:00 PM,Routine Cleaning,scheduled,Regular 6-month checkup

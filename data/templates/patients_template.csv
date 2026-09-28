@@ -1,0 +1,6 @@
+name,gender,age,phone,date,paid_amount,debt_amount,total_amount,notes,medical_history
+Ahmed Salah,male,34,07701234567,2026-09-15,150000,50000,200000,Root canal treatment completed on tooth 16,Penicillin allergy
+Sara Karim,female,28,07509876543,2026-09-20,80000,0,80000,Scaling & composite filling,None
+Zana Baxtyar,male,42,07801112233,2026-09-22,600000,0,600000,Zirconia bridge upper anterior,Hypertension
+Fatima Noor,female,24,07712223344,2026-09-25,50000,100000,150000,Orthodontic consultation - bracket bonding,None
+Kawa Ali,male,50,07503334455,2026-09-28,0,75000,75000,Extraction lower left wisdom tooth,Diabetic (Type 2)
