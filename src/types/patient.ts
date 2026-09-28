@@ -35,11 +35,17 @@ export interface Patient {
 }
 
 export function calculateDebt(total?: number, paid?: number, explicitDebt?: number): number {
+  const t = typeof total === "number" && !isNaN(total) ? Math.max(0, total) : 0;
+  const p = typeof paid === "number" && !isNaN(paid) ? Math.max(0, paid) : 0;
+
   if (typeof explicitDebt === "number" && !isNaN(explicitDebt)) {
+    // If total amount exists and paid is 0 while explicitDebt is 0, the actual unpaid debt is total
+    if (t > 0 && p === 0 && explicitDebt === 0) {
+      return t;
+    }
     return Math.max(0, explicitDebt);
   }
-  const t = total ?? 0;
-  const p = paid ?? 0;
+
   return Math.max(0, t - p);
 }
 

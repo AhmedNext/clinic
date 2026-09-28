@@ -58,7 +58,8 @@ export function DentalChartModal({
       ? localTeeth.map((t) => (t.toothNumber === record.toothNumber ? record : t))
       : [...localTeeth, record];
     setLocalTeeth(updated);
-    onSaveTeeth(patient.id, updated);
+    const updatedTotal = updated.reduce((sum, r) => sum + (r.price || 0), 0);
+    onSaveTeeth(patient.id, updated, updatedTotal);
   };
 
   // Immediately auto-save whenever multiple teeth are updated
@@ -69,14 +70,16 @@ export function DentalChartModal({
     }
     const updated = Array.from(map.values());
     setLocalTeeth(updated);
-    onSaveTeeth(patient.id, updated);
+    const updatedTotal = updated.reduce((sum, r) => sum + (r.price || 0), 0);
+    onSaveTeeth(patient.id, updated, updatedTotal);
   };
 
   // Immediately auto-save when a tooth is removed
   const handleRemoveTooth = (toothNumber: number) => {
     const updated = localTeeth.filter((t) => t.toothNumber !== toothNumber);
     setLocalTeeth(updated);
-    onSaveTeeth(patient.id, updated);
+    const updatedTotal = updated.reduce((sum, r) => sum + (r.price || 0), 0);
+    onSaveTeeth(patient.id, updated, updatedTotal);
   };
 
   // Immediately auto-save when multiple teeth are removed
@@ -84,13 +87,14 @@ export function DentalChartModal({
     const set = new Set(toothNumbers);
     const updated = localTeeth.filter((t) => !set.has(t.toothNumber));
     setLocalTeeth(updated);
-    onSaveTeeth(patient.id, updated);
+    const updatedTotal = updated.reduce((sum, r) => sum + (r.price || 0), 0);
+    onSaveTeeth(patient.id, updated, updatedTotal);
   };
 
   // Clear all teeth and auto-save
   const handleClearAll = () => {
     setLocalTeeth([]);
-    onSaveTeeth(patient.id, []);
+    onSaveTeeth(patient.id, [], 0);
   };
 
   const handleSyncToBill = () => {
@@ -100,7 +104,7 @@ export function DentalChartModal({
   };
 
   const handleDone = () => {
-    onSaveTeeth(patient.id, localTeeth);
+    onSaveTeeth(patient.id, localTeeth, totalChartPrice);
     onClose();
   };
 

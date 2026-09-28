@@ -471,10 +471,12 @@ export default function DashboardPage() {
     let targetUpdatedPatient: Patient | null = null;
     const updated = patients.map((p) => {
       if (p.id === patientId) {
-        const hasSync = typeof syncedTotalAmount === "number";
-        const newTotal = hasSync ? syncedTotalAmount : p.totalAmount;
+        const chartTotal = teeth.reduce((sum, t) => sum + (t.price || 0), 0);
+        const hasSync = typeof syncedTotalAmount === "number" || (chartTotal > 0 && (!p.totalAmount || p.totalAmount === 0));
+        const newTotal = typeof syncedTotalAmount === "number" ? syncedTotalAmount : (hasSync ? chartTotal : p.totalAmount);
+        const currentPaid = p.paidAmount || 0;
         const newDebt = hasSync
-          ? calculateDebt(newTotal, p.paidAmount, p.debtAmount)
+          ? Math.max(0, (newTotal || 0) - currentPaid)
           : p.debtAmount;
 
         targetUpdatedPatient = {

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { X, Calendar, Clock, User, FileText, CheckCircle2, Banknote, Phone, Check } from "lucide-react";
-import { Gender, Patient, calculateDebt } from "@/types/patient";
+import { Gender, Patient, calculateDebt, formatIQD } from "@/types/patient";
 import { ToothRecord } from "@/types/dental";
 import { DentalChart } from "./dental/DentalChart";
 import { PatientAvatar } from "./PatientAvatar";
@@ -47,6 +47,13 @@ export function EditPatientModal({
       ? teeth.map((t) => (t.toothNumber === record.toothNumber ? record : t))
       : [...teeth, record];
     setTeeth(updated);
+
+    const newTotal = updated.reduce((s, r) => s + (r.price || 0), 0);
+    const p = parseFloat(paidAmount) || 0;
+    const d = parseFloat(debtAmount) || 0;
+    if (p === 0 && d === 0 && newTotal > 0) {
+      setDebtAmount(String(newTotal));
+    }
   };
 
   const handleUpdateMultipleTeeth = (records: ToothRecord[]) => {
@@ -54,7 +61,15 @@ export function EditPatientModal({
     for (const rec of records) {
       map.set(rec.toothNumber, rec);
     }
-    setTeeth(Array.from(map.values()));
+    const updated = Array.from(map.values());
+    setTeeth(updated);
+
+    const newTotal = updated.reduce((s, r) => s + (r.price || 0), 0);
+    const p = parseFloat(paidAmount) || 0;
+    const d = parseFloat(debtAmount) || 0;
+    if (p === 0 && d === 0 && newTotal > 0) {
+      setDebtAmount(String(newTotal));
+    }
   };
 
   const handleRemoveTooth = (toothNumber: number) => {
@@ -116,7 +131,13 @@ export function EditPatientModal({
     }
 
     const parsedPaid = parseFloat(paidAmount) || 0;
-    const parsedDebt = parseFloat(debtAmount) || 0;
+    let parsedDebt = parseFloat(debtAmount) || 0;
+    const chartTotal = teeth.reduce((s, r) => s + (r.price || 0), 0);
+
+    // If both paid and debt are 0, but the chart has treatments with prices, default to chart total as debt
+    if (parsedPaid === 0 && parsedDebt === 0 && chartTotal > 0) {
+      parsedDebt = chartTotal;
+    }
 
     onUpdatePatient({
       ...patient,
@@ -378,6 +399,45 @@ export function EditPatientModal({
               <Banknote className="w-3.5 h-3.5 text-indigo-500" />
               <span>{t.paidLabel} & {t.owesLabel} (IQD)</span>
             </span>
+
+            {/* Dental Chart Fee Sync Pill */}
+            {teeth.reduce((s, r) => s + (r.price || 0), 0) > 0 && (
+              <div className="flex items-center justify-between p-2.5 rounded-xl bg-indigo-50/80 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800 text-xs">
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <span className="text-sm flex-shrink-0">🦷</span>
+                  <span className="text-[11px] font-medium text-slate-600 dark:text-slate-300 truncate">
+                    {t.totalDentalFee}:
+                  </span>
+                  <span className="font-mono font-bold text-indigo-600 dark:text-indigo-400 flex-shrink-0">
+                    {formatIQD(teeth.reduce((s, r) => s + (r.price || 0), 0))}
+                  </span>
+                </div>
+                <div className="flex items-center gap-1 flex-shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const total = teeth.reduce((s, r) => s + (r.price || 0), 0);
+                      const p = parseFloat(paidAmount) || 0;
+                      setDebtAmount(String(Math.max(0, total - p)));
+                    }}
+                    className="px-2 py-0.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-[10px] shadow-2xs transition-all cursor-pointer"
+                  >
+                    Sync Debt
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const total = teeth.reduce((s, r) => s + (r.price || 0), 0);
+                      setPaidAmount(String(total));
+                      setDebtAmount("0");
+                    }}
+                    className="px-2 py-0.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[10px] shadow-2xs transition-all cursor-pointer"
+                  >
+                    Mark Paid
+                  </button>
+                </div>
+              </div>
+            )}
 
             <div className="grid grid-cols-2 gap-2.5">
               {/* Amount Paid */}
