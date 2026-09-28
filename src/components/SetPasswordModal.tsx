@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Lock, ShieldCheck, CheckCircle2, AlertCircle, Eye, EyeOff, X } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
 import { useLanguage } from "@/context/LanguageContext";
@@ -22,6 +22,45 @@ export function SetPasswordModal({ isOpen, onClose, onSuccess }: SetPasswordModa
 
   if (!isOpen) return null;
 
+  // Ensure session is initialized from URL tokens as soon as modal opens
+  useEffect(() => {
+    async function initSessionFromUrl() {
+      if (typeof window === "undefined") return;
+      const supabase = createClient();
+
+      const hash = window.location.hash.replace(/^#/, "");
+      const hashParams = new URLSearchParams(hash);
+      const accessToken = hashParams.get("access_token");
+      const refreshToken = hashParams.get("refresh_token");
+
+      if (accessToken && refreshToken) {
+        try {
+          await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+          });
+        } catch (e) {
+          console.error("Failed to establish session from URL tokens:", e);
+        }
+        return;
+      }
+
+      const queryParams = new URLSearchParams(window.location.search);
+      const code = queryParams.get("code");
+      if (code) {
+        try {
+          await supabase.auth.exchangeCodeForSession(code);
+        } catch (e) {
+          console.error("Failed to exchange code for session:", e);
+        }
+      }
+    }
+
+    if (isOpen) {
+      initSessionFromUrl();
+    }
+  }, [isOpen]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!password || !confirmPassword) return;
@@ -42,6 +81,38 @@ export function SetPasswordModal({ isOpen, onClose, onSuccess }: SetPasswordModa
 
     try {
       const supabase = createClient();
+
+      // Verify or establish session from URL hash tokens if not already loaded
+      let { data: { session } } = await supabase.auth.getSession();
+
+      if (!session && typeof window !== "undefined") {
+        const hash = window.location.hash.replace(/^#/, "");
+        const hashParams = new URLSearchParams(hash);
+        const accessToken = hashParams.get("access_token");
+        const refreshToken = hashParams.get("refresh_token");
+
+        if (accessToken && refreshToken) {
+          const { data: sessionData, error: sessionErr } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+          });
+          if (sessionErr) throw sessionErr;
+          session = sessionData.session;
+        } else {
+          const queryParams = new URLSearchParams(window.location.search);
+          const code = queryParams.get("code");
+          if (code) {
+            const { data: codeData, error: codeErr } = await supabase.auth.exchangeCodeForSession(code);
+            if (codeErr) throw codeErr;
+            session = codeData.session;
+          }
+        }
+      }
+
+      if (!session) {
+        throw new Error("Invitation or recovery link is invalid or expired. Please request a new invite.");
+      }
+
       const { error } = await supabase.auth.updateUser({
         password: password,
       });
@@ -56,7 +127,10 @@ export function SetPasswordModal({ isOpen, onClose, onSuccess }: SetPasswordModa
         setTimeout(() => {
           onClose();
           if (onSuccess) onSuccess();
-        }, 1500);
+          if (typeof window !== "undefined") {
+            window.location.href = window.location.pathname;
+          }
+        }, 1200);
       }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Failed to update password.";

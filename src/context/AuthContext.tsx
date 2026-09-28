@@ -59,12 +59,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (typeof window !== "undefined") {
       sessionStorage.removeItem("clinic_role_override");
-      const hash = window.location.hash || "";
+      const hash = window.location.hash.replace(/^#/, "");
       if (hash.includes("type=recovery") || hash.includes("type=invite")) {
         setIsPasswordRecovery(true);
       }
+
+      const hashParams = new URLSearchParams(hash);
+      const accessToken = hashParams.get("access_token");
+      const refreshToken = hashParams.get("refresh_token");
+      if (accessToken && refreshToken) {
+        supabase.auth
+          .setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+          })
+          .then(({ data }) => {
+            if (data?.session) {
+              setSession(data.session);
+              setUser(data.session.user);
+              setSessionChecked(true);
+            }
+          })
+          .catch(console.error);
+      }
     }
-  }, []);
+  }, [supabase]);
 
   // Sync Supabase Auth session
   useEffect(() => {
