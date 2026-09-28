@@ -539,24 +539,14 @@ export default function DashboardPage() {
 
   const handleSaveTeeth = async (
     patientId: string,
-    teeth: ToothRecord[],
-    syncedTotalAmount?: number
+    teeth: ToothRecord[]
   ) => {
     let targetUpdatedPatient: Patient | null = null;
     const updated = patients.map((p) => {
       if (p.id === patientId) {
-        const chartTotal = teeth.reduce((sum, t) => sum + (t.price || 0), 0);
-        const hasSync = typeof syncedTotalAmount === "number" || (chartTotal > 0 && (!p.totalAmount || p.totalAmount === 0));
-        const newTotal = typeof syncedTotalAmount === "number" ? syncedTotalAmount : (hasSync ? chartTotal : p.totalAmount);
-        const currentPaid = p.paidAmount || 0;
-        const newDebt = hasSync
-          ? Math.max(0, (newTotal || 0) - currentPaid)
-          : p.debtAmount;
-
         targetUpdatedPatient = {
           ...p,
           teeth,
-          ...(hasSync ? { totalAmount: newTotal, debtAmount: newDebt } : {}),
         };
         return targetUpdatedPatient;
       }
@@ -565,10 +555,6 @@ export default function DashboardPage() {
 
     setPatients(updated);
     setDentalPatient((prev) => (prev && prev.id === patientId ? targetUpdatedPatient : prev));
-
-    if (typeof syncedTotalAmount === "number") {
-      showToast(`⚡ Dental fees (${formatIQD(syncedTotalAmount)}) synced to patient bill!`);
-    }
 
     if (targetUpdatedPatient) {
       try {
@@ -747,12 +733,57 @@ export default function DashboardPage() {
 
   // Filter and sort patients
   const filteredAndSortedPatients = useMemo(() => {
+    const rawQuery = searchQuery.trim();
+    const q = rawQuery.toLowerCase();
+    const cleanSearchDigits = rawQuery.replace(/\D/g, "");
+
     return patients
       .filter((patient) => {
-        const matchesSearch =
-          patient.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          (patient.notes &&
-            patient.notes.toLowerCase().includes(searchQuery.toLowerCase()));
+        if (rawQuery) {
+          // 1. Match patient name
+          const matchName = patient.name.toLowerCase().includes(q);
+
+          // 2. Match patient phone (supports full formatted string or pure digits)
+          const patientPhoneClean = (patient.phone || "").replace(/\D/g, "");
+          const matchPhone = Boolean(
+            (patient.phone && patient.phone.toLowerCase().includes(q)) ||
+            (cleanSearchDigits.length >= 2 && patientPhoneClean.includes(cleanSearchDigits))
+          );
+
+          // 3. Match patient general notes
+          const matchNotes = Boolean(
+            patient.notes && patient.notes.toLowerCase().includes(q)
+          );
+
+          // 4. Match tooth number or tooth condition/material/procedure
+          const matchTeeth = Boolean(
+            patient.teeth?.some((t) => {
+              const toothNum = String(t.toothNumber);
+              return (
+                toothNum === q ||
+                toothNum.includes(q) ||
+                (t.status && t.status.toLowerCase().includes(q)) ||
+                (t.procedure && t.procedure.toLowerCase().includes(q)) ||
+                (t.material && t.material.toLowerCase().includes(q)) ||
+                (t.notes && t.notes.toLowerCase().includes(q))
+              );
+            })
+          );
+
+          // 5. Match treatment history titles or past visit notes
+          const matchHistory = Boolean(
+            patient.history?.some(
+              (h) =>
+                (h.title && h.title.toLowerCase().includes(q)) ||
+                (h.notes && h.notes.toLowerCase().includes(q))
+            )
+          );
+
+          const matchesSearch =
+            matchName || matchPhone || matchNotes || matchTeeth || matchHistory;
+
+          if (!matchesSearch) return false;
+        }
         const matchesGender =
           genderFilter === "all" || patient.gender === genderFilter;
 
@@ -773,7 +804,7 @@ export default function DashboardPage() {
           (patient.date && patient.date.startsWith(monthFilter)) ||
           patient.history?.some((h) => h.date && h.date.startsWith(monthFilter));
 
-        return matchesSearch && matchesGender && matchesPayment && matchesMonth;
+        return matchesGender && matchesPayment && matchesMonth;
       })
       .sort((a, b) => {
         const dateA = a.date || "";
@@ -834,7 +865,7 @@ export default function DashboardPage() {
       />
 
       {/* Main Container */}
-      <main className="flex-1 w-full max-w-full px-3 sm:px-6 xl:px-10 pt-3 sm:pt-6 pb-28 md:pb-8">
+      <main className="flex-1 w-full max-w-full px-3 sm:px-6 xl:px-10 pt-3 sm:pt-6 pb-32 md:pb-12">
         {activeTab === "appointments" ? (
           /* ================= APPOINTMENTS FULL MONTH TAB ================= */
           <AppointmentsView
@@ -882,30 +913,41 @@ export default function DashboardPage() {
 
             {/* Filter and Control Toolbar (Mobbin-style segmented controls) */}
             <div className="mb-4 sm:mb-6 flex flex-col md:flex-row gap-2.5 sm:gap-3 md:items-center md:justify-between">
-              {/* Left: Search input */}
-              <div className="relative flex-1 max-w-full md:max-w-md">
-                <div className="absolute inset-y-0 left-0 rtl:left-auto rtl:right-0 pl-3.5 rtl:pl-0 rtl:pr-3.5 flex items-center pointer-events-none text-slate-400">
-                  <Search className="w-4 h-4" />
+              {/* Left: Search input & Add Patient CTA */}
+              <div className="flex items-center gap-2 flex-1 max-w-full md:max-w-lg">
+                <div className="relative flex-1">
+                  <div className="absolute inset-y-0 left-0 rtl:left-auto rtl:right-0 pl-3.5 rtl:pl-0 rtl:pr-3.5 flex items-center pointer-events-none text-slate-400">
+                    <Search className="w-4 h-4" />
+                  </div>
+                  <input
+                    type="text"
+                    placeholder={t.searchPlaceholder}
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full pl-10 pr-9 rtl:pl-9 rtl:pr-10 py-2.5 rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500/25 focus:border-sky-500 shadow-2xs transition-all"
+                  />
+                  {searchQuery && (
+                    <button
+                      onClick={() => setSearchQuery("")}
+                      className="absolute right-3 rtl:right-auto rtl:left-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs w-5 h-5 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 transition-colors cursor-pointer"
+                    >
+                      ×
+                    </button>
+                  )}
                 </div>
-                <input
-                  type="text"
-                  placeholder={t.searchPlaceholder}
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-9 rtl:pl-9 rtl:pr-10 py-2.5 rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/25 focus:border-indigo-500 shadow-2xs transition-all"
-                />
-                {searchQuery && (
-                  <button
-                    onClick={() => setSearchQuery("")}
-                    className="absolute right-3 rtl:right-auto rtl:left-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs w-5 h-5 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 transition-colors cursor-pointer"
-                  >
-                    ×
-                  </button>
-                )}
+
+                <button
+                  type="button"
+                  onClick={() => setIsModalOpen(true)}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-2xl text-xs font-bold bg-sky-600 hover:bg-sky-700 dark:bg-sky-500 dark:hover:bg-sky-600 text-white shadow-md shadow-sky-600/20 active:scale-95 transition-all cursor-pointer whitespace-nowrap flex-shrink-0"
+                >
+                  <UserPlus className="w-4 h-4" />
+                  <span className="hidden sm:inline">{t.addPatient}</span>
+                </button>
               </div>
 
               {/* Right: Horizontally swipeable filter chips on mobile */}
-              <div className="overflow-x-auto no-scrollbar flex items-center gap-2 pb-1 -mx-1 px-1 sm:mx-0 sm:px-0 sm:flex-wrap">
+              <div className="overflow-x-auto whitespace-nowrap no-scrollbar flex items-center gap-2 pb-1 -mx-1 px-1 sm:mx-0 sm:px-0 sm:flex-wrap">
                 {/* Gender Filters */}
                 <div className="inline-flex rounded-2xl border border-slate-200/90 dark:border-slate-800 p-0.5 bg-slate-100/70 dark:bg-slate-900/80 backdrop-blur-md shadow-2xs flex-shrink-0">
                   <button
@@ -991,7 +1033,7 @@ export default function DashboardPage() {
 
                 {/* Month / Billing Month Filter */}
                 <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md shadow-2xs flex-shrink-0">
-                  <Calendar className="w-3.5 h-3.5 text-indigo-500 flex-shrink-0" />
+                  <Calendar className="w-3.5 h-3.5 text-sky-500 flex-shrink-0" />
                   <label htmlFor="month-select" className="sr-only">Filter by Month</label>
                   <select
                     id="month-select"
@@ -1027,7 +1069,7 @@ export default function DashboardPage() {
                   }`}
                   className="inline-flex items-center gap-1.5 px-3 py-2 rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md hover:bg-slate-50 dark:hover:bg-slate-800/60 text-xs font-bold text-slate-700 dark:text-slate-300 shadow-2xs transition-all cursor-pointer whitespace-nowrap flex-shrink-0"
                 >
-                  <ArrowUpDown className="w-3.5 h-3.5 text-indigo-500" />
+                  <ArrowUpDown className="w-3.5 h-3.5 text-sky-500" />
                   <span>
                     {sortOrder === "desc" ? t.newest : t.oldest}
                   </span>
@@ -1066,7 +1108,7 @@ export default function DashboardPage() {
             {/* Patients Content Section */}
             {filteredAndSortedPatients.length === 0 ? (
               <div className="p-12 text-center rounded-3xl border border-dashed border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/30">
-                <div className="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-950/50 text-indigo-500 mx-auto flex items-center justify-center mb-3">
+                <div className="w-12 h-12 rounded-2xl bg-sky-50 dark:bg-sky-950/50 text-sky-500 mx-auto flex items-center justify-center mb-3">
                   <Filter className="w-6 h-6" />
                 </div>
                 <h3 className="text-base font-semibold text-slate-800 dark:text-slate-200">
@@ -1094,7 +1136,7 @@ export default function DashboardPage() {
                     <div className="flex flex-wrap items-center justify-center gap-3">
                       <button
                         onClick={() => setIsModalOpen(true)}
-                        className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white shadow-xs cursor-pointer"
+                        className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold bg-sky-600 hover:bg-sky-700 dark:bg-sky-500 dark:hover:bg-sky-600 text-white shadow-xs cursor-pointer"
                       >
                         <UserPlus className="w-4 h-4" />
                         <span>{t.addPatient}</span>
@@ -1102,9 +1144,9 @@ export default function DashboardPage() {
                       {isDoctor && (
                         <button
                           onClick={() => setIsImportModalOpen(true)}
-                          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold border border-emerald-300 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 shadow-xs cursor-pointer"
+                          className="hidden md:inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 shadow-xs cursor-pointer"
                         >
-                          <Database className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                          <Database className="w-4 h-4 text-sky-500" />
                           <span>{t.importDatabase}</span>
                         </button>
                       )}
@@ -1167,18 +1209,6 @@ export default function DashboardPage() {
           </>
         )}
 
-        {/* Mobile Floating Action Button (FAB) for Adding Patient */}
-        {activeTab === "patients" && (
-          <button
-            type="button"
-            onClick={() => setIsModalOpen(true)}
-            className="sm:hidden fixed bottom-20 right-4 rtl:right-auto rtl:left-4 z-30 flex items-center gap-2 px-4 py-3 rounded-full bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-bold shadow-xl shadow-indigo-600/35 active:scale-95 transition-all cursor-pointer"
-            aria-label={t.addPatient}
-          >
-            <UserPlus className="w-5 h-5 stroke-[2.2]" />
-            <span className="text-xs font-bold">{t.addPatient}</span>
-          </button>
-        )}
       </main>
 
       {/* Add Patient Modal */}
@@ -1296,7 +1326,7 @@ export default function DashboardPage() {
                 <button
                   type="button"
                   onClick={handleUndoDeletePatient}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white font-bold text-xs shadow-md shadow-emerald-500/20 active:scale-95 transition-all cursor-pointer"
+                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md shadow-emerald-600/20 active:scale-95 transition-all cursor-pointer"
                 >
                   <RotateCcw className="w-3.5 h-3.5" />
                   <span>{t.undo}</span>

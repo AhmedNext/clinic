@@ -57,6 +57,7 @@ export interface Translations {
   time: string;
   setTime: string;
   paidLabel: string;
+  quickPickFees: string;
   owesLabel: string;
   fullyPaid: string;
   call: string;
@@ -196,8 +197,11 @@ export interface Translations {
   supplierPlaceholder: string;
   totalMoneySpent: string;
   addPatientsOrExpensesToView: string;
+  noExpensesRecorded: string;
   totalExpenses: string;
   netProfit: string;
+  profitMargin: string;
+  currentMonthExpenses: string;
   category: string;
   categoryMaterials: string;
   categoryRent: string;
@@ -207,6 +211,9 @@ export interface Translations {
 
   // Appointments View
   scheduleSubtitle: string;
+  monthView: string;
+  dayView: string;
+  newAppointment: string;
   booked: string;
   scheduled: string;
   doneStatus: string;
@@ -326,6 +333,10 @@ export interface Translations {
   importSuccess: string;
   noFileSelected: string;
   patientsFoundInCsv: string;
+  theme: string;
+  darkMode: string;
+  lightMode: string;
+  language: string;
 }
 
 export const translations: Record<Language, Translations> = {
@@ -384,8 +395,9 @@ export const translations: Record<Language, Translations> = {
     visits: "visits",
     date: "Date",
     time: "Time (Clock)",
-    setTime: "Set Time 🕒",
+    setTime: "Set Time",
     paidLabel: "Paid",
+    quickPickFees: "Quick-Pick (IQD)",
     owesLabel: "Owes",
     fullyPaid: "Fully Paid",
     call: "Call",
@@ -502,13 +514,13 @@ export const translations: Record<Language, Translations> = {
     fitScreen: "Fit Screen",
     zoom150: "Zoom 150%",
     tapToothToMark: "Tap any tooth crown to mark",
-    chartedTreatmentsAndFees: "Charted Treatments & Fees",
+    chartedTreatmentsAndFees: "Charted Treatments",
 
     // Materials & Expenses View
     materialsSubtitle: "Track clinic purchases, bills, rents, and laboratory fees",
     totalMaterialSpendCard: "Total Expenses",
     totalSpendSubtitle: "All clinic expenses combined",
-    totalPurchases: "Total Expenses",
+    totalPurchases: "TOTAL PURCHASES",
     records: "records",
     supplierReceiptsLogged: "Expense receipts logged",
     clinicNetWorthImpact: "Clinic Net Profit Impact",
@@ -525,8 +537,11 @@ export const translations: Record<Language, Translations> = {
     supplierPlaceholder: "e.g. Composite, Clinic Rent, Electricity, Lab fees...",
     totalMoneySpent: "3. Amount (IQD) *",
     addPatientsOrExpensesToView: "Add patients or expenses to view monthly reports.",
+    noExpensesRecorded: "No expenses recorded yet. Track clinic rent, lab fees, utility bills, or dental material purchases.",
     totalExpenses: "Total Expenses",
     netProfit: "Net Profit",
+    profitMargin: "Profit Margin",
+    currentMonthExpenses: "CURRENT MONTH EXPENSES",
     category: "Category",
     categoryMaterials: "Dental Materials",
     categoryRent: "Clinic Rent",
@@ -535,12 +550,15 @@ export const translations: Record<Language, Translations> = {
     categoryOther: "Other",
 
     // Appointments View
-    scheduleSubtitle: "Interactive Full Month Schedule • Click any day to book",
+    scheduleSubtitle: "Interactive Schedule • Click any day to book",
+    monthView: "Month",
+    dayView: "Day",
+    newAppointment: "+ New Appointment",
     booked: "Booked",
     scheduled: "Scheduled",
     doneStatus: "Done",
     today: "Today",
-    directBookToday: "Direct Book Today",
+    directBookToday: "+ New Appointment",
     addAppointment: "Add Appointment",
     quickClinicTimes: "Quick Clinic Times",
     clearTime: "Clear Time",
@@ -655,6 +673,10 @@ export const translations: Record<Language, Translations> = {
     importSuccess: "Database imported successfully!",
     noFileSelected: "Please select a CSV file first.",
     patientsFoundInCsv: "patients detected in file",
+    theme: "Theme",
+    darkMode: "Dark Mode",
+    lightMode: "Light Mode",
+    language: "Language",
   },
 
   ar: {
@@ -712,8 +734,9 @@ export const translations: Record<Language, Translations> = {
     visits: "زيارات",
     date: "التاريخ",
     time: "الوقت (الساعة)",
-    setTime: "تحديد الوقت 🕒",
+    setTime: "تحديد الوقت",
     paidLabel: "المدفوع",
+    quickPickFees: "مبالغ شائعة (د.ع)",
     owesLabel: "متبقي",
     fullyPaid: "تم الدفع بالكامل",
     call: "اتصال",
@@ -830,13 +853,13 @@ export const translations: Record<Language, Translations> = {
     fitScreen: "ملء الشاشة",
     zoom150: "تكبير 150%",
     tapToothToMark: "اضغط على تاج السن للبدء",
-    chartedTreatmentsAndFees: "العلاجات والأسعار المسجلة",
+    chartedTreatmentsAndFees: "العلاجات المسجلة",
 
     // Materials & Expenses View
     materialsSubtitle: "متابعة مصاريف العيادة، الإيجار، الفواتير، ومختبر الأسنان",
     totalMaterialSpendCard: "إجمالي المصاريف",
     totalSpendSubtitle: "جميع مصاريف العيادة مجمعة",
-    totalPurchases: "إجمالي المصاريف",
+    totalPurchases: "إجمالي المشتريات",
     records: "سجلات",
     supplierReceiptsLogged: "وصولات وفواتير مسجلة",
     clinicNetWorthImpact: "تأثير المصاريف على صافي الأرباح",
@@ -853,8 +876,11 @@ export const translations: Record<Language, Translations> = {
     supplierPlaceholder: "مثال: مواد أسنان، إيجار، كهرباء، مختبر...",
     totalMoneySpent: "3. المبلغ المنفق (د.ع) *",
     addPatientsOrExpensesToView: "أضف مرضى أو مصاريف لعرض التقارير الشهرية.",
+    noExpensesRecorded: "لم يتم تسجيل أي مصاريف بعد. تابع إيجار العيادة، أجور المختبر، فواتير الخدمات، أو مشتريات مواد الأسنان.",
     totalExpenses: "إجمالي المصاريف",
     netProfit: "صافي الأرباح",
+    profitMargin: "هامش الربح",
+    currentMonthExpenses: "مصاريف الشهر الحالي",
     category: "الفئة",
     categoryMaterials: "مواد الأسنان",
     categoryRent: "إيجار العيادة",
@@ -863,12 +889,15 @@ export const translations: Record<Language, Translations> = {
     categoryOther: "أخرى",
 
     // Appointments View
-    scheduleSubtitle: "جدول المواعيد الشهري التفاعلي • اضغط على أي يوم للحجز",
+    scheduleSubtitle: "جدول المواعيد التفاعلي • اضغط على أي يوم للحجز",
+    monthView: "شهري",
+    dayView: "يومي",
+    newAppointment: "+ موعد جديد",
     booked: "محجوز",
     scheduled: "قيد الانتظار",
     doneStatus: "مكتمل",
     today: "اليوم",
-    directBookToday: "حجز مباشر لليوم",
+    directBookToday: "+ موعد جديد",
     addAppointment: "إضافة موعد",
     quickClinicTimes: "أوقات العيادة السريعة",
     clearTime: "مسح الوقت",
@@ -983,6 +1012,10 @@ export const translations: Record<Language, Translations> = {
     importSuccess: "تم استيراد قاعدة البيانات بنجاح!",
     noFileSelected: "يرجى اختيار ملف CSV أولاً.",
     patientsFoundInCsv: "مريض تم العثور عليهم في الملف",
+    theme: "المظهر",
+    darkMode: "الوضع الليلي",
+    lightMode: "الوضع الفاتح",
+    language: "اللغة",
   },
 
   ku: {
@@ -1040,8 +1073,9 @@ export const translations: Record<Language, Translations> = {
     visits: "سەردان",
     date: "بەروار",
     time: "کاتژمێر",
-    setTime: "دیاریکردنی کات 🕒",
+    setTime: "دیاریکردنی کات",
     paidLabel: "دراوە",
+    quickPickFees: "بڕە باوەکان (د.ع)",
     owesLabel: "ماوە",
     fullyPaid: "تەواوی پارەکە دراوە",
     call: "پەیوەندی",
@@ -1158,13 +1192,13 @@ export const translations: Record<Language, Translations> = {
     fitScreen: "ڕێکخستنی شاشە",
     zoom150: "گەورەکردن 150%",
     tapToothToMark: "دەست لە تاجی ددان بدە بۆ دیاریکردن",
-    chartedTreatmentsAndFees: "چارەسەر و نرخە تۆمارکراوەکان",
+    chartedTreatmentsAndFees: "چارەسەرە تۆمارکراوەکان",
 
     // Materials & Expenses View
     materialsSubtitle: "تۆمارکردنی کڕینی کەرەستە، کرێ، کارەبا و خەرجییەکانی تاقیگە",
     totalMaterialSpendCard: "کۆی خەرجییەکان",
     totalSpendSubtitle: "سەرجەم خەرجییەکانی نۆرینگە پێکەوە",
-    totalPurchases: "کۆی خەرجییەکان",
+    totalPurchases: "کۆی کڕین و پسوولەکان",
     records: "تۆمار",
     supplierReceiptsLogged: "وەسڵ و پسوولەی تۆمارکراو",
     clinicNetWorthImpact: "کاریگەری لەسەر قازانجی نۆرینگە",
@@ -1181,8 +1215,11 @@ export const translations: Record<Language, Translations> = {
     supplierPlaceholder: "نموونە: کەرەستەی ددان، کرێی کلینیک، کارەبا، مەعمەل...",
     totalMoneySpent: "3. بڕی پارەی دراو (د.ع) *",
     addPatientsOrExpensesToView: "نەخۆش یان خەرجی زیاد بکە بۆ بینینی ڕاپۆرتی مانگانە.",
+    noExpensesRecorded: "تا ئێستا هیچ خەرجییەک تۆمار نەکراوە. چاودێری کرێی کلینیک، تاقیگە، کارەبا، یان کەرەستەی ددان بکە.",
     totalExpenses: "کۆی خەرجییەکان",
     netProfit: "قازانجی سافی",
+    profitMargin: "ڕێژەی قازانج",
+    currentMonthExpenses: "خەرجییەکانی ئەم مانگە",
     category: "جۆر / پۆل",
     categoryMaterials: "کەرەستە",
     categoryRent: "کرێی کلینیک",
@@ -1191,12 +1228,15 @@ export const translations: Record<Language, Translations> = {
     categoryOther: "هیتر",
 
     // Appointments View
-    scheduleSubtitle: "خشتەی مانگانەی مەوعیدەکان • کلیک لە هەر ڕۆژێک بکە بۆ دانانی کات",
+    scheduleSubtitle: "خشتەی مەوعیدەکان • کلیک لە هەر ڕۆژێک بکە بۆ دانانی کات",
+    monthView: "مانگانە",
+    dayView: "ڕۆژانە",
+    newAppointment: "+ نۆرەی نوێ",
     booked: "گیراوە",
     scheduled: "دانراو",
     doneStatus: "تەواوبوو",
     today: "ئەمڕۆ",
-    directBookToday: "دانانی مەوعید بۆ ئەمڕۆ",
+    directBookToday: "+ نۆرەی نوێ",
     addAppointment: "مەوعیدی نوێ",
     quickClinicTimes: "کاتە ئاساییەکانی نۆرینگە",
     clearTime: "سڕینەوەی کات",
@@ -1311,6 +1351,10 @@ export const translations: Record<Language, Translations> = {
     importSuccess: "بنکەی داتا بە سەرکەوتوویی هاوردە کرا!",
     noFileSelected: "تکایە سەرەتا فایلێکی CSV هەڵبژێرە.",
     patientsFoundInCsv: "نەخۆش دۆزرایەوە لە فایلەکەدا",
+    theme: "ڕووکار",
+    darkMode: "دۆخی تاریک",
+    lightMode: "دۆخی ڕووناک",
+    language: "زمان",
   },
 };
 

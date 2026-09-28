@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { X, Calendar, Clock, User, FileText, CheckCircle2, Banknote, Phone, Check, Calculator } from "lucide-react";
-import { Gender, Patient, calculateDebt, formatIQD } from "@/types/patient";
+import { Gender, Patient, calculateDebt, formatIQD, formatNumberWithCommas, parseCleanNumber, QUICK_IQD_CHIPS } from "@/types/patient";
 import { ToothRecord } from "@/types/dental";
 import { DentalChart } from "./dental/DentalChart";
 import { PatientAvatar } from "./PatientAvatar";
@@ -32,28 +32,13 @@ export function EditPatientModal({
   const [time, setTime] = useState("");
   const [isClockPickerOpen, setIsClockPickerOpen] = useState(false);
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
-  const [totalAmount, setTotalAmount] = useState<string>("0");
   const [paidAmount, setPaidAmount] = useState<string>("0");
   const [debtAmount, setDebtAmount] = useState<string>("0");
-  const [isCustomDebt, setIsCustomDebt] = useState<boolean>(false);
   const [notes, setNotes] = useState("");
   const [medicalHistory, setMedicalHistory] = useState("");
   const [teeth, setTeeth] = useState<ToothRecord[]>([]);
   const [showTeethChart, setShowTeethChart] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  // Sync pricing when teeth change in dental chart
-  const syncTeethWithPricing = (updatedTeeth: ToothRecord[]) => {
-    setTeeth(updatedTeeth);
-    const chartTotal = updatedTeeth.reduce((s, r) => s + (r.price || 0), 0);
-    if (chartTotal > 0) {
-      setTotalAmount(String(chartTotal));
-      if (!isCustomDebt) {
-        const p = parseFloat(paidAmount) || 0;
-        setDebtAmount(String(Math.max(0, chartTotal - p)));
-      }
-    }
-  };
 
   // Teeth handlers
   const handleUpdateTooth = (record: ToothRecord) => {
@@ -61,7 +46,7 @@ export function EditPatientModal({
     const updated = exists
       ? teeth.map((t) => (t.toothNumber === record.toothNumber ? record : t))
       : [...teeth, record];
-    syncTeethWithPricing(updated);
+    setTeeth(updated);
   };
 
   const handleUpdateMultipleTeeth = (records: ToothRecord[]) => {
@@ -69,18 +54,16 @@ export function EditPatientModal({
     for (const rec of records) {
       map.set(rec.toothNumber, rec);
     }
-    syncTeethWithPricing(Array.from(map.values()));
+    setTeeth(Array.from(map.values()));
   };
 
   const handleRemoveTooth = (toothNumber: number) => {
-    const updated = teeth.filter((t) => t.toothNumber !== toothNumber);
-    syncTeethWithPricing(updated);
+    setTeeth(teeth.filter((t) => t.toothNumber !== toothNumber));
   };
 
   const handleRemoveMultipleTeeth = (toothNumbers: number[]) => {
     const set = new Set(toothNumbers);
-    const updated = teeth.filter((t) => !set.has(t.toothNumber));
-    syncTeethWithPricing(updated);
+    setTeeth(teeth.filter((t) => !set.has(t.toothNumber)));
   };
 
   // Synchronize form values with selected patient when modal opens
@@ -94,11 +77,8 @@ export function EditPatientModal({
       setTime(patient.time || "");
       const paid = patient.paidAmount ?? 0;
       const debt = calculateDebt(patient.totalAmount, patient.paidAmount, patient.debtAmount);
-      const total = patient.totalAmount ?? (paid + debt);
-      setTotalAmount(total.toString());
-      setPaidAmount(paid.toString());
-      setDebtAmount(debt.toString());
-      setIsCustomDebt(false);
+      setPaidAmount(paid > 0 ? paid.toLocaleString("en-US") : "0");
+      setDebtAmount(debt > 0 ? debt.toLocaleString("en-US") : "0");
       setNotes(patient.notes || "");
       setMedicalHistory(patient.medicalHistory || "");
       setTeeth(patient.teeth || []);
@@ -120,38 +100,6 @@ export function EditPatientModal({
 
   if (!isOpen || !patient) return null;
 
-  const handleTotalChange = (val: string) => {
-    setTotalAmount(val);
-    if (!isCustomDebt) {
-      const tot = parseFloat(val) || 0;
-      const p = parseFloat(paidAmount) || 0;
-      setDebtAmount(String(Math.max(0, tot - p)));
-    }
-  };
-
-  const handlePaidChange = (val: string) => {
-    setPaidAmount(val);
-    if (!isCustomDebt) {
-      const tot = parseFloat(totalAmount) || 0;
-      const p = parseFloat(val) || 0;
-      setDebtAmount(String(Math.max(0, tot - p)));
-    }
-  };
-
-  const handlePaidInFull = () => {
-    const tot = parseFloat(totalAmount) || 0;
-    setPaidAmount(String(tot));
-    setDebtAmount("0");
-    setIsCustomDebt(false);
-  };
-
-  const handleUnpaid = () => {
-    setPaidAmount("0");
-    const tot = parseFloat(totalAmount) || 0;
-    setDebtAmount(String(tot));
-    setIsCustomDebt(false);
-  };
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) {
@@ -163,20 +111,8 @@ export function EditPatientModal({
       return;
     }
 
-    const parsedTotal = parseFloat(totalAmount) || 0;
-    const parsedPaid = parseFloat(paidAmount) || 0;
-    let parsedDebt = isCustomDebt
-      ? (parseFloat(debtAmount) || 0)
-      : Math.max(0, parsedTotal - parsedPaid);
-
-    const chartTotal = teeth.reduce((s, r) => s + (r.price || 0), 0);
-    const effectiveTotal = parsedTotal > 0
-      ? parsedTotal
-      : (chartTotal > 0 ? chartTotal : parsedPaid + parsedDebt);
-
-    if (!isCustomDebt && parsedTotal === 0 && chartTotal > 0) {
-      parsedDebt = Math.max(0, chartTotal - parsedPaid);
-    }
+    const parsedPaid = parseCleanNumber(paidAmount);
+    const parsedDebt = parseCleanNumber(debtAmount);
 
     onUpdatePatient({
       ...patient,
@@ -186,12 +122,12 @@ export function EditPatientModal({
       phone: phone.trim() || undefined,
       date,
       time: time.trim() || undefined,
-      totalAmount: effectiveTotal,
+      totalAmount: parsedPaid + parsedDebt,
       paidAmount: parsedPaid,
       debtAmount: parsedDebt,
       notes: notes.trim() || undefined,
       medicalHistory: medicalHistory.trim() || undefined,
-      teeth,
+      teeth: teeth.length > 0 ? teeth : undefined,
     });
     onClose();
   };
@@ -432,162 +368,89 @@ export function EditPatientModal({
             </div>
           </div>
 
-          {/* Simplified Financial & Payment Card */}
+          {/* Financial: Paid & Debt */}
           <div className="p-3.5 sm:p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-gradient-to-b from-slate-50/80 to-slate-100/40 dark:from-slate-950/60 dark:to-slate-900/40 space-y-3 shadow-xs">
-            {/* Header */}
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
-                <Banknote className="w-4 h-4 text-indigo-500" />
-                <span>{t.totalTreatmentPrice} & {t.paidLabel}</span>
-              </span>
-              {teeth.reduce((s, r) => s + (r.price || 0), 0) > 0 && (
-                <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/60 px-2 py-0.5 rounded-full border border-indigo-200/60 dark:border-indigo-800/60">
-                  <span>🦷</span>
-                  <span>{t.syncedFromDentalChart}</span>
-                </span>
-              )}
-            </div>
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
+              <Banknote className="w-4 h-4 text-indigo-500" />
+              <span>{t.paidLabel} & {t.remainingDebt}</span>
+            </span>
 
-            {/* Step 1 & 2: Total Price and Amount Paid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {/* Total Treatment Fee */}
+            <div className="grid grid-cols-2 gap-3">
+              {/* Paid */}
               <div>
                 <label
-                  htmlFor="edit-patient-total"
-                  className="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1"
+                  htmlFor="edit-patient-paid"
+                  className="block text-[11px] font-semibold text-emerald-700 dark:text-emerald-400 mb-1"
                 >
-                  {t.totalTreatmentPrice} (IQD)
+                  {t.paidLabel} (IQD)
                 </label>
                 <input
-                  id="edit-patient-total"
-                  type="number"
-                  min="0"
-                  step="1000"
-                  placeholder="50000"
-                  value={totalAmount}
-                  onChange={(e) => handleTotalChange(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700/80 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-bold text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+                  id="edit-patient-paid"
+                  type="text"
+                  inputMode="numeric"
+                  placeholder="0"
+                  value={paidAmount}
+                  onChange={(e) => setPaidAmount(formatNumberWithCommas(e.target.value))}
+                  className="w-full px-3 py-2 rounded-xl border border-emerald-200 dark:border-emerald-900/60 bg-white dark:bg-slate-900 text-emerald-700 dark:text-emerald-400 font-bold text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-mono"
                 />
               </div>
 
-              {/* Amount Paid Today */}
+              {/* Debt */}
               <div>
-                <div className="flex items-center justify-between mb-1">
-                  <label
-                    htmlFor="edit-patient-paid"
-                    className="block text-[11px] font-semibold text-emerald-700 dark:text-emerald-400"
-                  >
-                    {t.amountPaidToday} (IQD)
-                  </label>
-                  {/* Quick-action 1-click shortcuts */}
-                  <div className="flex items-center gap-1">
-                    <button
-                      type="button"
-                      onClick={handlePaidInFull}
-                      title={t.paidInFullBtn}
-                      className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-100 hover:bg-emerald-200 dark:bg-emerald-950/80 dark:hover:bg-emerald-900 text-emerald-800 dark:text-emerald-300 border border-emerald-300/80 dark:border-emerald-800 transition-colors cursor-pointer"
-                    >
-                      {t.paidInFullBtn}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleUnpaid}
-                      title={t.unpaidBtn}
-                      className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-slate-200/70 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
-                    >
-                      {t.unpaidBtn}
-                    </button>
-                  </div>
-                </div>
+                <label
+                  htmlFor="edit-patient-debt"
+                  className="block text-[11px] font-semibold text-rose-700 dark:text-rose-400 mb-1"
+                >
+                  {t.remainingDebt} (IQD)
+                </label>
                 <input
-                  id="edit-patient-paid"
-                  type="number"
-                  min="0"
-                  step="1000"
+                  id="edit-patient-debt"
+                  type="text"
+                  inputMode="numeric"
                   placeholder="0"
-                  value={paidAmount}
-                  onChange={(e) => handlePaidChange(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl border border-emerald-200 dark:border-emerald-900/60 bg-white dark:bg-slate-900 text-emerald-700 dark:text-emerald-400 font-bold text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
+                  value={debtAmount}
+                  onChange={(e) => setDebtAmount(formatNumberWithCommas(e.target.value))}
+                  className="w-full px-3 py-2 rounded-xl border border-rose-200 dark:border-rose-900/60 bg-white dark:bg-slate-900 text-rose-700 dark:text-rose-400 font-bold text-sm focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all font-mono"
                 />
               </div>
             </div>
 
-            {/* Step 3: Auto-Calculated Remaining Balance / Status Badge */}
-            <div className="pt-0.5">
-              {!isCustomDebt ? (
-                <div
-                  className={`p-2.5 rounded-xl border flex items-center justify-between text-xs transition-all ${
-                    (parseFloat(debtAmount) || 0) === 0 && (parseFloat(totalAmount) || 0) > 0
-                      ? "bg-emerald-50/90 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800/80 text-emerald-800 dark:text-emerald-300"
-                      : (parseFloat(debtAmount) || 0) > 0
-                      ? "bg-amber-50/90 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800/80 text-amber-900 dark:text-amber-200"
-                      : "bg-slate-100/70 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400"
-                  }`}
-                >
-                  <div className="flex items-center gap-2">
-                    {(parseFloat(debtAmount) || 0) === 0 && (parseFloat(totalAmount) || 0) > 0 ? (
-                      <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
-                    ) : (
-                      <Calculator className="w-4 h-4 text-slate-400 dark:text-slate-500 flex-shrink-0" />
-                    )}
-                    <div>
-                      <div className="font-semibold flex items-center gap-1.5">
-                        <span>{t.remainingDebt}:</span>
-                        <span className="font-mono font-bold text-sm">
-                          {formatIQD(parseFloat(debtAmount) || 0)}
-                        </span>
-                        <span className="text-[10px] opacity-75 font-normal">
-                          ({t.autoCalculated})
-                        </span>
-                      </div>
-                      <p className="text-[10px] opacity-80">
-                        {(parseFloat(debtAmount) || 0) === 0 && (parseFloat(totalAmount) || 0) > 0
-                          ? t.noRemainingDebt
-                          : `${formatIQD(parseFloat(totalAmount) || 0)} - ${formatIQD(parseFloat(paidAmount) || 0)}`}
-                      </p>
-                    </div>
-                  </div>
+            {/* Quick-Pick Chips: [ 10,000 ] [ 15,000 ] [ 25,000 ] [ 50,000 ] [ 100,000 ] */}
+            <div className="pt-2 border-t border-slate-200/60 dark:border-slate-800">
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                  ⚡ {t.quickPickFees}
+                </span>
+                <span className="text-[10px] text-slate-400">
+                  {t.paidLabel} (1-tap)
+                </span>
+              </div>
+              <div className="flex items-center gap-1.5 flex-wrap">
+                {QUICK_IQD_CHIPS.map((chipVal) => (
+                  <button
+                    key={chipVal}
+                    type="button"
+                    onClick={() => setPaidAmount(chipVal.toLocaleString("en-US"))}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-mono font-bold transition-all cursor-pointer ${
+                      parseCleanNumber(paidAmount) === chipVal
+                        ? "bg-emerald-600 text-white shadow-xs ring-2 ring-emerald-500/30 scale-[1.03]"
+                        : "bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-800 hover:border-emerald-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50/50 dark:hover:bg-emerald-950/30"
+                    }`}
+                  >
+                    {chipVal.toLocaleString()}
+                  </button>
+                ))}
+                {paidAmount !== "0" && paidAmount !== "" && (
                   <button
                     type="button"
-                    onClick={() => setIsCustomDebt(true)}
-                    className="text-[10px] font-semibold text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 underline cursor-pointer"
+                    onClick={() => setPaidAmount("0")}
+                    className="px-2 py-1 rounded-lg text-xs font-semibold text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
+                    title="0 IQD"
                   >
-                    {t.manualDebtOverride}
+                    0
                   </button>
-                </div>
-              ) : (
-                <div className="p-2.5 rounded-xl border border-rose-200 dark:border-rose-900/60 bg-rose-50/40 dark:bg-rose-950/20 space-y-1.5">
-                  <div className="flex items-center justify-between text-xs">
-                    <label
-                      htmlFor="edit-patient-debt-override"
-                      className="font-semibold text-rose-700 dark:text-rose-400 flex items-center gap-1"
-                    >
-                      <span>{t.remainingDebt} ({t.manualDebtOverride})</span>
-                    </label>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsCustomDebt(false);
-                        const tot = parseFloat(totalAmount) || 0;
-                        const p = parseFloat(paidAmount) || 0;
-                        setDebtAmount(String(Math.max(0, tot - p)));
-                      }}
-                      className="text-[10px] font-semibold text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer"
-                    >
-                      {t.autoCalculated} ↺
-                    </button>
-                  </div>
-                  <input
-                    id="edit-patient-debt-override"
-                    type="number"
-                    min="0"
-                    step="1000"
-                    value={debtAmount}
-                    onChange={(e) => setDebtAmount(e.target.value)}
-                    className="w-full px-2.5 py-1.5 rounded-lg border border-rose-200 dark:border-rose-900/60 bg-white dark:bg-slate-900 text-rose-600 dark:text-rose-400 font-semibold text-sm focus:outline-none focus:ring-2 focus:ring-rose-500/20"
-                  />
-                </div>
-              )}
+                )}
+              </div>
             </div>
           </div>
 

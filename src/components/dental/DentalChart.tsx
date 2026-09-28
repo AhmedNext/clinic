@@ -10,7 +10,6 @@ import {
   ToothTreatment,
 } from "@/types/dental";
 import { ClinicMaterial } from "@/types/material";
-import { formatIQD } from "@/types/patient";
 import { useLanguage } from "@/context/LanguageContext";
 import { PROCEDURE_TRANSLATIONS, QUADRANT_TRANSLATIONS } from "@/i18n/translations";
 import {
@@ -108,12 +107,12 @@ export function DentalChart({
   const [selectedTeethNumbers, setSelectedTeethNumbers] = useState<number[]>([]);
   const [treatmentNote, setTreatmentNote] = useState("");
   const [treatmentMaterial, setTreatmentMaterial] = useState<string>("");
-  const [treatmentPrice, setTreatmentPrice] = useState<string>("");
+
   const [showAllMaterials, setShowAllMaterials] = useState<boolean>(false);
 
   const [batchNote, setBatchNote] = useState("");
   const [batchMaterial, setBatchMaterial] = useState<string>("");
-  const [batchPrice, setBatchPrice] = useState<string>("");
+
   const [activeTooth, setActiveTooth] = useState<ToothInfo | null>(null);
 
   const [isQuadrantMenuOpen, setIsQuadrantMenuOpen] = useState<boolean>(false);
@@ -124,19 +123,17 @@ export function DentalChart({
     teethRecords.map((r) => [r.toothNumber, r])
   );
 
-  // Total fees across all charted teeth
-  const totalChartPrice = teethRecords.reduce((sum, r) => sum + (r.price || 0), 0);
+
 
   const upperTeethNumbers = [18, 17, 16, 15, 14, 13, 12, 11, 21, 22, 23, 24, 25, 26, 27, 28];
   const lowerTeethNumbers = [48, 47, 46, 45, 44, 43, 42, 41, 31, 32, 33, 34, 35, 36, 37, 38];
   const allTeethNumbers = [...upperTeethNumbers, ...lowerTeethNumbers];
 
-  // All teeth that have clinical notes or materials or prices or non-default status
+  // All teeth that have clinical notes or materials or non-default status
   const activeChartedTeeth = teethRecords.filter(
     (r) =>
       (r.notes && r.notes.trim().length > 0) ||
       (r.material && r.material.trim().length > 0) ||
-      (typeof r.price === "number" && r.price > 0) ||
       r.status !== "treated"
   );
 
@@ -203,12 +200,12 @@ export function DentalChart({
           const r = recordsMap.get(updated[0]);
           setTreatmentNote(r?.notes || "");
           setTreatmentMaterial(r?.material || "");
-          setTreatmentPrice(r?.price !== undefined ? String(r.price) : "");
+
         } else if (updated.length === 0) {
           setActiveTooth(null);
           setTreatmentNote("");
           setTreatmentMaterial("");
-          setTreatmentPrice("");
+
         } else {
           setActiveTooth(tooth);
         }
@@ -223,14 +220,14 @@ export function DentalChart({
         setActiveTooth(null);
         setTreatmentNote("");
         setTreatmentMaterial("");
-        setTreatmentPrice("");
+
       } else {
         setSelectedTeethNumbers([toothNum]);
         setActiveTooth(tooth);
         const existingRecord = recordsMap.get(toothNum);
         setTreatmentNote(existingRecord?.notes || "");
         setTreatmentMaterial(existingRecord?.material || "");
-        setTreatmentPrice(existingRecord?.price !== undefined ? String(existingRecord.price) : "");
+
       }
     }
   };
@@ -241,7 +238,7 @@ export function DentalChart({
     if (!activeTooth) return;
 
     const existingRecord = recordsMap.get(activeTooth.number);
-    const parsedPrice = treatmentPrice.trim() !== "" ? Number(treatmentPrice) : undefined;
+
     const updatedRecord: ToothRecord = {
       toothNumber: activeTooth.number,
       status: existingRecord?.status || (activeTool === "erase" ? "treated" : activeTool),
@@ -249,7 +246,7 @@ export function DentalChart({
         existingRecord?.procedure ||
         TREATMENT_METADATA[activeTool === "erase" ? "treated" : activeTool].label,
       material: treatmentMaterial.trim() || existingRecord?.material || undefined,
-      price: typeof parsedPrice === "number" && !isNaN(parsedPrice) ? parsedPrice : existingRecord?.price,
+
       notes: text.trim() || undefined,
       updatedAt: Date.now(),
     };
@@ -266,13 +263,13 @@ export function DentalChart({
     }
 
     const existingRecord = recordsMap.get(activeTooth.number);
-    const parsedPrice = treatmentPrice.trim() !== "" ? Number(treatmentPrice) : undefined;
+
     const updatedRecord: ToothRecord = {
       toothNumber: activeTooth.number,
       status,
       procedure: TREATMENT_METADATA[status].label,
       material: treatmentMaterial.trim() || existingRecord?.material || undefined,
-      price: typeof parsedPrice === "number" && !isNaN(parsedPrice) ? parsedPrice : existingRecord?.price,
+
       notes: treatmentNote.trim() || existingRecord?.notes || undefined,
       updatedAt: Date.now(),
     };
@@ -283,7 +280,7 @@ export function DentalChart({
   const handleSelectClinicMaterial = (mat: ClinicMaterial) => {
     if (!activeTooth) return;
     setTreatmentMaterial(mat.name || mat.supplier || "");
-    setTreatmentPrice(String(mat.patientPrice ?? ""));
+
 
     const existingRecord = recordsMap.get(activeTooth.number);
     const updatedRecord: ToothRecord = {
@@ -293,7 +290,7 @@ export function DentalChart({
         existingRecord?.procedure ||
         TREATMENT_METADATA[activeTool === "erase" ? "treated" : activeTool].label,
       material: mat.name,
-      price: mat.patientPrice,
+
       notes: treatmentNote.trim() || existingRecord?.notes || undefined,
       updatedAt: Date.now(),
     };
@@ -306,7 +303,7 @@ export function DentalChart({
     if (!activeTooth) return;
 
     const existingRecord = recordsMap.get(activeTooth.number);
-    const parsedPrice = treatmentPrice.trim() !== "" ? Number(treatmentPrice) : undefined;
+
     const updatedRecord: ToothRecord = {
       toothNumber: activeTooth.number,
       status: existingRecord?.status || (activeTool === "erase" ? "treated" : activeTool),
@@ -314,42 +311,14 @@ export function DentalChart({
         existingRecord?.procedure ||
         TREATMENT_METADATA[activeTool === "erase" ? "treated" : activeTool].label,
       material: text.trim() || undefined,
-      price: typeof parsedPrice === "number" && !isNaN(parsedPrice) ? parsedPrice : existingRecord?.price,
+
       notes: treatmentNote.trim() || existingRecord?.notes || undefined,
       updatedAt: Date.now(),
     };
     onUpdateTooth(updatedRecord);
   };
 
-  // Immediate fee/price change for active single tooth
-  const handleActiveToothPriceChange = (valStr: string) => {
-    setTreatmentPrice(valStr);
-    if (!activeTooth) return;
 
-    const existingRecord = recordsMap.get(activeTooth.number);
-    const parsed = valStr.trim() === "" ? undefined : Number(valStr);
-    const numPrice = typeof parsed === "number" && !isNaN(parsed) ? parsed : undefined;
-
-    const updatedRecord: ToothRecord = {
-      toothNumber: activeTooth.number,
-      status: existingRecord?.status || (activeTool === "erase" ? "treated" : activeTool),
-      procedure:
-        existingRecord?.procedure ||
-        TREATMENT_METADATA[activeTool === "erase" ? "treated" : activeTool].label,
-      material: treatmentMaterial.trim() || existingRecord?.material || undefined,
-      price: numPrice,
-      notes: treatmentNote.trim() || existingRecord?.notes || undefined,
-      updatedAt: Date.now(),
-    };
-    onUpdateTooth(updatedRecord);
-  };
-
-  // Quick price adjuster (+10k, -10k, etc.)
-  const handleAdjustPrice = (delta: number) => {
-    const current = treatmentPrice.trim() !== "" ? Number(treatmentPrice) : 0;
-    const nextVal = Math.max(0, (isNaN(current) ? 0 : current) + delta);
-    handleActiveToothPriceChange(String(nextVal));
-  };
 
   const handleAppendPreset = (preset: string) => {
     const newNote = treatmentNote.trim() ? `${treatmentNote.trim()}, ${preset}` : preset;
@@ -365,7 +334,7 @@ export function DentalChart({
       const r = recordsMap.get(teeth[0]);
       setTreatmentNote(r?.notes || "");
       setTreatmentMaterial(r?.material || "");
-      setTreatmentPrice(r?.price !== undefined ? String(r.price) : "");
+
     } else {
       setActiveTooth(null);
     }
@@ -381,10 +350,10 @@ export function DentalChart({
     setActiveTooth(null);
     setTreatmentNote("");
     setTreatmentMaterial("");
-    setTreatmentPrice("");
+
     setBatchNote("");
     setBatchMaterial("");
-    setBatchPrice("");
+
   };
 
   // Apply a status to all currently selected teeth
@@ -398,7 +367,7 @@ export function DentalChart({
         status,
         procedure: TREATMENT_METADATA[status].label,
         material: existing?.material,
-        price: existing?.price,
+
         notes: existing?.notes,
         updatedAt: Date.now(),
       };
@@ -424,7 +393,7 @@ export function DentalChart({
           existing?.procedure ||
           TREATMENT_METADATA[activeTool === "erase" ? "treated" : activeTool].label,
         material: mat.name,
-        price: mat.patientPrice,
+
         notes: existing?.notes,
         updatedAt: Date.now(),
       };
@@ -437,11 +406,9 @@ export function DentalChart({
     }
   };
 
-  // Apply custom batch material and price
-  const handleApplyBatchCustomMaterialAndPrice = () => {
+  // Apply custom batch material
+  const handleApplyBatchCustomMaterial = () => {
     if (selectedTeethNumbers.length === 0) return;
-    const parsedPrice = batchPrice.trim() !== "" ? Number(batchPrice) : undefined;
-    const numPrice = typeof parsedPrice === "number" && !isNaN(parsedPrice) ? parsedPrice : undefined;
 
     const newRecords: ToothRecord[] = selectedTeethNumbers.map((num) => {
       const existing = recordsMap.get(num);
@@ -450,7 +417,6 @@ export function DentalChart({
         status: existing?.status || (activeTool === "erase" ? "treated" : activeTool),
         procedure: existing?.procedure || TREATMENT_METADATA[activeTool === "erase" ? "treated" : activeTool].label,
         material: batchMaterial.trim() || existing?.material,
-        price: numPrice !== undefined ? numPrice : existing?.price,
         notes: existing?.notes,
         updatedAt: Date.now(),
       };
@@ -462,7 +428,6 @@ export function DentalChart({
       newRecords.forEach((rec) => onUpdateTooth(rec));
     }
     setBatchMaterial("");
-    setBatchPrice("");
   };
 
   // Erase status from selected teeth
@@ -493,7 +458,7 @@ export function DentalChart({
           existing?.procedure ||
           TREATMENT_METADATA[activeTool === "erase" ? "treated" : activeTool].label,
         material: existing?.material,
-        price: existing?.price,
+
         notes: combinedNote,
         updatedAt: Date.now(),
       };
@@ -523,7 +488,7 @@ export function DentalChart({
     (activeTool === "erase" ? "treated" : activeTool);
 
   return (
-    <div className="w-full flex flex-col bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800 rounded-xl sm:rounded-3xl p-1.5 sm:p-5 shadow-inner select-none">
+    <div dir="ltr" className="w-full flex flex-col bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800 rounded-xl sm:rounded-3xl p-1.5 sm:p-5 shadow-inner select-none">
       {/* ================= 1. SLEEK MINIMAL HEADER TOOLBAR ================= */}
       <div className="sticky top-0 z-30 bg-white dark:bg-slate-900 px-3 py-2 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs mb-3 flex items-center justify-between gap-2 flex-wrap">
         {/* Left: Mode / Active Tool Switcher & Quadrant Selector */}
@@ -682,7 +647,7 @@ export function DentalChart({
               ))}
             </select>
 
-            {/* Material & Fee Dropdown (from doctor's clinic materials) */}
+            {/* Material Dropdown (from doctor's clinic materials) */}
             {clinicMaterials.length > 0 && (
               <select
                 onChange={(e) => {
@@ -695,7 +660,7 @@ export function DentalChart({
                 <option value="" disabled>{t.chooseMaterial}...</option>
                 {clinicMaterials.map((p) => (
                   <option key={p.id} value={p.name}>
-                    {p.name} ({formatIQD(p.patientPrice)})
+                    {p.name}
                   </option>
                 ))}
               </select>
@@ -1105,9 +1070,6 @@ export function DentalChart({
             </div>
 
             <div className="flex items-center gap-2">
-              <span className="font-mono font-bold text-xs text-emerald-600 dark:text-emerald-400">
-                {formatIQD(totalChartPrice)}
-              </span>
               {isFeedExpanded ? (
                 <ChevronUp className="w-4 h-4 text-slate-400" />
               ) : (
@@ -1132,7 +1094,7 @@ export function DentalChart({
                         setSelectedTeethNumbers([tooth.number]);
                         setTreatmentNote(rec.notes || "");
                         setTreatmentMaterial(rec.material || "");
-                        setTreatmentPrice(rec.price !== undefined ? String(rec.price) : "");
+
                       }
                     }}
                     className={`
@@ -1154,11 +1116,6 @@ export function DentalChart({
                     </div>
 
                     <div className="flex items-center gap-1 flex-shrink-0">
-                      {rec.price !== undefined && (
-                        <span className="font-mono font-bold text-[11px] text-emerald-600 dark:text-emerald-400">
-                          {formatIQD(rec.price)}
-                        </span>
-                      )}
                       <Edit3 className="w-3 h-3 text-slate-400" />
                     </div>
                   </div>
@@ -1186,11 +1143,6 @@ export function DentalChart({
             </div>
 
             <div className="flex items-center gap-1.5">
-              {treatmentPrice && (
-                <span className="px-2 py-0.5 rounded-lg text-xs font-mono font-bold bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
-                  {formatIQD(Number(treatmentPrice))}
-                </span>
-              )}
               <button
                 type="button"
                 onClick={() => handleClearSelection()}
@@ -1203,7 +1155,7 @@ export function DentalChart({
           </div>
 
           {/* Controls Grid (Compact 3-Column on desktop, 1-col on phone) */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
             {/* 1. Condition Selector */}
             <div>
               <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
@@ -1222,9 +1174,8 @@ export function DentalChart({
 
             {/* 2. Clinic Material Dropdown / Input */}
             <div>
-              <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1 flex items-center justify-between">
-                <span>{t.material}</span>
-                <span className="text-indigo-500 font-semibold text-[9px]">{t.procedurePricing}</span>
+              <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
+                {t.material}
               </label>
               {clinicMaterials.length > 0 ? (
                 <select
@@ -1242,7 +1193,7 @@ export function DentalChart({
                   <option value="">{t.chooseMaterial}...</option>
                   {clinicMaterials.map((m) => (
                     <option key={m.id} value={m.name}>
-                      {m.name} ({formatIQD(m.patientPrice)})
+                      {m.name}
                     </option>
                   ))}
                   {treatmentMaterial && !clinicMaterials.some((m) => m.name === treatmentMaterial) && (
@@ -1260,50 +1211,6 @@ export function DentalChart({
               )}
             </div>
 
-            {/* 3. Fee Input with +/- 10k Quick Adjust */}
-            <div>
-              <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
-                {t.feeIQD}
-              </label>
-              <div className="flex items-center gap-1">
-                <div className="relative flex-1">
-                  <input
-                    type="number"
-                    placeholder="0"
-                    value={treatmentPrice}
-                    onChange={(e) => handleActiveToothPriceChange(e.target.value)}
-                    className="w-full pl-2.5 pr-8 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-mono font-bold text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  />
-                  <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400">
-                    IQD
-                  </span>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => handleAdjustPrice(10000)}
-                  className="px-1.5 py-1.5 rounded-lg text-[10px] font-bold bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-indigo-400 cursor-pointer"
-                  title="Add 10,000 IQD"
-                >
-                  +10k
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleAdjustPrice(-10000)}
-                  className="px-1.5 py-1.5 rounded-lg text-[10px] font-bold bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-indigo-400 cursor-pointer"
-                  title="Subtract 10,000 IQD"
-                >
-                  -10k
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleActiveToothPriceChange("0")}
-                  className="px-1.5 py-1.5 rounded-lg text-[10px] font-bold bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-rose-500 hover:border-rose-400 cursor-pointer"
-                  title="Free (0 IQD)"
-                >
-                  0
-                </button>
-              </div>
-            </div>
           </div>
 
           {/* Clinical Note Row (Clean single-line with presets & actions) */}
@@ -1350,14 +1257,7 @@ export function DentalChart({
             </span>
           </div>
 
-          {totalChartPrice > 0 && (
-            <div className="flex items-center gap-1 pl-2 border-l border-slate-300 dark:border-slate-700">
-              <span className="text-[10px] text-slate-400 font-semibold uppercase">{t.totalDentalFee}:</span>
-              <span className="text-xs font-mono font-black text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/80 px-2 py-0.5 rounded-md border border-emerald-200 dark:border-emerald-800">
-                {formatIQD(totalChartPrice)}
-              </span>
-            </div>
-          )}
+
         </div>
 
         <div className="flex items-center gap-1 text-[10px] sm:text-[11px]">

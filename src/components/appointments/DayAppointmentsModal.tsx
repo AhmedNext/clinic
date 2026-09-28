@@ -17,6 +17,7 @@ import {
 import { Appointment, AppointmentStatus } from "@/types/appointment";
 import { Patient, getWhatsAppUrl } from "@/types/patient";
 import { useLanguage } from "@/context/LanguageContext";
+import { useClinicSettings } from "@/context/ClinicSettingsContext";
 import { formatStaticDate, WEEKDAY_NAMES } from "@/utils/date";
 import { CircleClockPickerModal } from "@/components/ui/CircleClockPickerModal";
 
@@ -66,6 +67,7 @@ export function DayAppointmentsModal({
   onOpenAddPatient,
 }: DayAppointmentsModalProps) {
   const { language, t } = useLanguage();
+  const { settings } = useClinicSettings();
   const [patientName, setPatientName] = useState("");
   const [phone, setPhone] = useState("");
   const [time, setTime] = useState("10:00 AM");
@@ -95,7 +97,7 @@ export function DayAppointmentsModal({
 
   const handleSelectPatient = (patient: Patient) => {
     setPatientName(patient.name);
-    // If patient already has a note or contact, prefill
+    if (patient.phone) setPhone(patient.phone);
     setError(null);
   };
 
@@ -495,7 +497,19 @@ export function DayAppointmentsModal({
                           </a>
 
                           <a
-                            href={getWhatsAppUrl(apt.phone, apt.patientName)}
+                            href={getWhatsAppUrl({
+                              phone: apt.phone,
+                              patientName: apt.patientName,
+                              clinicName: settings.clinicName,
+                              date: apt.date || dateString,
+                              time: apt.time,
+                              language,
+                              gender: existingPatients.find(
+                                (p) =>
+                                  p.name.toLowerCase() === apt.patientName.toLowerCase() ||
+                                  (apt.phone && p.phone === apt.phone)
+                              )?.gender,
+                            })}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 font-semibold border border-emerald-200 dark:border-emerald-800 text-[11px] hover:scale-105 active:scale-95 transition-transform"

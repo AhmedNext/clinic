@@ -4,6 +4,7 @@ import React, { useState, useMemo, useRef } from "react";
 import { ClinicMaterial, NewClinicMaterial, ExpenseCategory } from "@/types/material";
 import { formatIQD } from "@/types/patient";
 import { useLanguage } from "@/context/LanguageContext";
+import { formatMonthName } from "@/utils/date";
 import {
   Boxes,
   Plus,
@@ -47,7 +48,7 @@ export function MaterialsView({
   onUpdateMaterial,
   onDeleteMaterial,
 }: MaterialsViewProps) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<ClinicMaterial | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -144,6 +145,13 @@ export function MaterialsView({
   const totalSpend = useMemo(() => {
     return materials.reduce((sum, m) => sum + (m.costPrice || 0), 0);
   }, [materials]);
+
+  const currentMonthKey = useMemo(() => new Date().toISOString().substring(0, 7), []);
+  const currentMonthExpenses = useMemo(() => {
+    return materials
+      .filter((m) => m.date?.startsWith(currentMonthKey))
+      .reduce((sum, m) => sum + (m.costPrice || 0), 0);
+  }, [materials, currentMonthKey]);
 
   // Filter by Supplier search and Category
   const filteredMaterials = useMemo(() => {
@@ -265,19 +273,22 @@ export function MaterialsView({
           </p>
         </div>
 
-        {/* Card 3: Live Net Profit Impact */}
+        {/* Card 3: Current Month Expenses */}
         <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-2xs">
           <div className="flex items-center justify-between text-slate-400 mb-1.5">
             <span className="text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
-              {t.clinicNetWorthImpact}
+              {t.currentMonthExpenses}
             </span>
-            <div className="w-7 h-7 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
-              <Sparkles className="w-3.5 h-3.5" />
+            <div className="w-7 h-7 rounded-xl bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-400 flex items-center justify-center">
+              <Calendar className="w-3.5 h-3.5" />
             </div>
           </div>
-          <div className="text-xs text-slate-600 dark:text-slate-300 font-medium leading-relaxed">
-            {t.netWorthImpactDesc}
+          <div className="text-2xl font-mono font-black text-slate-900 dark:text-slate-100 tracking-tight">
+            {formatIQD(currentMonthExpenses)}
           </div>
+          <p className="text-[11px] text-slate-400 mt-1 font-medium">
+            {formatMonthName(currentMonthKey, language)}
+          </p>
         </div>
       </div>
 
@@ -328,7 +339,7 @@ export function MaterialsView({
             <Boxes className="w-6 h-6" />
           </div>
           <h3 className="text-sm sm:text-base font-bold text-slate-800 dark:text-slate-200">
-            {t.addPatientsOrExpensesToView}
+            {t.noExpensesRecorded}
           </h3>
           <p className="text-xs text-slate-400 max-w-sm mx-auto mt-1 mb-4">
             {t.addMaterialDesc}

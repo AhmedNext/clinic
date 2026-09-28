@@ -17,7 +17,7 @@ import {
   CloudCheck,
   Printer,
 } from "lucide-react";
-import { Patient, PatientHistoryEntry, calculateDebt, formatIQD } from "@/types/patient";
+import { Patient, PatientHistoryEntry, calculateDebt, formatIQD, formatNumberWithCommas, parseCleanNumber, QUICK_IQD_CHIPS } from "@/types/patient";
 import { PatientAvatar } from "./PatientAvatar";
 import { formatStaticDate } from "@/utils/date";
 import { useLanguage } from "@/context/LanguageContext";
@@ -109,8 +109,8 @@ export function PatientHistoryModal({
     setEditDate(entry.date || getTodayString());
     setEditTitle(entry.title || "");
     setEditNotes(entry.notes || "");
-    setEditPaid(String(entry.paid ?? 0));
-    setEditDebt(String(entry.debt ?? 0));
+    setEditPaid(entry.paid ? entry.paid.toLocaleString("en-US") : "0");
+    setEditDebt(entry.debt ? entry.debt.toLocaleString("en-US") : "0");
     setEditError(null);
     setShowAddForm(false); // close add form if open
   };
@@ -134,8 +134,8 @@ export function PatientHistoryModal({
       title: editTitle.trim(),
       notes: editNotes.trim(),
       fee: 0,
-      paid: parseFloat(editPaid) || 0,
-      debt: parseFloat(editDebt) || 0,
+      paid: parseCleanNumber(editPaid),
+      debt: parseCleanNumber(editDebt),
     });
 
     setEditingEntryId(null);
@@ -154,8 +154,8 @@ export function PatientHistoryModal({
       title: newTitle.trim(),
       notes: newNotes.trim(),
       fee: 0,
-      paid: parseFloat(newPaid) || 0,
-      debt: parseFloat(newDebt) || 0,
+      paid: parseCleanNumber(newPaid),
+      debt: parseCleanNumber(newDebt),
     });
     setNewTitle("");
     setNewNotes("");
@@ -372,13 +372,12 @@ export function PatientHistoryModal({
                     {t.paidIQD}
                   </label>
                   <input
-                    type="number"
-                    min="0"
-                    step="1000"
+                    type="text"
+                    inputMode="numeric"
                     placeholder="0"
                     value={newPaid}
-                    onChange={(e) => setNewPaid(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl border border-emerald-200 dark:border-emerald-900/60 bg-white dark:bg-slate-900 text-emerald-700 dark:text-emerald-400 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-400/30"
+                    onChange={(e) => setNewPaid(formatNumberWithCommas(e.target.value))}
+                    className="w-full px-3 py-2 rounded-xl border border-emerald-200 dark:border-emerald-900/60 bg-white dark:bg-slate-900 text-emerald-700 dark:text-emerald-400 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-400/30 font-mono"
                   />
                 </div>
                 <div>
@@ -386,14 +385,51 @@ export function PatientHistoryModal({
                     {t.debtIQD}
                   </label>
                   <input
-                    type="number"
-                    min="0"
-                    step="1000"
+                    type="text"
+                    inputMode="numeric"
                     placeholder="0"
                     value={newDebt}
-                    onChange={(e) => setNewDebt(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl border border-rose-200 dark:border-rose-900/50 bg-white dark:bg-slate-900 text-rose-600 dark:text-rose-400 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-rose-400/30"
+                    onChange={(e) => setNewDebt(formatNumberWithCommas(e.target.value))}
+                    className="w-full px-3 py-2 rounded-xl border border-rose-200 dark:border-rose-900/50 bg-white dark:bg-slate-900 text-rose-600 dark:text-rose-400 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-rose-400/30 font-mono"
                   />
+                </div>
+              </div>
+
+              {/* Quick-Pick Chips: [ 10,000 ] [ 15,000 ] [ 25,000 ] [ 50,000 ] [ 100,000 ] */}
+              <div className="pt-1 border-t border-indigo-100 dark:border-indigo-900/50">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-[10px] font-semibold text-indigo-700 dark:text-indigo-300">
+                    ⚡ {t.quickPickFees}
+                  </span>
+                  <span className="text-[10px] text-slate-400">
+                    {t.paidLabel} (1-tap)
+                  </span>
+                </div>
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  {QUICK_IQD_CHIPS.map((chipVal) => (
+                    <button
+                      key={chipVal}
+                      type="button"
+                      onClick={() => setNewPaid(chipVal.toLocaleString("en-US"))}
+                      className={`px-2 py-0.5 rounded-lg text-xs font-mono font-bold transition-all cursor-pointer ${
+                        parseCleanNumber(newPaid) === chipVal
+                          ? "bg-emerald-600 text-white shadow-xs scale-105"
+                          : "bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-800 hover:border-emerald-400 hover:text-emerald-600"
+                      }`}
+                    >
+                      {chipVal.toLocaleString()}
+                    </button>
+                  ))}
+                  {newPaid !== "0" && newPaid !== "" && (
+                    <button
+                      type="button"
+                      onClick={() => setNewPaid("0")}
+                      className="px-1.5 py-0.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-rose-500 cursor-pointer"
+                      title="0 IQD"
+                    >
+                      0
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -519,12 +555,11 @@ export function PatientHistoryModal({
                                     {t.paidIQD}
                                   </label>
                                   <input
-                                    type="number"
-                                    min="0"
-                                    step="1000"
+                                    type="text"
+                                    inputMode="numeric"
                                     value={editPaid}
-                                    onChange={(e) => setEditPaid(e.target.value)}
-                                    className="w-full px-2.5 py-1.5 rounded-xl border border-emerald-300 dark:border-emerald-800 bg-white dark:bg-slate-900 text-xs font-semibold text-emerald-700 dark:text-emerald-400 focus:ring-2 focus:ring-emerald-400"
+                                    onChange={(e) => setEditPaid(formatNumberWithCommas(e.target.value))}
+                                    className="w-full px-2.5 py-1.5 rounded-xl border border-emerald-300 dark:border-emerald-800 bg-white dark:bg-slate-900 text-xs font-semibold text-emerald-700 dark:text-emerald-400 focus:ring-2 focus:ring-emerald-400 font-mono"
                                   />
                                 </div>
                                 <div>
@@ -532,13 +567,42 @@ export function PatientHistoryModal({
                                     {t.debtIQD}
                                   </label>
                                   <input
-                                    type="number"
-                                    min="0"
-                                    step="1000"
+                                    type="text"
+                                    inputMode="numeric"
                                     value={editDebt}
-                                    onChange={(e) => setEditDebt(e.target.value)}
-                                    className="w-full px-2.5 py-1.5 rounded-xl border border-rose-300 dark:border-rose-800 bg-white dark:bg-slate-900 text-xs font-semibold text-rose-600 dark:text-rose-400 focus:ring-2 focus:ring-rose-400"
+                                    onChange={(e) => setEditDebt(formatNumberWithCommas(e.target.value))}
+                                    className="w-full px-2.5 py-1.5 rounded-xl border border-rose-300 dark:border-rose-800 bg-white dark:bg-slate-900 text-xs font-semibold text-rose-600 dark:text-rose-400 focus:ring-2 focus:ring-rose-400 font-mono"
                                   />
+                                </div>
+                              </div>
+
+                              {/* Quick-Pick Chips: [ 10,000 ] [ 15,000 ] [ 25,000 ] [ 50,000 ] [ 100,000 ] */}
+                              <div className="pt-1">
+                                <div className="flex items-center gap-1.5 flex-wrap">
+                                  {QUICK_IQD_CHIPS.map((chipVal) => (
+                                    <button
+                                      key={chipVal}
+                                      type="button"
+                                      onClick={() => setEditPaid(chipVal.toLocaleString("en-US"))}
+                                      className={`px-2 py-0.5 rounded-lg text-[11px] font-mono font-bold transition-all cursor-pointer ${
+                                        parseCleanNumber(editPaid) === chipVal
+                                          ? "bg-emerald-600 text-white shadow-xs scale-105"
+                                          : "bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-800 hover:border-emerald-400 hover:text-emerald-600"
+                                      }`}
+                                    >
+                                      {chipVal.toLocaleString()}
+                                    </button>
+                                  ))}
+                                  {editPaid !== "0" && editPaid !== "" && (
+                                    <button
+                                      type="button"
+                                      onClick={() => setEditPaid("0")}
+                                      className="px-1.5 py-0.5 rounded-lg text-[11px] font-semibold text-slate-400 hover:text-rose-500 cursor-pointer"
+                                      title="0 IQD"
+                                    >
+                                      0
+                                    </button>
+                                  )}
                                 </div>
                               </div>
 

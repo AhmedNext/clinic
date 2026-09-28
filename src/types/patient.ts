@@ -64,7 +64,8 @@ export function getPaymentStatus(patient: Patient): PaymentStatus {
  */
 export function formatIQD(amount?: number): string {
   const val = typeof amount === "number" && !isNaN(amount) ? amount : 0;
-  return `${new Intl.NumberFormat("en-US").format(Math.round(val))} IQD`;
+  const numStr = new Intl.NumberFormat("en-US").format(Math.round(val)).replace(/,\s+/g, ",");
+  return `${numStr} IQD`;
 }
 
 /**
@@ -79,14 +80,87 @@ export function getWhatsAppNumber(phone?: string): string {
   return digits;
 }
 
-export function getWhatsAppUrl(phone?: string, patientName?: string, clinicName?: string): string {
-  const num = getWhatsAppNumber(phone);
+export interface WhatsAppMessageParams {
+  phone?: string;
+  patientName?: string;
+  clinicName?: string;
+  date?: string;
+  time?: string;
+  language?: "en" | "ar" | "ku";
+  gender?: "male" | "female";
+}
+
+export function getWhatsAppUrl(
+  phoneOrOptions?: string | WhatsAppMessageParams,
+  patientName?: string,
+  clinicName?: string,
+  date?: string,
+  time?: string,
+  language: "en" | "ar" | "ku" = "ku",
+  gender?: "male" | "female"
+): string {
+  let opts: WhatsAppMessageParams;
+
+  if (typeof phoneOrOptions === "object" && phoneOrOptions !== null) {
+    opts = phoneOrOptions;
+  } else {
+    opts = {
+      phone: phoneOrOptions,
+      patientName,
+      clinicName,
+      date,
+      time,
+      language,
+      gender,
+    };
+  }
+
+  const num = getWhatsAppNumber(opts.phone);
   if (!num) return "#";
-  const clinic = clinicName?.trim() || "Dental Clinic";
-  const msg = encodeURIComponent(
-    `Hello ${patientName || ""}, from ${clinic}. Regarding your dental appointment:`
-  );
-  return `https://wa.me/${num}?text=${msg}`;
+
+  const lang = opts.language || "ku";
+  const clinic =
+    opts.clinicName?.trim() ||
+    (lang === "ar" ? "عيادة طب الأسنان" : lang === "ku" ? "کلینیکی ددان" : "Dental Clinic");
+  const name = opts.patientName?.trim() || "";
+  const dateStr = opts.date?.trim();
+  const timeStr = opts.time?.trim();
+  const isFemale = opts.gender === "female";
+
+  let message = "";
+
+  if (lang === "ku") {
+    const title = isFemale ? "خاتوو" : "کاک";
+    if (dateStr && timeStr) {
+      message = `سڵاو ${title} ${name}، بیرخستنەوەی نۆرەکەت لە کلینیکی ${clinic} لە بەرواری ${dateStr} کاتژمێر ${timeStr}. تکایە لە کاتی خۆیدا ئامادەبە.`;
+    } else if (dateStr) {
+      message = `سڵاو ${title} ${name}، بیرخستنەوەی نۆرەکەت لە کلینیکی ${clinic} لە بەرواری ${dateStr}. تکایە لە کاتی خۆیدا ئامادەبە.`;
+    } else {
+      message = `سڵاو ${title} ${name}، لە کلینیکی ${clinic}. پەیوەست بە سەردان و چاودێری ددانەکانت، تکایە پەیوەندیمان پێوە بکە.`;
+    }
+  } else if (lang === "ar") {
+    const title = isFemale ? "أستاذة" : "أستاذ";
+    if (dateStr && timeStr) {
+      message = `مرحباً ${title} ${name}، نود تذكيرك بموعدك في عيادة ${clinic} بتاريخ ${dateStr} الساعة ${timeStr}. يرجى الحضور في الموعد المحدد.`;
+    } else if (dateStr) {
+      message = `مرحباً ${title} ${name}، نود تذكيرك بموعدك في عيادة ${clinic} بتاريخ ${dateStr}. يرجى الحضور في الموعد المحدد.`;
+    } else {
+      message = `مرحباً ${title} ${name}، من عيادة ${clinic}. نود الاطمئنان على صحتكم ومتابعة علاجكم، يرجى التواصل معنا لأي استفسار.`;
+    }
+  } else {
+    // English
+    const title = isFemale ? "Ms." : opts.gender === "male" ? "Mr." : "";
+    const greeting = title ? `Hello ${title} ${name}` : `Hello ${name || "there"}`;
+    if (dateStr && timeStr) {
+      message = `${greeting}, this is a reminder for your upcoming appointment at ${clinic} on ${dateStr} at ${timeStr}. Please arrive on time.`;
+    } else if (dateStr) {
+      message = `${greeting}, this is a reminder for your upcoming appointment at ${clinic} on ${dateStr}. Please arrive on time.`;
+    } else {
+      message = `${greeting}, from ${clinic}. Regarding your dental consultation and appointment, please let us know if you have any questions.`;
+    }
+  }
+
+  return `https://wa.me/${num}?text=${encodeURIComponent(message.trim())}`;
 }
 
 export interface PatientMonthlyStats {
@@ -184,5 +258,28 @@ export function getPatientMonthlyStats(patient: Patient, monthKey: string): Pati
     visits: monthHistory.length,
     hasActivity: hasHistoryInMonth,
   };
+}
+
+export const QUICK_IQD_CHIPS = [10000, 15000, 25000, 50000, 100000] as const;
+
+export function cleanNumberInput(val: string): string {
+  if (!val) return "";
+  // Strip English commas, Arabic commas (،), spaces, and any non-digit characters
+  return val.replace(/[,،\s]/g, "").replace(/[^0-9]/g, "");
+}
+
+export function formatNumberWithCommas(val: string | number): string {
+  if (val === undefined || val === null || val === "") return "";
+  const digits = String(val).replace(/[,،\s]/g, "").replace(/[^0-9]/g, "");
+  if (!digits) return "";
+  const normalized = digits.replace(/^0+(?=\d)/, "");
+  return Number(normalized).toLocaleString("en-US").replace(/,\s+/g, ",");
+}
+
+export function parseCleanNumber(val: string | number | undefined | null): number {
+  if (val === undefined || val === null || val === "") return 0;
+  const digits = String(val).replace(/[,،\s]/g, "").replace(/[^0-9]/g, "");
+  const num = parseInt(digits, 10);
+  return isNaN(num) ? 0 : num;
 }
 

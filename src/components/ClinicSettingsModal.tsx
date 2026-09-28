@@ -53,7 +53,7 @@ export function ClinicSettingsModal({ isOpen, onClose, onOpenImportDatabase }: C
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-slate-800/80 bg-slate-50/70 dark:bg-slate-950/50">
           <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400">
+            <div className="p-2 rounded-xl bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-400">
               <Building2 className="w-5 h-5" />
             </div>
             <div>
@@ -87,7 +87,7 @@ export function ClinicSettingsModal({ isOpen, onClose, onOpenImportDatabase }: C
                 placeholder="e.g. Al-Noor Dental Clinic"
                 value={clinicName}
                 onChange={(e) => setClinicName(e.target.value)}
-                className="w-full pl-10 rtl:pl-4 rtl:pr-10 pr-4 py-2.5 rounded-xl text-xs bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
+                className="w-full pl-10 rtl:pl-4 rtl:pr-10 pr-4 py-2.5 rounded-xl text-xs bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500/30 focus:border-sky-500"
               />
             </div>
           </div>
@@ -104,7 +104,7 @@ export function ClinicSettingsModal({ isOpen, onClose, onOpenImportDatabase }: C
                 placeholder="e.g. Dr. Ahmed"
                 value={doctorName}
                 onChange={(e) => setDoctorName(e.target.value)}
-                className="w-full pl-10 rtl:pl-4 rtl:pr-10 pr-4 py-2.5 rounded-xl text-xs bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
+                className="w-full pl-10 rtl:pl-4 rtl:pr-10 pr-4 py-2.5 rounded-xl text-xs bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500/30 focus:border-sky-500"
               />
             </div>
           </div>
@@ -120,7 +120,7 @@ export function ClinicSettingsModal({ isOpen, onClose, onOpenImportDatabase }: C
                 placeholder="+964 750 000 0000"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                className="w-full pl-10 rtl:pl-4 rtl:pr-10 pr-4 py-2.5 rounded-xl text-xs bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
+                className="w-full pl-10 rtl:pl-4 rtl:pr-10 pr-4 py-2.5 rounded-xl text-xs bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500/30 focus:border-sky-500"
               />
             </div>
           </div>
@@ -136,27 +136,38 @@ export function ClinicSettingsModal({ isOpen, onClose, onOpenImportDatabase }: C
                 placeholder="e.g. City Center, 60m Street"
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
-                className="w-full pl-10 rtl:pl-4 rtl:pr-10 pr-4 py-2.5 rounded-xl text-xs bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
+                className="w-full pl-10 rtl:pl-4 rtl:pr-10 pr-4 py-2.5 rounded-xl text-xs bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500/30 focus:border-sky-500"
               />
             </div>
           </div>
 
-          {/* Database Import & Export Section */}
+          {/* Data & Backup Section */}
           {onOpenImportDatabase && (
-            <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
+            <div className="pt-3 border-t border-slate-100 dark:border-slate-800 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                  Data & Backup
+                </span>
+                <span className="text-[10px] text-slate-400 font-mono uppercase">CSV Import / Export</span>
+              </div>
               <button
                 type="button"
                 onClick={() => {
                   onClose();
                   onOpenImportDatabase();
                 }}
-                className="w-full flex items-center justify-between p-3 rounded-2xl border border-emerald-200/80 dark:border-emerald-800/80 bg-emerald-50/60 dark:bg-emerald-950/40 hover:bg-emerald-100/70 dark:hover:bg-emerald-900/50 text-emerald-800 dark:text-emerald-300 text-xs font-bold transition-all cursor-pointer"
+                className="w-full flex items-center justify-between p-3 rounded-2xl border border-sky-200 dark:border-sky-800/60 bg-sky-50/50 dark:bg-sky-950/30 hover:bg-sky-100/70 dark:hover:bg-sky-900/40 text-sky-800 dark:text-sky-300 text-xs font-bold transition-all cursor-pointer"
               >
                 <div className="flex items-center gap-2.5">
-                  <Database className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                  <span>{t.importDatabase}</span>
+                  <Database className="w-4 h-4 text-sky-600 dark:text-sky-400" />
+                  <div className="text-left rtl:text-right">
+                    <div>{t.importDatabase}</div>
+                    <div className="text-[10px] font-normal text-slate-500 dark:text-slate-400">{t.uploadCsvFile}</div>
+                  </div>
                 </div>
-                <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold">CSV</span>
+                <span className="px-2 py-0.5 rounded-lg text-[10px] font-bold bg-sky-100 dark:bg-sky-900/80 text-sky-700 dark:text-sky-300">
+                  CSV
+                </span>
               </button>
             </div>
           )}
@@ -164,7 +175,7 @@ export function ClinicSettingsModal({ isOpen, onClose, onOpenImportDatabase }: C
           <div className="pt-2">
             <button
               type="submit"
-              className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white text-xs font-bold shadow-md shadow-indigo-600/30 active:scale-[0.99] transition-all cursor-pointer flex items-center justify-center gap-2"
+              className="w-full py-2.5 px-4 rounded-xl bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold shadow-md shadow-sky-600/20 active:scale-[0.99] transition-all cursor-pointer flex items-center justify-center gap-2"
             >
               {isSaved ? (
                 <>

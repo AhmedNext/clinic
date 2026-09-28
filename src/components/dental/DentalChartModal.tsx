@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { X, CheckCircle2, Zap, Coins } from "lucide-react";
-import { Patient, formatIQD } from "@/types/patient";
+import { X, CheckCircle2 } from "lucide-react";
+import { Patient } from "@/types/patient";
 import { ToothRecord } from "@/types/dental";
 import { ClinicMaterial } from "@/types/material";
 import { DentalChart } from "./DentalChart";
@@ -13,7 +13,7 @@ interface DentalChartModalProps {
   isOpen: boolean;
   patient: Patient | null;
   onClose: () => void;
-  onSaveTeeth: (patientId: string, teeth: ToothRecord[], syncedTotalAmount?: number) => void;
+  onSaveTeeth: (patientId: string, teeth: ToothRecord[]) => void;
   clinicMaterials?: ClinicMaterial[];
 }
 
@@ -26,13 +26,11 @@ export function DentalChartModal({
 }: DentalChartModalProps) {
   const { t } = useLanguage();
   const [localTeeth, setLocalTeeth] = useState<ToothRecord[]>([]);
-  const [isSynced, setIsSynced] = useState<boolean>(false);
 
   // Initialize teeth when modal opens for this patient ID
   useEffect(() => {
     if (isOpen && patient) {
       setLocalTeeth(patient.teeth || []);
-      setIsSynced(false);
     }
   }, [isOpen, patient?.id]);
 
@@ -49,8 +47,6 @@ export function DentalChartModal({
 
   if (!isOpen || !patient) return null;
 
-  const totalChartPrice = localTeeth.reduce((sum, r) => sum + (r.price || 0), 0);
-
   // Immediately auto-save whenever a single tooth is updated
   const handleUpdateTooth = (record: ToothRecord) => {
     const exists = localTeeth.some((t) => t.toothNumber === record.toothNumber);
@@ -58,8 +54,7 @@ export function DentalChartModal({
       ? localTeeth.map((t) => (t.toothNumber === record.toothNumber ? record : t))
       : [...localTeeth, record];
     setLocalTeeth(updated);
-    const updatedTotal = updated.reduce((sum, r) => sum + (r.price || 0), 0);
-    onSaveTeeth(patient.id, updated, updatedTotal);
+    onSaveTeeth(patient.id, updated);
   };
 
   // Immediately auto-save whenever multiple teeth are updated
@@ -70,16 +65,14 @@ export function DentalChartModal({
     }
     const updated = Array.from(map.values());
     setLocalTeeth(updated);
-    const updatedTotal = updated.reduce((sum, r) => sum + (r.price || 0), 0);
-    onSaveTeeth(patient.id, updated, updatedTotal);
+    onSaveTeeth(patient.id, updated);
   };
 
   // Immediately auto-save when a tooth is removed
   const handleRemoveTooth = (toothNumber: number) => {
     const updated = localTeeth.filter((t) => t.toothNumber !== toothNumber);
     setLocalTeeth(updated);
-    const updatedTotal = updated.reduce((sum, r) => sum + (r.price || 0), 0);
-    onSaveTeeth(patient.id, updated, updatedTotal);
+    onSaveTeeth(patient.id, updated);
   };
 
   // Immediately auto-save when multiple teeth are removed
@@ -87,24 +80,17 @@ export function DentalChartModal({
     const set = new Set(toothNumbers);
     const updated = localTeeth.filter((t) => !set.has(t.toothNumber));
     setLocalTeeth(updated);
-    const updatedTotal = updated.reduce((sum, r) => sum + (r.price || 0), 0);
-    onSaveTeeth(patient.id, updated, updatedTotal);
+    onSaveTeeth(patient.id, updated);
   };
 
   // Clear all teeth and auto-save
   const handleClearAll = () => {
     setLocalTeeth([]);
-    onSaveTeeth(patient.id, [], 0);
-  };
-
-  const handleSyncToBill = () => {
-    onSaveTeeth(patient.id, localTeeth, totalChartPrice);
-    setIsSynced(true);
-    setTimeout(() => setIsSynced(false), 3000);
+    onSaveTeeth(patient.id, []);
   };
 
   const handleDone = () => {
-    onSaveTeeth(patient.id, localTeeth, totalChartPrice);
+    onSaveTeeth(patient.id, localTeeth);
     onClose();
   };
 
@@ -136,11 +122,6 @@ export function DentalChartModal({
                 <span className="text-[10px] sm:text-[11px] px-1.5 py-0.2 rounded-full font-bold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 flex-shrink-0">
                   {localTeeth.length} {t.workedTeeth}
                 </span>
-                {totalChartPrice > 0 && (
-                  <span className="text-[10px] sm:text-[11px] px-2 py-0.2 rounded-full font-mono font-bold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 flex-shrink-0">
-                    {formatIQD(totalChartPrice)}
-                  </span>
-                )}
               </div>
               <p className="text-[10px] text-slate-500 dark:text-slate-400 flex items-center gap-1 truncate">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse flex-shrink-0" />
@@ -173,7 +154,7 @@ export function DentalChartModal({
         </div>
 
         {/* Modal Body: Interactive Dental Chart */}
-        <div className="p-1 sm:p-5 overflow-y-auto flex-1">
+        <div dir="ltr" className="p-1 sm:p-5 overflow-y-auto flex-1">
           <DentalChart
             teethRecords={localTeeth}
             onUpdateTooth={handleUpdateTooth}
@@ -185,37 +166,15 @@ export function DentalChartModal({
         </div>
 
         {/* Modal Footer */}
-        <div className="px-3 sm:px-6 py-2 sm:py-3 border-t border-slate-100 dark:border-slate-800/80 bg-slate-50/90 dark:bg-slate-900/90 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-          {/* Left: Total fees & Sync to Bill Button */}
-          <div className="flex items-center gap-2 flex-wrap">
-            <div className="flex items-center gap-1.5">
-              <span className="text-xs text-slate-500 dark:text-slate-400 font-semibold">{t.totalDentalFee}:</span>
-              <span className="text-xs sm:text-sm font-mono font-black text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/80 px-2 py-0.5 rounded-lg border border-emerald-300 dark:border-emerald-800">
-                {formatIQD(totalChartPrice)}
-              </span>
-            </div>
-
-            {totalChartPrice > 0 && (
-              <button
-                type="button"
-                onClick={handleSyncToBill}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all shadow-xs cursor-pointer active:scale-95 ${
-                  isSynced
-                    ? "bg-emerald-700 text-white ring-2 ring-emerald-400"
-                    : "bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-600/20"
-                }`}
-                title="Sync this dental procedure fee directly into the patient's billing balance"
-              >
-                <Zap className="w-3.5 h-3.5 fill-current" />
-                <span>{isSynced ? `✓ ${t.syncedToBill}` : t.syncToBill}</span>
-              </button>
-            )}
+        <div className="px-3 sm:px-6 py-2 sm:py-3 border-t border-slate-100 dark:border-slate-800/80 bg-slate-50/90 dark:bg-slate-900/90 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+            <span className="font-semibold">{localTeeth.length} {t.workedTeeth}</span>
           </div>
 
           <button
             type="button"
             onClick={handleDone}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2 rounded-xl text-xs sm:text-sm font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow-md shadow-indigo-600/20 active:scale-[0.98] transition-all cursor-pointer"
+            className="inline-flex items-center justify-center gap-2 px-5 py-2 rounded-xl text-xs sm:text-sm font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow-md shadow-indigo-600/20 active:scale-[0.98] transition-all cursor-pointer"
           >
             <span>{t.doneAndClose}</span>
           </button>
