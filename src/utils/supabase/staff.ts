@@ -2,7 +2,9 @@ import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { StaffMember } from "@/types/staff";
 import { createClient } from "./client";
 
-const LOCAL_STORAGE_STAFF_KEY = "clinic_staff_members_cache";
+function getStaffCacheKey(doctorId?: string | null) {
+  return doctorId ? `clinic_staff_members_cache_${doctorId}` : "clinic_staff_members_cache";
+}
 
 /**
  * Creates a dedicated non-persisting Supabase client so creating a new
@@ -20,33 +22,34 @@ function getStaffAuthClient() {
   });
 }
 
-export function getCachedStaff(): StaffMember[] {
+export function getCachedStaff(doctorId?: string | null): StaffMember[] {
   if (typeof window === "undefined") return [];
   try {
-    const raw = localStorage.getItem(LOCAL_STORAGE_STAFF_KEY);
+    const raw = localStorage.getItem(getStaffCacheKey(doctorId));
     return raw ? JSON.parse(raw) : [];
   } catch {
     return [];
   }
 }
 
-export function setCachedStaff(staff: StaffMember[]) {
+export function setCachedStaff(staff: StaffMember[], doctorId?: string | null) {
   if (typeof window === "undefined") return;
   try {
-    localStorage.setItem(LOCAL_STORAGE_STAFF_KEY, JSON.stringify(staff));
+    localStorage.setItem(getStaffCacheKey(doctorId), JSON.stringify(staff));
   } catch (e) {
     console.error("Failed to cache staff list:", e);
   }
 }
 
 /**
- * Registers a new Secretary account in Supabase Auth with metadata { role: 'secretary' }.
+ * Registers a new Secretary account in Supabase Auth with metadata { role: 'secretary', doctor_id }.
  * Saves to clinic_staff table and local cache.
  */
 export async function createSecretaryAccount(
   name: string,
   email: string,
-  password: string
+  password: string,
+  doctorId?: string | null
 ): Promise<{ success: boolean; error?: string; staffMember?: StaffMember }> {
   try {
     const authClient = getStaffAuthClient();
@@ -58,7 +61,7 @@ export async function createSecretaryAccount(
         ? window.location.origin
         : "https://iq-dent.vercel.app");
 
-    // 1. Sign up user in Supabase Auth with role: 'secretary'
+    // 1. Sign up user in Supabase Auth with role: 'secretary' and doctor_id
     const { data, error } = await authClient.auth.signUp({
       email: cleanEmail,
       password,
@@ -66,6 +69,7 @@ export async function createSecretaryAccount(
         emailRedirectTo: redirectUrl,
         data: {
           role: "secretary",
+          doctor_id: doctorId,
           full_name: name.trim(),
           name: name.trim(),
         },
@@ -85,16 +89,17 @@ export async function createSecretaryAccount(
     };
 
     // 2. Persist in local cache
-    const current = getCachedStaff().filter((s) => s.email !== cleanEmail);
+    const current = getCachedStaff(doctorId).filter((s) => s.email !== cleanEmail);
     const updated = [newStaffMember, ...current];
-    setCachedStaff(updated);
+    setCachedStaff(updated, doctorId);
 
-    // 3. Try to save to Supabase clinic_staff table if created
+    // 3. Save to Supabase clinic_staff table with doctor_id
     try {
       const activeClient = createClient();
       await activeClient.from("clinic_staff").upsert([
         {
           id: newStaffMember.id,
+          doctor_id: doctorId,
           name: newStaffMember.name,
           email: newStaffMember.email,
           role: newStaffMember.role,
@@ -115,15 +120,21 @@ export async function createSecretaryAccount(
 /**
  * Fetch list of staff from Supabase or fallback to cache.
  */
-export async function fetchStaffFromDB(): Promise<StaffMember[]> {
+export async function fetchStaffFromDB(doctorId?: string | null): Promise<StaffMember[]> {
   try {
     const activeClient = createClient();
-    const { data, error } = await activeClient
+    let query = activeClient
       .from("clinic_staff")
       .select("*")
       .order("created_at", { ascending: false });
 
-    if (!error && Array.isArray(data) && data.length > 0) {
+    if (doctorId) {
+      query = query.eq("doctor_id", doctorId);
+    }
+
+    const { data, error } = await query;
+
+    if (!error && Array.isArray(data)) {
       const staff: StaffMember[] = data.map((d) => ({
         id: String(d.id),
         name: String(d.name),
@@ -131,22 +142,22 @@ export async function fetchStaffFromDB(): Promise<StaffMember[]> {
         role: (d.role as "secretary" | "doctor") || "secretary",
         createdAt: Number(d.created_at) || Date.now(),
       }));
-      setCachedStaff(staff);
+      setCachedStaff(staff, doctorId);
       return staff;
     }
   } catch {
     // fallback to cache
   }
 
-  return getCachedStaff();
+  return getCachedStaff(doctorId);
 }
 
 /**
  * Delete a staff member record.
  */
-export async function deleteStaffFromDB(id: string): Promise<void> {
-  const current = getCachedStaff().filter((s) => s.id !== id);
-  setCachedStaff(current);
+export async function deleteStaffFromDB(id: string, doctorId?: string | null): Promise<void> {
+  const current = getCachedStaff(doctorId).filter((s) => s.id !== id);
+  setCachedStaff(current, doctorId);
 
   try {
     const activeClient = createClient();

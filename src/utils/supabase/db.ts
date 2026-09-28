@@ -34,7 +34,7 @@ export function mapRowToPatient(row: any): Patient {
 }
 
 // Map Patient type to DB row
-export function mapPatientToRow(patient: Patient): any {
+export function mapPatientToRow(patient: Patient, userId?: string | null): any {
   // Preserve patient.time in the latest history entry so it saves in JSONB without DB migrations
   const history = [...(patient.history || [])];
   if (patient.time) {
@@ -55,7 +55,7 @@ export function mapPatientToRow(patient: Patient): any {
     }
   }
 
-  return {
+  const row: any = {
     id: patient.id,
     name: patient.name,
     gender: patient.gender,
@@ -72,6 +72,12 @@ export function mapPatientToRow(patient: Patient): any {
     created_at: patient.createdAt ?? Date.now(),
     updated_at: new Date().toISOString(),
   };
+
+  if (userId) {
+    row.user_id = userId;
+  }
+
+  return row;
 }
 
 // Map DB row to Appointment type
@@ -90,8 +96,8 @@ export function mapRowToAppointment(row: any): Appointment {
 }
 
 // Map Appointment type to DB row
-export function mapAppointmentToRow(apt: Appointment): any {
-  return {
+export function mapAppointmentToRow(apt: Appointment, userId?: string | null): any {
+  const row: any = {
     id: apt.id,
     patient_name: apt.patientName,
     phone: apt.phone ?? null,
@@ -103,37 +109,88 @@ export function mapAppointmentToRow(apt: Appointment): any {
     created_at: apt.createdAt ?? Date.now(),
     updated_at: new Date().toISOString(),
   };
+
+  if (userId) {
+    row.user_id = userId;
+  }
+
+  return row;
 }
 
-// Cache keys for instant 0ms loads
-const LOCAL_STORAGE_PATIENTS_KEY = "clinic_patients_cache";
-const LOCAL_STORAGE_APPOINTMENTS_KEY = "clinic_appointments_cache";
-const LOCAL_STORAGE_MATERIALS_KEY = "clinic_materials_cache";
+// Helper to generate strictly isolated cache keys per clinic / doctor
+function getCacheKey(baseKey: string, userId?: string | null): string {
+  if (userId) return `${baseKey}_${userId}`;
+  return baseKey;
+}
 
-export function getCachedPatients(): Patient[] {
+export function clearAllClinicCache() {
+  if (typeof window === "undefined") return;
+  try {
+    const keysToRemove: string[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (
+        k &&
+        (k.startsWith("clinic_") ||
+          k.startsWith("dr_qayssar_") ||
+          k.includes("patients_cache") ||
+          k.includes("appointments_cache") ||
+          k.includes("materials_cache") ||
+          k.includes("settings") ||
+          k.includes("staff"))
+      ) {
+        keysToRemove.push(k);
+      }
+    }
+    keysToRemove.forEach((k) => localStorage.removeItem(k));
+  } catch (e) {
+    console.error("Failed to clear clinic cache:", e);
+  }
+}
+
+export function getCachedPatients(userId?: string | null): Patient[] {
   if (typeof window === "undefined") return [];
   try {
-    const cached = localStorage.getItem(LOCAL_STORAGE_PATIENTS_KEY) || localStorage.getItem("dr_qayssar_patients_cache");
+    const key = getCacheKey("clinic_patients_cache", userId);
+    const cached = localStorage.getItem(key);
     return cached ? JSON.parse(cached) : [];
   } catch {
     return [];
   }
 }
 
-export function getCachedAppointments(): Appointment[] {
+export function setCachedPatients(patients: Patient[], userId?: string | null): void {
+  if (typeof window === "undefined") return;
+  try {
+    const key = getCacheKey("clinic_patients_cache", userId);
+    localStorage.setItem(key, JSON.stringify(patients));
+  } catch {}
+}
+
+export function getCachedAppointments(userId?: string | null): Appointment[] {
   if (typeof window === "undefined") return [];
   try {
-    const cached = localStorage.getItem(LOCAL_STORAGE_APPOINTMENTS_KEY) || localStorage.getItem("dr_qayssar_appointments_cache");
+    const key = getCacheKey("clinic_appointments_cache", userId);
+    const cached = localStorage.getItem(key);
     return cached ? JSON.parse(cached) : [];
   } catch {
     return [];
   }
 }
 
-export function getCachedMaterials(): ClinicMaterial[] {
+export function setCachedAppointments(apts: Appointment[], userId?: string | null): void {
+  if (typeof window === "undefined") return;
+  try {
+    const key = getCacheKey("clinic_appointments_cache", userId);
+    localStorage.setItem(key, JSON.stringify(apts));
+  } catch {}
+}
+
+export function getCachedMaterials(userId?: string | null): ClinicMaterial[] {
   if (typeof window === "undefined") return [];
   try {
-    const cached = localStorage.getItem(LOCAL_STORAGE_MATERIALS_KEY) || localStorage.getItem("dr_qayssar_materials_cache");
+    const key = getCacheKey("clinic_materials_cache", userId);
+    const cached = localStorage.getItem(key);
     if (!cached) return [];
     const parsed = JSON.parse(cached);
     return Array.isArray(parsed)
@@ -144,42 +201,54 @@ export function getCachedMaterials(): ClinicMaterial[] {
   }
 }
 
-// ================= PATIENT API =================
-export async function fetchPatientsFromDB(): Promise<Patient[]> {
+export function setCachedMaterials(materials: ClinicMaterial[], userId?: string | null): void {
+  if (typeof window === "undefined") return;
   try {
-    const { data, error } = await getSupabase()
+    const key = getCacheKey("clinic_materials_cache", userId);
+    localStorage.setItem(key, JSON.stringify(materials));
+  } catch {}
+}
+
+// ================= PATIENT API =================
+export async function fetchPatientsFromDB(userId?: string | null): Promise<Patient[]> {
+  try {
+    let query = getSupabase()
       .from("patients")
       .select("*")
       .order("created_at", { ascending: false })
       .limit(5000);
 
+    if (userId) {
+      query = query.eq("user_id", userId);
+    }
+
+    const { data, error } = await query;
+
     if (!error && data) {
       const parsed = data.map(mapRowToPatient);
-      if (typeof window !== "undefined") {
-        localStorage.setItem(LOCAL_STORAGE_PATIENTS_KEY, JSON.stringify(parsed));
-      }
+      setCachedPatients(parsed, userId);
       return parsed;
     }
   } catch (err) {
     console.warn("Error fetching patients from Supabase, using cache:", err);
   }
-  return getCachedPatients();
+  return getCachedPatients(userId);
 }
 
-export async function upsertPatientToDB(patient: Patient): Promise<void> {
-  // Update local cache immediately for 0ms UI response
+export async function upsertPatientToDB(patient: Patient, userId?: string | null): Promise<void> {
+  // Update isolated local cache immediately for 0ms UI response
   if (typeof window !== "undefined") {
-    const cached = getCachedPatients();
+    const cached = getCachedPatients(userId);
     const idx = cached.findIndex((p) => p.id === patient.id);
     if (idx >= 0) {
       cached[idx] = patient;
     } else {
       cached.unshift(patient);
     }
-    localStorage.setItem(LOCAL_STORAGE_PATIENTS_KEY, JSON.stringify(cached));
+    setCachedPatients(cached, userId);
   }
 
-  const row = mapPatientToRow(patient);
+  const row = mapPatientToRow(patient, userId);
   const { error } = await getSupabase().from("patients").upsert(row);
   if (error) {
     console.error("Error saving patient to Supabase:", error);
@@ -187,13 +256,10 @@ export async function upsertPatientToDB(patient: Patient): Promise<void> {
   }
 }
 
-export async function deletePatientFromDB(id: string): Promise<void> {
+export async function deletePatientFromDB(id: string, userId?: string | null): Promise<void> {
   if (typeof window !== "undefined") {
-    const cached = getCachedPatients();
-    localStorage.setItem(
-      LOCAL_STORAGE_PATIENTS_KEY,
-      JSON.stringify(cached.filter((p) => p.id !== id))
-    );
+    const cached = getCachedPatients(userId);
+    setCachedPatients(cached.filter((p) => p.id !== id), userId);
   }
 
   const { error } = await getSupabase().from("patients").delete().eq("id", id);
@@ -204,39 +270,43 @@ export async function deletePatientFromDB(id: string): Promise<void> {
 }
 
 // ================= APPOINTMENT API =================
-export async function fetchAppointmentsFromDB(): Promise<Appointment[]> {
+export async function fetchAppointmentsFromDB(userId?: string | null): Promise<Appointment[]> {
   try {
-    const { data, error } = await getSupabase()
+    let query = getSupabase()
       .from("appointments")
       .select("*")
       .order("date", { ascending: true });
 
+    if (userId) {
+      query = query.eq("user_id", userId);
+    }
+
+    const { data, error } = await query;
+
     if (!error && data) {
       const parsed = data.map(mapRowToAppointment);
-      if (typeof window !== "undefined") {
-        localStorage.setItem(LOCAL_STORAGE_APPOINTMENTS_KEY, JSON.stringify(parsed));
-      }
+      setCachedAppointments(parsed, userId);
       return parsed;
     }
   } catch (err) {
     console.warn("Error fetching appointments from Supabase, using cache:", err);
   }
-  return getCachedAppointments();
+  return getCachedAppointments(userId);
 }
 
-export async function upsertAppointmentToDB(apt: Appointment): Promise<void> {
+export async function upsertAppointmentToDB(apt: Appointment, userId?: string | null): Promise<void> {
   if (typeof window !== "undefined") {
-    const cached = getCachedAppointments();
+    const cached = getCachedAppointments(userId);
     const idx = cached.findIndex((a) => a.id === apt.id);
     if (idx >= 0) {
       cached[idx] = apt;
     } else {
       cached.push(apt);
     }
-    localStorage.setItem(LOCAL_STORAGE_APPOINTMENTS_KEY, JSON.stringify(cached));
+    setCachedAppointments(cached, userId);
   }
 
-  const row = mapAppointmentToRow(apt);
+  const row = mapAppointmentToRow(apt, userId);
   const { error } = await getSupabase().from("appointments").upsert(row);
   if (error) {
     console.error("Error saving appointment to Supabase:", error);
@@ -244,13 +314,10 @@ export async function upsertAppointmentToDB(apt: Appointment): Promise<void> {
   }
 }
 
-export async function deleteAppointmentFromDB(id: string): Promise<void> {
+export async function deleteAppointmentFromDB(id: string, userId?: string | null): Promise<void> {
   if (typeof window !== "undefined") {
-    const cached = getCachedAppointments();
-    localStorage.setItem(
-      LOCAL_STORAGE_APPOINTMENTS_KEY,
-      JSON.stringify(cached.filter((a) => a.id !== id))
-    );
+    const cached = getCachedAppointments(userId);
+    setCachedAppointments(cached.filter((a) => a.id !== id), userId);
   }
 
   const { error } = await getSupabase().from("appointments").delete().eq("id", id);
@@ -286,8 +353,8 @@ export function mapRowToMaterial(row: any): ClinicMaterial {
   };
 }
 
-export function mapMaterialToRow(mat: ClinicMaterial): any {
-  return {
+export function mapMaterialToRow(mat: ClinicMaterial, userId?: string | null): any {
+  const row: any = {
     id: mat.id,
     name: mat.supplier,
     supplier: mat.supplier,
@@ -302,87 +369,68 @@ export function mapMaterialToRow(mat: ClinicMaterial): any {
     created_at: mat.createdAt ?? Date.now(),
     updated_at: new Date().toISOString(),
   };
+
+  if (userId) {
+    row.user_id = userId;
+  }
+
+  return row;
 }
 
-export async function fetchMaterialsFromDB(): Promise<ClinicMaterial[]> {
+export async function fetchMaterialsFromDB(userId?: string | null): Promise<ClinicMaterial[]> {
   try {
-    const { data, error } = await getSupabase()
+    let query = getSupabase()
       .from("clinic_materials")
       .select("*")
       .order("created_at", { ascending: false });
+
+    if (userId) {
+      query = query.eq("user_id", userId);
+    }
+
+    const { data, error } = await query;
 
     if (!error && data) {
       const parsed = data
         .map(mapRowToMaterial)
         .filter((m) => !["mat-1", "mat-2", "mat-3", "mat-4", "mat-5", "mat-6"].includes(m.id));
 
-      if (typeof window !== "undefined") {
-        localStorage.setItem(LOCAL_STORAGE_MATERIALS_KEY, JSON.stringify(parsed));
-      }
+      setCachedMaterials(parsed, userId);
       return parsed;
     }
   } catch (err) {
     console.warn("Supabase clinic_materials not available, using fallback:", err);
   }
 
-  // Fallback to localStorage or empty array
-  if (typeof window !== "undefined") {
-    const cached = localStorage.getItem(LOCAL_STORAGE_MATERIALS_KEY);
-    if (cached) {
-      try {
-        const parsed = JSON.parse(cached);
-        if (Array.isArray(parsed)) {
-          // Filter out any legacy dummy seed items
-          const cleaned = parsed.filter(
-            (m) => !["mat-1", "mat-2", "mat-3", "mat-4", "mat-5", "mat-6"].includes(m.id)
-          );
-          localStorage.setItem(LOCAL_STORAGE_MATERIALS_KEY, JSON.stringify(cleaned));
-          return cleaned;
-        }
-      } catch (e) {
-        // ignore
-      }
-    }
-    localStorage.setItem(LOCAL_STORAGE_MATERIALS_KEY, JSON.stringify([]));
-  }
-  return [];
+  return getCachedMaterials(userId);
 }
 
-export async function upsertMaterialToDB(mat: ClinicMaterial): Promise<void> {
+export async function upsertMaterialToDB(mat: ClinicMaterial, userId?: string | null): Promise<void> {
   if (typeof window !== "undefined") {
-    const cached = localStorage.getItem(LOCAL_STORAGE_MATERIALS_KEY);
-    let list: ClinicMaterial[] = cached ? JSON.parse(cached) : [];
-    const idx = list.findIndex((m) => m.id === mat.id);
+    const cached = getCachedMaterials(userId);
+    const idx = cached.findIndex((m) => m.id === mat.id);
+    let list: ClinicMaterial[];
     if (idx >= 0) {
+      list = [...cached];
       list[idx] = mat;
     } else {
-      list.unshift(mat);
+      list = [mat, ...cached];
     }
-    localStorage.setItem(LOCAL_STORAGE_MATERIALS_KEY, JSON.stringify(list));
+    setCachedMaterials(list, userId);
   }
 
   try {
-    const row = mapMaterialToRow(mat);
+    const row = mapMaterialToRow(mat, userId);
     await getSupabase().from("clinic_materials").upsert(row);
   } catch (e) {
     console.warn("Could not sync material to Supabase (using local cache):", e);
   }
 }
 
-export async function deleteMaterialFromDB(id: string): Promise<void> {
+export async function deleteMaterialFromDB(id: string, userId?: string | null): Promise<void> {
   if (typeof window !== "undefined") {
-    const cached = localStorage.getItem(LOCAL_STORAGE_MATERIALS_KEY);
-    if (cached) {
-      try {
-        const list: ClinicMaterial[] = JSON.parse(cached);
-        localStorage.setItem(
-          LOCAL_STORAGE_MATERIALS_KEY,
-          JSON.stringify(list.filter((m) => m.id !== id))
-        );
-      } catch (e) {
-        // ignore
-      }
-    }
+    const cached = getCachedMaterials(userId);
+    setCachedMaterials(cached.filter((m) => m.id !== id), userId);
   }
 
   try {
@@ -393,14 +441,18 @@ export async function deleteMaterialFromDB(id: string): Promise<void> {
 }
 
 // ================= CLINIC MONTHLY RENT API =================
-const LOCAL_STORAGE_RENT_KEY = "clinic_rent_cache";
-
-export async function fetchRentFromDB(): Promise<Record<string, number>> {
+export async function fetchRentFromDB(userId?: string | null): Promise<Record<string, number>> {
   try {
-    const { data, error } = await getSupabase()
+    let query = getSupabase()
       .from("clinic_materials")
       .select("*")
       .eq("category", "Rent");
+
+    if (userId) {
+      query = query.eq("user_id", userId);
+    }
+
+    const { data, error } = await query;
 
     if (!error && data) {
       const rentMap: Record<string, number> = {};
@@ -411,7 +463,8 @@ export async function fetchRentFromDB(): Promise<Record<string, number>> {
         }
       });
       if (typeof window !== "undefined") {
-        localStorage.setItem(LOCAL_STORAGE_RENT_KEY, JSON.stringify(rentMap));
+        const key = getCacheKey("clinic_rent_cache", userId);
+        localStorage.setItem(key, JSON.stringify(rentMap));
       }
       return rentMap;
     }
@@ -421,25 +474,27 @@ export async function fetchRentFromDB(): Promise<Record<string, number>> {
 
   if (typeof window !== "undefined") {
     try {
-      const cached = localStorage.getItem(LOCAL_STORAGE_RENT_KEY);
+      const key = getCacheKey("clinic_rent_cache", userId);
+      const cached = localStorage.getItem(key);
       if (cached) return JSON.parse(cached);
     } catch {}
   }
   return {};
 }
 
-export async function saveRentToDB(month: string, amount: number): Promise<void> {
-  const rentId = `rent-${month}`;
+export async function saveRentToDB(month: string, amount: number, userId?: string | null): Promise<void> {
+  const rentId = userId ? `rent-${userId}-${month}` : `rent-${month}`;
   if (typeof window !== "undefined") {
     try {
-      const cached = localStorage.getItem(LOCAL_STORAGE_RENT_KEY);
+      const key = getCacheKey("clinic_rent_cache", userId);
+      const cached = localStorage.getItem(key);
       const map: Record<string, number> = cached ? JSON.parse(cached) : {};
       if (amount <= 0) {
         delete map[month];
       } else {
         map[month] = amount;
       }
-      localStorage.setItem(LOCAL_STORAGE_RENT_KEY, JSON.stringify(map));
+      localStorage.setItem(key, JSON.stringify(map));
     } catch {}
   }
 
@@ -447,7 +502,7 @@ export async function saveRentToDB(month: string, amount: number): Promise<void>
     if (amount <= 0) {
       await getSupabase().from("clinic_materials").delete().eq("id", rentId);
     } else {
-      await getSupabase().from("clinic_materials").upsert({
+      const row: any = {
         id: rentId,
         name: `Rent ${month}`,
         category: "Rent",
@@ -460,7 +515,11 @@ export async function saveRentToDB(month: string, amount: number): Promise<void>
         purchase_date: `${month}-01`,
         created_at: Date.now(),
         updated_at: new Date().toISOString(),
-      });
+      };
+      if (userId) {
+        row.user_id = userId;
+      }
+      await getSupabase().from("clinic_materials").upsert(row);
     }
   } catch (e) {
     console.warn("Could not save rent to Supabase:", e);

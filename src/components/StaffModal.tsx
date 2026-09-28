@@ -5,6 +5,7 @@ import { X, UserPlus, Mail, Lock, User, Trash2, ShieldCheck, AlertCircle, CheckC
 import { StaffMember } from "@/types/staff";
 import { createSecretaryAccount, fetchStaffFromDB, deleteStaffFromDB } from "@/utils/supabase/staff";
 import { useLanguage } from "@/context/LanguageContext";
+import { useAuth } from "@/context/AuthContext";
 import { formatStaticDate } from "@/utils/date";
 
 interface StaffModalProps {
@@ -14,6 +15,7 @@ interface StaffModalProps {
 
 export function StaffModal({ isOpen, onClose }: StaffModalProps) {
   const { t } = useLanguage();
+  const { clinicOwnerId } = useAuth();
   const [staffList, setStaffList] = useState<StaffMember[]>([]);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -24,11 +26,11 @@ export function StaffModal({ isOpen, onClose }: StaffModalProps) {
 
   useEffect(() => {
     if (isOpen) {
-      fetchStaffFromDB().then(setStaffList);
+      fetchStaffFromDB(clinicOwnerId).then(setStaffList);
       setErrorMsg(null);
       setSuccessMsg(null);
     }
-  }, [isOpen]);
+  }, [isOpen, clinicOwnerId]);
 
   if (!isOpen) return null;
 
@@ -45,7 +47,7 @@ export function StaffModal({ isOpen, onClose }: StaffModalProps) {
     setErrorMsg(null);
     setSuccessMsg(null);
 
-    const result = await createSecretaryAccount(name, email, password);
+    const result = await createSecretaryAccount(name, email, password, clinicOwnerId);
 
     setIsLoading(false);
     if (!result.success) {
@@ -62,7 +64,7 @@ export function StaffModal({ isOpen, onClose }: StaffModalProps) {
   };
 
   const handleDelete = async (id: string) => {
-    await deleteStaffFromDB(id);
+    await deleteStaffFromDB(id, clinicOwnerId);
     setStaffList((prev) => prev.filter((s) => s.id !== id));
   };
 

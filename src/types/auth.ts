@@ -15,4 +15,5 @@ export interface AuthContextType {
   badgeLabel: string;
   isPasswordRecovery: boolean;
   setIsPasswordRecovery: (val: boolean) => void;
+  clinicOwnerId: string | null;
 }

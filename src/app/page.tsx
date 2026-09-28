@@ -107,6 +107,7 @@ export default function DashboardPage() {
     isAuthenticated,
     isDoctor,
     isSecretary,
+    clinicOwnerId,
     signOut,
     isPasswordRecovery,
     setIsPasswordRecovery,
@@ -115,10 +116,10 @@ export default function DashboardPage() {
 
   const [activeTab, setActiveTab] = useState<"patients" | "appointments" | "materials" | "reports">("patients");
   
-  // Instant 0ms Load: Initialize from local cache immediately on render
-  const [patients, setPatients] = useState<Patient[]>(() => getCachedPatients());
-  const [appointments, setAppointments] = useState<Appointment[]>(() => getCachedAppointments());
-  const [materials, setMaterials] = useState<ClinicMaterial[]>(() => getCachedMaterials());
+  // Isolated state per account (never preload global caches)
+  const [patients, setPatients] = useState<Patient[]>([]);
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [materials, setMaterials] = useState<ClinicMaterial[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
   // Modals state
@@ -154,14 +155,14 @@ export default function DashboardPage() {
     const handleBeforeUnload = () => {
       if (undoPatientState && pendingDeleteTimeoutRef.current) {
         clearTimeout(pendingDeleteTimeoutRef.current);
-        deletePatientFromDB(undoPatientState.patient.id).catch(console.error);
+        deletePatientFromDB(undoPatientState.patient.id, clinicOwnerId).catch(console.error);
       }
     };
     window.addEventListener("beforeunload", handleBeforeUnload);
     return () => {
       window.removeEventListener("beforeunload", handleBeforeUnload);
     };
-  }, [undoPatientState]);
+  }, [undoPatientState, clinicOwnerId]);
 
   // Role Access Guard: if secretary, restrict activeTab to patients or appointments
   useEffect(() => {
@@ -170,18 +171,30 @@ export default function DashboardPage() {
     }
   }, [isDoctor, activeTab]);
 
-  // Load from Supabase when authenticated
+  // Load from Supabase when authenticated, strictly scoped to this clinic
   useEffect(() => {
-    if (!isAuthenticated) return;
+    if (!isAuthenticated || !clinicOwnerId) {
+      setPatients([]);
+      setAppointments([]);
+      setMaterials([]);
+      return;
+    }
+
+    // 1. Immediately load this specific clinic's cached records
+    setPatients(getCachedPatients(clinicOwnerId));
+    setAppointments(getCachedAppointments(clinicOwnerId));
+    if (isDoctor) {
+      setMaterials(getCachedMaterials(clinicOwnerId));
+    }
 
     async function loadData() {
       setIsLoading(true);
       try {
         if (isDoctor) {
           const [dbPatients, dbApts, dbMaterials] = await Promise.all([
-            fetchPatientsFromDB(),
-            fetchAppointmentsFromDB(),
-            fetchMaterialsFromDB(),
+            fetchPatientsFromDB(clinicOwnerId),
+            fetchAppointmentsFromDB(clinicOwnerId),
+            fetchMaterialsFromDB(clinicOwnerId),
           ]);
           setPatients(dbPatients);
           setAppointments(dbApts);
@@ -189,8 +202,8 @@ export default function DashboardPage() {
         } else {
           // Secretary only needs patients and appointments
           const [dbPatients, dbApts] = await Promise.all([
-            fetchPatientsFromDB(),
-            fetchAppointmentsFromDB(),
+            fetchPatientsFromDB(clinicOwnerId),
+            fetchAppointmentsFromDB(clinicOwnerId),
           ]);
           setPatients(dbPatients);
           setAppointments(dbApts);
@@ -203,7 +216,7 @@ export default function DashboardPage() {
     }
 
     loadData();
-  }, [isAuthenticated, isDoctor]);
+  }, [isAuthenticated, isDoctor, clinicOwnerId]);
 
   const handleSignOut = async () => {
     await signOut();
@@ -260,14 +273,14 @@ export default function DashboardPage() {
       };
       setAppointments((prev) => [newApt, ...prev]);
       try {
-        await upsertAppointmentToDB(newApt);
+        await upsertAppointmentToDB(newApt, clinicOwnerId);
       } catch (err) {
         console.error("Failed to auto-save appointment:", err);
       }
     }
 
     try {
-      await upsertPatientToDB(newPatient);
+      await upsertPatientToDB(newPatient, clinicOwnerId);
     } catch (e) {
       console.error("Failed to save patient to Supabase:", e);
       showToast("⚠️ Failed to save to cloud");
@@ -282,7 +295,7 @@ export default function DashboardPage() {
     setEditingPatient(null);
 
     try {
-      await upsertPatientToDB(updatedPatient);
+      await upsertPatientToDB(updatedPatient, clinicOwnerId);
     } catch (e) {
       console.error("Failed to update patient in Supabase:", e);
       showToast("⚠️ Failed to save to cloud");
@@ -294,7 +307,7 @@ export default function DashboardPage() {
     if (undoPatientState && pendingDeleteTimeoutRef.current) {
       clearTimeout(pendingDeleteTimeoutRef.current);
       pendingDeleteTimeoutRef.current = null;
-      deletePatientFromDB(undoPatientState.patient.id).catch(console.error);
+      deletePatientFromDB(undoPatientState.patient.id, clinicOwnerId).catch(console.error);
     }
 
     const patientIndex = patients.findIndex((p) => p.id === id);
@@ -310,7 +323,7 @@ export default function DashboardPage() {
     // Schedule final permanent DB deletion after 7 seconds
     pendingDeleteTimeoutRef.current = setTimeout(async () => {
       try {
-        await deletePatientFromDB(id);
+        await deletePatientFromDB(id, clinicOwnerId);
       } catch (e) {
         console.error("Failed to delete patient from Supabase:", e);
       }
@@ -340,7 +353,7 @@ export default function DashboardPage() {
 
     // Re-save to local cache and Supabase to guarantee data consistency
     try {
-      await upsertPatientToDB(restoredPatient);
+      await upsertPatientToDB(restoredPatient, clinicOwnerId);
       showToast(`✓ ${restoredPatient.name}: ${t.patientRestored}`);
     } catch (e) {
       console.error("Failed to restore patient:", e);
@@ -356,7 +369,7 @@ export default function DashboardPage() {
       const id = undoPatientState.patient.id;
       setUndoPatientState(null);
       try {
-        await deletePatientFromDB(id);
+        await deletePatientFromDB(id, clinicOwnerId);
       } catch (e) {
         console.error("Failed to delete patient from Supabase:", e);
       }
@@ -400,7 +413,7 @@ export default function DashboardPage() {
 
     if (targetUpdatedPatient) {
       try {
-        await upsertPatientToDB(targetUpdatedPatient);
+        await upsertPatientToDB(targetUpdatedPatient, clinicOwnerId);
       } catch (e) {
         console.error("Failed to save history to Supabase:", e);
         showToast("⚠️ Failed to save to cloud");
@@ -438,7 +451,7 @@ export default function DashboardPage() {
 
     if (targetUpdatedPatient) {
       try {
-        await upsertPatientToDB(targetUpdatedPatient);
+        await upsertPatientToDB(targetUpdatedPatient, clinicOwnerId);
       } catch (e) {
         console.error("Failed to delete history from Supabase:", e);
         showToast("⚠️ Failed to save to cloud");
@@ -491,7 +504,7 @@ export default function DashboardPage() {
 
     if (targetUpdatedPatient) {
       try {
-        await upsertPatientToDB(targetUpdatedPatient);
+        await upsertPatientToDB(targetUpdatedPatient, clinicOwnerId);
       } catch (e) {
         console.error("Failed to update history in Supabase:", e);
         showToast("⚠️ Failed to save to cloud");
@@ -534,7 +547,7 @@ export default function DashboardPage() {
 
     if (targetUpdatedPatient) {
       try {
-        await upsertPatientToDB(targetUpdatedPatient);
+        await upsertPatientToDB(targetUpdatedPatient, clinicOwnerId);
       } catch (e) {
         console.error("Failed to save dental chart to Supabase:", e);
         showToast("⚠️ Failed to save to cloud");
@@ -553,7 +566,7 @@ export default function DashboardPage() {
     showToast(`Booked appointment for "${newApt.patientName}"`);
 
     try {
-      await upsertAppointmentToDB(newApt);
+      await upsertAppointmentToDB(newApt, clinicOwnerId);
     } catch (e) {
       console.error("Failed to save appointment to Supabase:", e);
       showToast("⚠️ Failed to save to cloud");
@@ -577,7 +590,7 @@ export default function DashboardPage() {
 
     if (targetApt) {
       try {
-        await upsertAppointmentToDB(targetApt);
+        await upsertAppointmentToDB(targetApt, clinicOwnerId);
       } catch (e) {
         console.error("Failed to update appointment in Supabase:", e);
         showToast("⚠️ Failed to save to cloud");
@@ -593,7 +606,7 @@ export default function DashboardPage() {
     }
 
     try {
-      await deleteAppointmentFromDB(id);
+      await deleteAppointmentFromDB(id, clinicOwnerId);
     } catch (e) {
       console.error("Failed to delete appointment from Supabase:", e);
       showToast("⚠️ Failed to delete from cloud");
@@ -631,7 +644,7 @@ export default function DashboardPage() {
     showToast(`✓ Debt of ${formatIQD(curDebt)} for "${patient.name}" marked as fully paid!`);
 
     try {
-      await upsertPatientToDB(updatedPatient);
+      await upsertPatientToDB(updatedPatient, clinicOwnerId);
     } catch (e) {
       console.error("Failed to settle debt in Supabase:", e);
       showToast("⚠️ Failed to sync debt settlement to cloud");
@@ -649,7 +662,7 @@ export default function DashboardPage() {
     showToast(`Added expense for "${newMat.supplier}"`);
 
     try {
-      await upsertMaterialToDB(newMat);
+      await upsertMaterialToDB(newMat, clinicOwnerId);
     } catch (e) {
       console.error("Failed to save material to Supabase:", e);
     }
@@ -658,7 +671,7 @@ export default function DashboardPage() {
   const handleUpdateMaterial = async (updated: ClinicMaterial) => {
     setMaterials((prev) => prev.map((m) => (m.id === updated.id ? updated : m)));
     try {
-      await upsertMaterialToDB(updated);
+      await upsertMaterialToDB(updated, clinicOwnerId);
     } catch (e) {
       console.error("Failed to update material in Supabase:", e);
     }
@@ -672,7 +685,7 @@ export default function DashboardPage() {
     }
 
     try {
-      await deleteMaterialFromDB(id);
+      await deleteMaterialFromDB(id, clinicOwnerId);
     } catch (e) {
       console.error("Failed to delete material from Supabase:", e);
     }

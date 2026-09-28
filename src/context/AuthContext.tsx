@@ -19,6 +19,7 @@ const AuthContext = createContext<AuthContextType>({
   badgeLabel: "دکتۆر / Doctor",
   isPasswordRecovery: false,
   setIsPasswordRecovery: () => {},
+  clinicOwnerId: null,
 });
 
 /**
@@ -111,6 +112,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signOut = useCallback(async () => {
     if (typeof window !== "undefined") {
       sessionStorage.removeItem("clinic_role_override");
+      // Clean up all local storage caches to prevent cross-account data leakage
+      const keysToRemove: string[] = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (
+          k &&
+          (k.startsWith("clinic_") ||
+            k.startsWith("dr_qayssar_") ||
+            k.includes("patients_cache") ||
+            k.includes("appointments_cache") ||
+            k.includes("materials_cache") ||
+            k.includes("settings") ||
+            k.includes("staff"))
+        ) {
+          keysToRemove.push(k);
+        }
+      }
+      keysToRemove.forEach((k) => localStorage.removeItem(k));
     }
     await supabase.auth.signOut();
     setSession(null);
@@ -124,6 +143,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const isDoctor = role === "doctor";
   const isSecretary = role === "secretary";
+
+  // Resolved clinic owner ID: doctor's own id, or the doctor_id this secretary belongs to
+  const clinicOwnerId: string | null = useMemo(() => {
+    if (!user) return null;
+    return (user.user_metadata?.doctor_id as string) || user.id || null;
+  }, [user]);
 
   // Friendly display name
   const userName = useMemo(() => {
@@ -148,6 +173,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       role,
       isDoctor,
       isSecretary,
+      clinicOwnerId,
       userName,
       sessionChecked,
       isAuthenticated,
@@ -162,6 +188,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       role,
       isDoctor,
       isSecretary,
+      clinicOwnerId,
       userName,
       sessionChecked,
       isAuthenticated,
