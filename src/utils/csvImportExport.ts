@@ -358,16 +358,43 @@ export function parsePatientsCsv(csvText: string): ParsedCsvResult {
 
     const patientId = `pat-${now}-${Math.random().toString(36).substring(2, 6)}-${r}`;
 
-    const initialEntry: PatientHistoryEntry = {
-      id: `hist-${now}-${Math.random().toString(36).substring(2, 6)}-${r}`,
-      date,
-      title: "Initial Import",
-      notes: notes || "Imported from database CSV",
-      fee: totalAmount,
-      paid: paidAmount,
-      debt: debtAmount,
-      createdAt: now,
-    };
+    // Smart visit chain parser: check if notes contains [YYYY-MM-DD: Procedure (amount)]
+    const visitRegex = /\[(\d{4}-\d{2}-\d{2}):\s*([^(\]]+?)(?:\s*\(([0-9,.\s]+)\))?\]/g;
+    const visitMatches = Array.from(notes.matchAll(visitRegex));
+
+    let history: PatientHistoryEntry[] = [];
+    if (visitMatches.length > 0) {
+      visitMatches.forEach((m, idx) => {
+        const vDate = m[1];
+        const vTitle = m[2].trim();
+        const vFee = m[3] ? parseNumber(m[3]) : 0;
+        history.push({
+          id: `hist-${now}-${r}-${idx}`,
+          date: vDate,
+          title: vTitle,
+          notes: "",
+          fee: vFee,
+          paid: vFee,
+          debt: 0,
+          createdAt: now + idx,
+        });
+      });
+      // Sort newest first
+      history.sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+    } else {
+      history = [
+        {
+          id: `hist-${now}-${r}`,
+          date,
+          title: notes ? notes.slice(0, 60) : "Initial Visit",
+          notes: notes || "Imported from database CSV",
+          fee: totalAmount,
+          paid: paidAmount,
+          debt: debtAmount,
+          createdAt: now,
+        },
+      ];
+    }
 
     const patient: Patient = {
       id: patientId,
@@ -380,8 +407,8 @@ export function parsePatientsCsv(csvText: string): ParsedCsvResult {
       paidAmount,
       debtAmount,
       notes,
-      medicalHistory,
-      history: [initialEntry],
+      medicalHistory: medicalHistory === "None" ? "" : medicalHistory,
+      history,
       teeth: [],
       createdAt: now,
     };

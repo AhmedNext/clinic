@@ -109,5 +109,20 @@ Sara Ali,07709876543,female,32,2026-04-11,50000,50000,0,Scaling,Penicillin aller
       assert.equal(result.errors.length, 1);
       assert.equal(result.patients[0].name, "Valid Patient");
     });
+
+    it("smartly extracts multi-visit chains from notes into individual history entries", () => {
+      const csv = `Name,Gender,Phone,Date,Paid Amount,Debt Amount,Total Amount,Notes
+Rawsht Ali,male,07701042114,2026-08-12,480000,0,480000,"3 visits: [2026-01-07: Ortho Appliance (80,000)] -> [2026-02-18: Ortho Appliance (75,000)] -> [2026-04-02: Ortho Appliance (40,000)]"`;
+      const result = parsePatientsCsv(csv);
+      assert.equal(result.validRows, 1);
+      const p = result.patients[0];
+      assert.equal(p.history?.length, 3);
+      assert.equal(p.history?.[0].date, "2026-04-02");
+      assert.equal(p.history?.[0].fee, 40000);
+      assert.equal(p.history?.[1].date, "2026-02-18");
+      assert.equal(p.history?.[1].fee, 75000);
+      assert.equal(p.history?.[2].date, "2026-01-07");
+      assert.equal(p.history?.[2].fee, 80000);
+    });
   });
 });
