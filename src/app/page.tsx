@@ -91,6 +91,14 @@ const SetPasswordModal = dynamic(
   () => import("@/components/SetPasswordModal").then((m) => m.SetPasswordModal),
   { ssr: false }
 );
+const PrintReceiptModal = dynamic(
+  () => import("@/components/print/PrintReceiptModal").then((m) => m.PrintReceiptModal),
+  { ssr: false }
+);
+const DentalPrescriptionModal = dynamic(
+  () => import("@/components/print/DentalPrescriptionModal").then((m) => m.DentalPrescriptionModal),
+  { ssr: false }
+);
 
 export default function DashboardPage() {
   const { t, language } = useLanguage();
@@ -120,6 +128,8 @@ export default function DashboardPage() {
   const [editingPatient, setEditingPatient] = useState<Patient | null>(null);
   const [historyPatient, setHistoryPatient] = useState<Patient | null>(null);
   const [dentalPatient, setDentalPatient] = useState<Patient | null>(null);
+  const [receiptPatient, setReceiptPatient] = useState<Patient | null>(null);
+  const [prescriptionPatient, setPrescriptionPatient] = useState<Patient | null>(null);
 
   // Patients filters
   const [searchQuery, setSearchQuery] = useState("");
@@ -1050,6 +1060,8 @@ export default function DashboardPage() {
                       onViewHistory={(patient) => setHistoryPatient(patient)}
                       onOpenDentalChart={(patient) => setDentalPatient(patient)}
                       onSettleDebt={handleSettleDebt}
+                      onPrintReceipt={(patient) => setReceiptPatient(patient)}
+                      onPrintPrescription={(patient) => setPrescriptionPatient(patient)}
                     />
                   </div>
                 ) : (
@@ -1065,6 +1077,8 @@ export default function DashboardPage() {
                         onOpenDentalChart={(patient) => setDentalPatient(patient)}
                         onSettleDebt={handleSettleDebt}
                         onUpdatePatient={handleUpdatePatient}
+                        onPrintReceipt={(patient) => setReceiptPatient(patient)}
+                        onPrintPrescription={(patient) => setPrescriptionPatient(patient)}
                       />
                     ))}
                   </div>
@@ -1133,6 +1147,8 @@ export default function DashboardPage() {
         onAddHistoryEntry={handleAddHistoryEntry}
         onUpdateHistoryEntry={handleUpdateHistoryEntry}
         onDeleteHistoryEntry={handleDeleteHistoryEntry}
+        onPrintReceipt={(patient) => setReceiptPatient(patient)}
+        onPrintPrescription={(patient) => setPrescriptionPatient(patient)}
       />
 
       {/* 3D Dental Chart Modal */}
@@ -1142,6 +1158,20 @@ export default function DashboardPage() {
         onClose={() => setDentalPatient(null)}
         onSaveTeeth={handleSaveTeeth}
         clinicMaterials={materials}
+      />
+
+      {/* Print Receipt / Invoice Modal */}
+      <PrintReceiptModal
+        isOpen={Boolean(receiptPatient)}
+        patient={receiptPatient}
+        onClose={() => setReceiptPatient(null)}
+      />
+
+      {/* Dental Prescription Modal */}
+      <DentalPrescriptionModal
+        isOpen={Boolean(prescriptionPatient)}
+        patient={prescriptionPatient}
+        onClose={() => setPrescriptionPatient(null)}
       />
 
 

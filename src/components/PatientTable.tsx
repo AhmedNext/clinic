@@ -3,7 +3,7 @@
 import React from "react";
 import { Patient, calculateDebt, formatIQD, getWhatsAppUrl } from "@/types/patient";
 import { PatientAvatar } from "./PatientAvatar";
-import { Calendar, Clock, Trash2, FileText, Pencil, History, Phone, Check } from "lucide-react";
+import { Calendar, Clock, Trash2, FileText, Pencil, History, Phone, Check, Printer, Stethoscope } from "lucide-react";
 import { formatStaticDate } from "@/utils/date";
 import { useLanguage } from "@/context/LanguageContext";
 import { useAuth } from "@/context/AuthContext";
@@ -15,6 +15,8 @@ interface PatientTableProps {
   onViewHistory: (patient: Patient) => void;
   onOpenDentalChart: (patient: Patient) => void;
   onSettleDebt?: (patient: Patient) => void;
+  onPrintReceipt?: (patient: Patient) => void;
+  onPrintPrescription?: (patient: Patient) => void;
 }
 
 export const PatientTable = React.memo(function PatientTable({
@@ -24,6 +26,8 @@ export const PatientTable = React.memo(function PatientTable({
   onViewHistory,
   onOpenDentalChart,
   onSettleDebt,
+  onPrintReceipt,
+  onPrintPrescription,
 }: PatientTableProps) {
   const { t } = useLanguage();
   const { isDoctor } = useAuth();
@@ -83,6 +87,26 @@ export const PatientTable = React.memo(function PatientTable({
                 </div>
 
                 <div className="flex items-center gap-0.5 flex-shrink-0">
+                  {onPrintReceipt && (
+                    <button
+                      onClick={() => onPrintReceipt(patient)}
+                      title={t.printReceipt}
+                      aria-label={t.printReceipt}
+                      className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 active:scale-90 transition-all cursor-pointer"
+                    >
+                      <Printer className="w-4 h-4" />
+                    </button>
+                  )}
+                  {onPrintPrescription && (
+                    <button
+                      onClick={() => onPrintPrescription(patient)}
+                      title={t.printPrescription}
+                      aria-label={t.printPrescription}
+                      className="p-1.5 rounded-lg text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 active:scale-90 transition-all cursor-pointer"
+                    >
+                      <Stethoscope className="w-4 h-4" />
+                    </button>
+                  )}
                   <button
                     onClick={() => onViewHistory(patient)}
                     title="History"
@@ -396,6 +420,26 @@ export const PatientTable = React.memo(function PatientTable({
                     {/* Actions */}
                     <td className="py-3.5 pl-3 pr-5 text-right">
                       <div className="flex items-center justify-end gap-0.5">
+                        {onPrintReceipt && (
+                          <button
+                            onClick={() => onPrintReceipt(patient)}
+                            title={t.printReceipt}
+                            aria-label={t.printReceipt}
+                            className="p-1.5 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 rounded-lg transition-colors cursor-pointer"
+                          >
+                            <Printer className="w-4 h-4" />
+                          </button>
+                        )}
+                        {onPrintPrescription && (
+                          <button
+                            onClick={() => onPrintPrescription(patient)}
+                            title={t.printPrescription}
+                            aria-label={t.printPrescription}
+                            className="p-1.5 text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 rounded-lg transition-colors cursor-pointer"
+                          >
+                            <Stethoscope className="w-4 h-4" />
+                          </button>
+                        )}
                         <button
                           onClick={() => onOpenDentalChart(patient)}
                           title="Open 3D Dental Chart"

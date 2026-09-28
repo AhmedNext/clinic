@@ -282,6 +282,25 @@ export interface Translations {
   savePassword: string;
   passwordsDoNotMatch: string;
   passwordUpdatedSuccess: string;
+
+  // Printing & Prescriptions
+  printReceipt: string;
+  printPrescription: string;
+  prescription: string;
+  receipt: string;
+  officialReceipt: string;
+  medication: string;
+  dosage: string;
+  frequency: string;
+  duration: string;
+  instructions: string;
+  addMedication: string;
+  quickPresets: string;
+  doctorSignature: string;
+  diagnosis: string;
+  thankYouClinic: string;
+  printNow: string;
+  allergiesAlert: string;
 }
 
 export const translations: Record<Language, Translations> = {
@@ -567,6 +586,25 @@ export const translations: Record<Language, Translations> = {
     savePassword: "Save Password & Continue",
     passwordsDoNotMatch: "Passwords do not match.",
     passwordUpdatedSuccess: "Password saved successfully! You can now log in anytime.",
+
+    // Printing & Prescriptions
+    printReceipt: "Print Receipt",
+    printPrescription: "Print Prescription",
+    prescription: "Dental Prescription",
+    receipt: "Patient Receipt",
+    officialReceipt: "Official Patient Receipt",
+    medication: "Medication / Drug",
+    dosage: "Dosage",
+    frequency: "Frequency",
+    duration: "Duration",
+    instructions: "Instructions",
+    addMedication: "Add Medication",
+    quickPresets: "Dental Presets",
+    doctorSignature: "Doctor's Signature & Stamp",
+    diagnosis: "Diagnosis / Treatment",
+    thankYouClinic: "Thank you for trusting our clinic with your dental care.",
+    printNow: "Print Document",
+    allergiesAlert: "Allergies / Medical Alert",
   },
 
   ar: {
@@ -851,6 +889,25 @@ export const translations: Record<Language, Translations> = {
     savePassword: "حفظ كلمة المرور والمتابعة",
     passwordsDoNotMatch: "كلمتا المرور غير متطابقتين.",
     passwordUpdatedSuccess: "تم حفظ كلمة المرور بنجاح! يمكنك الآن تسجيل الدخول في أي وقت.",
+
+    // Printing & Prescriptions
+    printReceipt: "طباعة الإيصال",
+    printPrescription: "طباعة الوصفة الطبية",
+    prescription: "وصفة طبية للأسنان",
+    receipt: "إيصال المريض",
+    officialReceipt: "إيصال قبض رسمي",
+    medication: "الدواء والشكل",
+    dosage: "الجرعة",
+    frequency: "التكرار / الاستخدام",
+    duration: "المدة",
+    instructions: "التعليمات",
+    addMedication: "إضافة دواء",
+    quickPresets: "وصفات أسنان جاهزة",
+    doctorSignature: "توقيع وختم الطبيب",
+    diagnosis: "التشخيص / الإجراء",
+    thankYouClinic: "شكراً لثقتكم بعيادتنا لرعاية أسنانكم.",
+    printNow: "طباعة المستند",
+    allergiesAlert: "تنبيه الحساسية / السيرة المرضية",
   },
 
   ku: {
@@ -1135,6 +1192,25 @@ export const translations: Record<Language, Translations> = {
     savePassword: "پاشەکەوتکردنی وشەی نهێنی و بەردەوامبوون",
     passwordsDoNotMatch: "وشە نهێنییەکان هاوشێوە نین.",
     passwordUpdatedSuccess: "وشەی نهێنی بە سەرکەوتوویی پاشەکەوتکرا! ئێستا دەتوانیت لە هەر کاتێکدا بێیتە ژوورەوە.",
+
+    // Printing & Prescriptions
+    printReceipt: "چاپکردنی پسوولە",
+    printPrescription: "چاپکردنی ڕەچەتە",
+    prescription: "ڕەچەتەی پزیشکی ددان",
+    receipt: "پسوولەی نەخۆش",
+    officialReceipt: "پسوولەی فەرمی نەخۆش",
+    medication: "دەرمان و جۆرەکەی",
+    dosage: "بڕی دەرمان",
+    frequency: "چۆنیەتی بەکارهێنان",
+    duration: "ماوە",
+    instructions: "ڕێنماییەکان",
+    addMedication: "زیادکردنی دەرمان",
+    quickPresets: "دەرمانی ئامادەکراوی ددان",
+    doctorSignature: "واژۆ و مۆری پزیشک",
+    diagnosis: "دەستنیشانکردن / چارەسەر",
+    thankYouClinic: "سوپاس بۆ متمانەکردنتان بە نۆرینگەکەمان بۆ چارەسەری دەم و ددانتان.",
+    printNow: "چاپکردنی بەڵگەنامە",
+    allergiesAlert: "هەستیاری / هۆشداری پزیشکی",
   },
 };
 

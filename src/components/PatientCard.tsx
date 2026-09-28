@@ -12,6 +12,8 @@ import {
   History,
   Phone,
   Check,
+  Printer,
+  Stethoscope,
 } from "lucide-react";
 import { formatStaticDate } from "@/utils/date";
 import { CircleClockPickerModal } from "./ui/CircleClockPickerModal";
@@ -27,6 +29,8 @@ interface PatientCardProps {
   onOpenDentalChart: (patient: Patient) => void;
   onSettleDebt?: (patient: Patient) => void;
   onUpdatePatient?: (patient: Patient) => void;
+  onPrintReceipt?: (patient: Patient) => void;
+  onPrintPrescription?: (patient: Patient) => void;
 }
 
 export const PatientCard = React.memo(function PatientCard({
@@ -37,6 +41,8 @@ export const PatientCard = React.memo(function PatientCard({
   onOpenDentalChart,
   onSettleDebt,
   onUpdatePatient,
+  onPrintReceipt,
+  onPrintPrescription,
 }: PatientCardProps) {
   const { t } = useLanguage();
   const { isDoctor } = useAuth();
@@ -126,6 +132,26 @@ export const PatientCard = React.memo(function PatientCard({
 
         {/* Quick action buttons */}
         <div className="flex items-center gap-0.5 flex-shrink-0 -mr-1">
+          {onPrintReceipt && (
+            <button
+              onClick={() => onPrintReceipt(patient)}
+              title={t.printReceipt}
+              aria-label={t.printReceipt}
+              className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 transition-all cursor-pointer active:scale-90"
+            >
+              <Printer className="w-4 h-4" />
+            </button>
+          )}
+          {onPrintPrescription && (
+            <button
+              onClick={() => onPrintPrescription(patient)}
+              title={t.printPrescription}
+              aria-label={t.printPrescription}
+              className="p-1.5 rounded-lg text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 transition-all cursor-pointer active:scale-90"
+            >
+              <Stethoscope className="w-4 h-4" />
+            </button>
+          )}
           <button
             onClick={() => onViewHistory(patient)}
             title="History timeline"
