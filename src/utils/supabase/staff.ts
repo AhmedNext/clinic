@@ -52,11 +52,18 @@ export async function createSecretaryAccount(
     const authClient = getStaffAuthClient();
     const cleanEmail = email.trim().toLowerCase();
 
+    const redirectUrl =
+      process.env.NEXT_PUBLIC_SITE_URL ||
+      (typeof window !== "undefined" && window.location.origin.includes("iq-dent")
+        ? window.location.origin
+        : "https://iq-dent.vercel.app");
+
     // 1. Sign up user in Supabase Auth with role: 'secretary'
     const { data, error } = await authClient.auth.signUp({
       email: cleanEmail,
       password,
       options: {
+        emailRedirectTo: redirectUrl,
         data: {
           role: "secretary",
           full_name: name.trim(),

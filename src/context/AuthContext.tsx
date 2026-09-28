@@ -17,6 +17,8 @@ const AuthContext = createContext<AuthContextType>({
   isAuthenticated: false,
   signOut: async () => {},
   badgeLabel: "دکتۆر / Doctor",
+  isPasswordRecovery: false,
+  setIsPasswordRecovery: () => {},
 });
 
 /**
@@ -51,11 +53,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [sessionChecked, setSessionChecked] = useState(false);
+  const [isPasswordRecovery, setIsPasswordRecovery] = useState(false);
 
-  // Clear any legacy role overrides on mount
+  // Clear any legacy role overrides on mount & check for recovery / invite links in URL
   useEffect(() => {
     if (typeof window !== "undefined") {
       sessionStorage.removeItem("clinic_role_override");
+      const hash = window.location.hash || "";
+      if (hash.includes("type=recovery") || hash.includes("type=invite")) {
+        setIsPasswordRecovery(true);
+      }
     }
   }, []);
 
@@ -69,10 +76,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, currentSession) => {
+    } = supabase.auth.onAuthStateChange((event, currentSession) => {
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
       setSessionChecked(true);
+
+      if (event === "PASSWORD_RECOVERY") {
+        setIsPasswordRecovery(true);
+      }
     });
 
     return () => subscription.unsubscribe();
@@ -123,6 +134,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       isAuthenticated,
       signOut,
       badgeLabel,
+      isPasswordRecovery,
+      setIsPasswordRecovery,
     }),
     [
       user,
@@ -135,6 +148,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       isAuthenticated,
       signOut,
       badgeLabel,
+      isPasswordRecovery,
+      setIsPasswordRecovery,
     ]
   );
 

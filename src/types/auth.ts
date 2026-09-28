@@ -13,4 +13,6 @@ export interface AuthContextType {
   isAuthenticated: boolean;
   signOut: () => Promise<void>;
   badgeLabel: string;
+  isPasswordRecovery: boolean;
+  setIsPasswordRecovery: (val: boolean) => void;
 }

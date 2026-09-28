@@ -273,6 +273,15 @@ export interface Translations {
   undo: string;
   patientDeleted: string;
   patientRestored: string;
+
+  // Set Password & Recovery
+  setPasswordTitle: string;
+  setPasswordSubtitle: string;
+  newPassword: string;
+  confirmPassword: string;
+  savePassword: string;
+  passwordsDoNotMatch: string;
+  passwordUpdatedSuccess: string;
 }
 
 export const translations: Record<Language, Translations> = {
@@ -549,6 +558,15 @@ export const translations: Record<Language, Translations> = {
     undo: "Undo",
     patientDeleted: "Patient record deleted",
     patientRestored: "Patient record restored successfully",
+
+    // Set Password & Recovery
+    setPasswordTitle: "Create Your Password",
+    setPasswordSubtitle: "Enter a secure password to access your clinic account.",
+    newPassword: "New Password",
+    confirmPassword: "Confirm Password",
+    savePassword: "Save Password & Continue",
+    passwordsDoNotMatch: "Passwords do not match.",
+    passwordUpdatedSuccess: "Password saved successfully! You can now log in anytime.",
   },
 
   ar: {
@@ -824,6 +842,15 @@ export const translations: Record<Language, Translations> = {
     undo: "تراجع",
     patientDeleted: "تم حذف ملف المريض",
     patientRestored: "تمت استعادة المريض بنجاح",
+
+    // Set Password & Recovery
+    setPasswordTitle: "تعيين كلمة المرور",
+    setPasswordSubtitle: "أدخل كلمة مرور قوية لتسجيل الدخول إلى حساب العيادة.",
+    newPassword: "كلمة المرور الجديدة",
+    confirmPassword: "تأكيد كلمة المرور",
+    savePassword: "حفظ كلمة المرور والمتابعة",
+    passwordsDoNotMatch: "كلمتا المرور غير متطابقتين.",
+    passwordUpdatedSuccess: "تم حفظ كلمة المرور بنجاح! يمكنك الآن تسجيل الدخول في أي وقت.",
   },
 
   ku: {
@@ -1099,6 +1126,15 @@ export const translations: Record<Language, Translations> = {
     undo: "گەڕاندنەوە",
     patientDeleted: "نەخۆش سڕایەوە",
     patientRestored: "نەخۆشەکە بە سەرکەوتوویی گەڕێندرایەوە",
+
+    // Set Password & Recovery
+    setPasswordTitle: "دروستکردنی وشەی نهێنی",
+    setPasswordSubtitle: "وشەیەکی نهێنی پارێزراو دابنێ بۆ چوونەژوورەوە لە هەژمارەکەت.",
+    newPassword: "وشەی نهێنی نوێ",
+    confirmPassword: "دووپاتکردنەوەی وشەی نهێنی",
+    savePassword: "پاشەکەوتکردنی وشەی نهێنی و بەردەوامبوون",
+    passwordsDoNotMatch: "وشە نهێنییەکان هاوشێوە نین.",
+    passwordUpdatedSuccess: "وشەی نهێنی بە سەرکەوتوویی پاشەکەوتکرا! ئێستا دەتوانیت لە هەر کاتێکدا بێیتە ژوورەوە.",
   },
 };
 

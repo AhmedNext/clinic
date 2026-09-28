@@ -87,10 +87,22 @@ const ClinicSettingsModal = dynamic(
   () => import("@/components/ClinicSettingsModal").then((m) => m.ClinicSettingsModal),
   { ssr: false }
 );
+const SetPasswordModal = dynamic(
+  () => import("@/components/SetPasswordModal").then((m) => m.SetPasswordModal),
+  { ssr: false }
+);
 
 export default function DashboardPage() {
   const { t, language } = useLanguage();
-  const { sessionChecked, isAuthenticated, isDoctor, isSecretary, signOut } = useAuth();
+  const {
+    sessionChecked,
+    isAuthenticated,
+    isDoctor,
+    isSecretary,
+    signOut,
+    isPasswordRecovery,
+    setIsPasswordRecovery,
+  } = useAuth();
   const { settings: clinicSettings } = useClinicSettings();
 
   const [activeTab, setActiveTab] = useState<"patients" | "appointments" | "materials" | "reports">("patients");
@@ -730,9 +742,17 @@ export default function DashboardPage() {
     );
   }
 
-  // If not logged in, show Clinic Login Screen
+  // If not logged in, show Clinic Login Screen (with SetPasswordModal if arrived via invite/recovery)
   if (!isAuthenticated) {
-    return <LoginScreen onSuccess={() => {}} />;
+    return (
+      <>
+        <LoginScreen onSuccess={() => {}} />
+        <SetPasswordModal
+          isOpen={isPasswordRecovery}
+          onClose={() => setIsPasswordRecovery(false)}
+        />
+      </>
+    );
   }
 
   return (
@@ -1196,6 +1216,12 @@ export default function DashboardPage() {
           </div>
         </div>
       )}
+
+      {/* Set Password / Password Recovery Modal */}
+      <SetPasswordModal
+        isOpen={isPasswordRecovery}
+        onClose={() => setIsPasswordRecovery(false)}
+      />
     </div>
   );
 }
