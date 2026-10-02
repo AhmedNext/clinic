@@ -4,6 +4,7 @@ import React from "react";
 import { Patient, calculateDebt, formatIQD, getWhatsAppUrl } from "@/types/patient";
 import { PatientAvatar } from "./PatientAvatar";
 import { MobilePatientCard } from "./MobilePatientCard";
+import { Button } from "./ui/button";
 import {
   Calendar,
   Clock,
@@ -159,29 +160,26 @@ export const PatientTable = React.memo(function PatientTable({
                     </td>
 
                     {/* Date & Visits */}
-                    <td className="py-3.5 px-3 text-slate-600 dark:text-slate-300">
-                      <div className="inline-flex items-center gap-1.5 text-xs whitespace-nowrap">
-                        <Calendar className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 flex-shrink-0" />
-                        <span>{formatDate(patient.date)}</span>
+                    <td className="py-3.5 px-3">
+                      <div className="flex items-center gap-1.5 text-xs text-slate-700 dark:text-slate-200 whitespace-nowrap">
+                        <Calendar className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 shrink-0" />
+                        <span>
+                          {formatDate(patient.date)}
+                          {patient.time ? `, ${patient.time}` : ""}
+                        </span>
                       </div>
-                      {patient.time && (
-                        <div className="mt-0.5 inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-950/50 border border-sky-100 dark:border-sky-900/40">
-                          <Clock className="w-2.5 h-2.5" />
-                          <span>{patient.time}</span>
-                        </div>
-                      )}
-                      {patient.history && patient.history.length > 0 && (
-                        <div className="mt-1">
-                          <button
-                            type="button"
-                            onClick={() => onViewHistory(patient)}
-                            className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-sky-50 dark:bg-sky-950/50 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-800 hover:bg-sky-100 transition-colors cursor-pointer"
-                          >
-                            <History className="w-2.5 h-2.5" />
-                            <span>{patient.history.length} {patient.history.length === 1 ? t.visit : t.visits}</span>
-                          </button>
-                        </div>
-                      )}
+                      <div className="mt-0.5">
+                        <button
+                          type="button"
+                          onClick={() => onViewHistory(patient)}
+                          className="text-xs text-slate-400 dark:text-slate-500 hover:text-sky-600 dark:hover:text-sky-400 hover:underline transition-colors cursor-pointer"
+                        >
+                          {(patient.history?.length ?? 0) > 0 ? patient.history!.length : 1}{" "}
+                          {(patient.history?.length ?? 0) === 1 || !patient.history?.length
+                            ? t.visit
+                            : t.visits}
+                        </button>
+                      </div>
                     </td>
 
                     {/* 3D Dental Chart (Doctor Only) */}
@@ -209,28 +207,27 @@ export const PatientTable = React.memo(function PatientTable({
                     <td className="py-3.5 px-3 text-xs">
                       {debt > 0 ? (
                         <div className="space-y-1">
-                          <div className="flex items-center gap-1.5">
+                          <div className="flex items-center gap-2">
                             <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full font-semibold text-[11px] bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-900/60 whitespace-nowrap">
                               {t.owesLabel}: {formatIQD(debt)}
                             </span>
                             {onSettleDebt && (
-                              <button
+                              <Button
+                                size="sm"
                                 type="button"
                                 onClick={() => onSettleDebt(patient)}
-                                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow-2xs transition-all cursor-pointer"
-                                title={t.markDebtPaid}
+                                className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs h-7 px-2.5 rounded-lg shadow-2xs font-bold"
                               >
-                                <Check className="w-2.5 h-2.5" />
-                                <span>{t.markDebtPaid}</span>
-                              </button>
+                                Collect
+                              </Button>
                             )}
                           </div>
-                          <div className="text-[11px] text-slate-500 dark:text-slate-400 pl-1 rtl:pl-0 rtl:pr-1 font-medium whitespace-nowrap">
+                          <div className="text-[11px] text-slate-400 dark:text-slate-500 ps-1 font-medium font-mono whitespace-nowrap">
                             {t.paidLabel}: {formatIQD(paid)}
                           </div>
                         </div>
                       ) : (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full font-medium text-[11px] bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 ring-1 ring-emerald-600/20 whitespace-nowrap">
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl font-medium text-xs bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 ring-1 ring-emerald-600/20 whitespace-nowrap">
                           ✓ {t.fullyPaid}
                         </span>
                       )}

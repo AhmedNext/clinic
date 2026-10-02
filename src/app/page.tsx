@@ -12,6 +12,7 @@ import { Header } from "@/components/Header";
 import { StatsOverview } from "@/components/StatsOverview";
 import { PatientTable } from "@/components/PatientTable";
 import { PatientCard } from "@/components/PatientCard";
+import { SearchBox } from "@/components/SearchBox";
 import {
   Search,
   LayoutList,
@@ -742,6 +743,17 @@ export default function DashboardPage() {
     return formatStaticMonthName(yearMonth, language);
   };
 
+  // Quick filter presets for the search box
+  const searchSuggestions = useMemo(() => {
+    if (language === "ku") {
+      return ["دەماربڕین", "حەشوە", "ڤینێر", "کێشان", "قەرز"];
+    }
+    if (language === "ar") {
+      return ["حشوة عصب", "حشوة تجميلية", "فينير", "قلع", "ديون"];
+    }
+    return ["Root Canal", "Composite", "Veneer", "Extraction", "Debt"];
+  }, [language]);
+
   // Filter and sort patients
   const filteredAndSortedPatients = useMemo(() => {
     const rawQuery = searchQuery.trim();
@@ -790,8 +802,19 @@ export default function DashboardPage() {
             )
           );
 
+          // 6. Match "debt" / "debts" / "قەرز" / "ديون"
+          const curDebt = calculateDebt(patient.totalAmount, patient.paidAmount, patient.debtAmount);
+          const matchDebt =
+            (q === "debt" || q === "debts" || q === "قەرز" || q === "ديون" || q === "دين") &&
+            curDebt > 0;
+
+          // 7. Match "paid" / "settled" / "واصل"
+          const matchPaid =
+            (q === "paid" || q === "settled" || q === "واصل") &&
+            curDebt === 0;
+
           const matchesSearch =
-            matchName || matchPhone || matchNotes || matchTeeth || matchHistory;
+            matchName || matchPhone || matchNotes || matchTeeth || matchHistory || matchDebt || matchPaid;
 
           if (!matchesSearch) return false;
         }
@@ -932,32 +955,28 @@ export default function DashboardPage() {
             {/* Filter and Control Toolbar (Mobbin-style segmented controls) */}
             <div className="mb-4 sm:mb-6 flex flex-col md:flex-row gap-2.5 sm:gap-3 md:items-center md:justify-between">
               {/* Left: Search input & Add Patient CTA */}
-              <div className="flex items-center gap-2 flex-1 max-w-full md:max-w-lg">
-                <div className="relative flex-1">
-                  <div className="absolute inset-y-0 start-0 ps-3.5 flex items-center pointer-events-none text-slate-400">
-                    <Search className="w-4 h-4" />
-                  </div>
-                  <input
-                    type="text"
-                    placeholder={t.searchPlaceholder}
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full ps-10 pe-9 py-2.5 rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-hidden focus:ring-2 focus:ring-sky-500/25 focus:border-sky-500 shadow-2xs transition-all"
-                  />
-                  {searchQuery && (
-                    <button
-                      onClick={() => setSearchQuery("")}
-                      className="absolute end-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs w-5 h-5 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 transition-colors cursor-pointer"
-                    >
-                      ×
-                    </button>
-                  )}
-                </div>
+              <div className="flex items-center gap-2 w-full md:w-auto md:flex-1 md:max-w-sm shrink-0">
+                <SearchBox
+                  value={searchQuery}
+                  onChange={setSearchQuery}
+                  placeholder="Search patient, phone, procedure..."
+                  totalMatches={searchQuery.trim() ? filteredAndSortedPatients.length : undefined}
+                  suggestions={searchSuggestions}
+                  suggestionsTitle={
+                    language === "ku"
+                      ? "فلتەری خێرا:"
+                      : language === "ar"
+                      ? "اقتراحات البحث:"
+                      : "Quick filters:"
+                  }
+                  className="w-full sm:w-72 md:w-80"
+                  onClear={() => setSearchQuery("")}
+                />
 
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(true)}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-2xl text-xs font-bold bg-sky-600 hover:bg-sky-700 dark:bg-sky-500 dark:hover:bg-sky-600 text-white shadow-md shadow-sky-600/20 active:scale-95 transition-all cursor-pointer whitespace-nowrap flex-shrink-0"
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-2xl text-xs font-bold bg-sky-600 hover:bg-sky-700 dark:bg-sky-500 dark:hover:bg-sky-600 text-white shadow-md shadow-sky-600/20 active:scale-95 transition-all cursor-pointer whitespace-nowrap shrink-0"
                 >
                   <UserPlus className="w-4 h-4" />
                   <span className="hidden sm:inline">{t.addPatient}</span>
@@ -965,7 +984,7 @@ export default function DashboardPage() {
               </div>
 
               {/* Right: Horizontally swipeable filter chips on mobile */}
-              <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1 w-full flex-nowrap md:flex-wrap">
+              <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1 w-full md:w-auto flex-nowrap md:flex-wrap shrink-0">
                 {/* Gender Filters */}
                 <div className="inline-flex rounded-2xl border border-slate-200/90 dark:border-slate-800 p-0.5 bg-slate-100/70 dark:bg-slate-900/80 backdrop-blur-md shadow-2xs shrink-0 whitespace-nowrap">
                   <button
@@ -1125,15 +1144,19 @@ export default function DashboardPage() {
 
             {/* Patients Content Section */}
             {filteredAndSortedPatients.length === 0 ? (
-              <div className="p-12 text-center rounded-3xl border border-dashed border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/30">
+              <div className="p-10 sm:p-14 text-center rounded-3xl border border-dashed border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/30">
                 <div className="w-12 h-12 rounded-2xl bg-sky-50 dark:bg-sky-950/50 text-sky-500 mx-auto flex items-center justify-center mb-3">
-                  <Filter className="w-6 h-6" />
+                  {searchQuery.trim() ? <Search className="w-6 h-6" /> : <Filter className="w-6 h-6" />}
                 </div>
                 <h3 className="text-base font-semibold text-slate-800 dark:text-slate-200">
-                  No matching patient cases
+                  {searchQuery.trim()
+                    ? `No patient cases matching "${searchQuery.trim()}"`
+                    : "No matching patient cases"}
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto mt-1 mb-5">
-                  {searchQuery || genderFilter !== "all" || paymentFilter !== "all" || monthFilter !== "all"
+                  {searchQuery.trim()
+                    ? "Check your spelling, or try searching by phone number, tooth number (e.g. 21, 46), or diagnosis."
+                    : genderFilter !== "all" || paymentFilter !== "all" || monthFilter !== "all"
                     ? "Try clearing your filters or changing your search terms to see other patients."
                     : "No patient cases have been added yet. Click below to create your first patient case file."}
                 </p>
@@ -1146,9 +1169,9 @@ export default function DashboardPage() {
                         setPaymentFilter("all");
                         setMonthFilter("all");
                       }}
-                      className="px-4 py-2 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer"
+                      className="px-4 py-2 rounded-xl text-xs font-semibold bg-sky-600 hover:bg-sky-700 text-white shadow-xs cursor-pointer transition-colors"
                     >
-                      Clear Filters
+                      {searchQuery.trim() ? "Clear Search & Filters" : "Clear Filters"}
                     </button>
                   ) : (
                     <div className="flex flex-wrap items-center justify-center gap-3">

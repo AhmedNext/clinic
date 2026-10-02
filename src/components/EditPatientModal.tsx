@@ -337,16 +337,9 @@ export function EditPatientModal({
                 >
                   {t.time}
                 </label>
-                <button
-                  type="button"
-                  onClick={() => setIsClockPickerOpen(true)}
-                  className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer"
-                >
-                  {t.circleClock}
-                </button>
               </div>
               <div className="relative flex items-center">
-                <div className="absolute inset-y-0 left-0 rtl:left-auto rtl:right-0 pl-3.5 rtl:pl-0 rtl:pr-3.5 flex items-center pointer-events-none text-slate-400">
+                <div className="absolute inset-y-0 start-0 ps-3.5 flex items-center pointer-events-none text-slate-400">
                   <Clock className="w-4 h-4" />
                 </div>
                 <input
@@ -355,12 +348,12 @@ export function EditPatientModal({
                   placeholder={t.timePlaceholder}
                   value={time}
                   onChange={(e) => setTime(e.target.value)}
-                  className="w-full pl-10 rtl:pl-20 rtl:pr-10 pr-20 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 text-sm transition-all"
+                  className="w-full ps-10 pe-20 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-hidden focus:ring-2 focus:ring-sky-500/30 focus:border-sky-500 text-sm transition-all"
                 />
                 <button
                   type="button"
                   onClick={() => setIsClockPickerOpen(true)}
-                  className="absolute right-1.5 rtl:right-auto rtl:left-1.5 px-2.5 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 hover:bg-indigo-100 text-xs font-bold cursor-pointer"
+                  className="absolute end-1.5 px-2.5 py-1 rounded-lg bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-400 border border-sky-200 dark:border-sky-800 hover:bg-sky-100 dark:hover:bg-sky-900/40 text-xs font-bold cursor-pointer"
                 >
                   {t.clockBtn}
                 </button>
