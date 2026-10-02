@@ -144,9 +144,26 @@ export function AppointmentsView({
   const listAppointments = viewMode === "list" ? monthAppointments : dayAppointments;
 
   const filteredListAppointments = useMemo(() => {
-    if (statusFilter === "all") return listAppointments;
-    return listAppointments.filter((a) => a.status === statusFilter);
+    const list = statusFilter === "all" ? listAppointments : listAppointments.filter((a) => a.status === statusFilter);
+    return [...list].sort((a, b) => a.date.localeCompare(b.date) || (a.time || "").localeCompare(b.time || ""));
   }, [listAppointments, statusFilter]);
+
+  // Group appointments chronologically by date
+  const groupedListAppointments = useMemo(() => {
+    const groups: { date: string; appointments: Appointment[] }[] = [];
+    const dateMap = new Map<string, Appointment[]>();
+    for (const apt of filteredListAppointments) {
+      const existing = dateMap.get(apt.date);
+      if (existing) {
+        existing.push(apt);
+      } else {
+        const arr = [apt];
+        dateMap.set(apt.date, arr);
+        groups.push({ date: apt.date, appointments: arr });
+      }
+    }
+    return groups;
+  }, [filteredListAppointments]);
 
   // ─── Localized labels ───
   const labels = {
@@ -210,16 +227,25 @@ export function AppointmentsView({
         }`}
       >
         <div className="flex flex-col sm:flex-row gap-3.5 sm:gap-4">
-          {/* LEFT: Time Block */}
-          <div className="flex sm:flex-col items-center sm:items-start gap-2 sm:gap-1 sm:w-[90px] flex-shrink-0">
-            <div className={`px-3 py-2 rounded-xl text-center font-mono text-sm ${
-              isDone ? "bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 font-semibold ring-1 ring-emerald-200 dark:ring-emerald-800/60"
+          {/* LEFT: Date & Time Block */}
+          <div className="flex sm:flex-col items-center sm:items-start justify-between sm:justify-center gap-2 sm:gap-1.5 sm:w-[150px] flex-shrink-0">
+            {/* Line 1: Date */}
+            <div className="flex items-center gap-1.5 text-xs font-medium text-slate-700 dark:text-slate-300">
+              <CalendarIcon className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400 shrink-0" />
+              <span>{formatStaticDate(apt.date, language)}</span>
+            </div>
+
+            {/* Line 2: Time */}
+            <div className={`px-2.5 py-1 rounded-lg text-center font-mono font-bold text-sm ${
+              isDone ? "bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 ring-1 ring-emerald-200 dark:ring-emerald-800/60"
               : isCancelled ? "bg-slate-100 dark:bg-slate-800 text-slate-400 font-medium ring-1 ring-slate-200 dark:ring-slate-700 line-through"
-              : "bg-slate-50 dark:bg-slate-800/80 text-slate-800 dark:text-slate-200 font-semibold ring-1 ring-slate-200 dark:ring-slate-700"
+              : "bg-slate-50 dark:bg-slate-800/80 text-slate-900 dark:text-slate-100 ring-1 ring-slate-200 dark:ring-slate-700"
             }`}>
               {apt.time || "—"}
             </div>
-            <span className="text-[10px] font-medium text-slate-400 dark:text-slate-500">30 {labels.duration}</span>
+
+            {/* Line 3: Duration */}
+            <span className="text-[11px] text-slate-400 dark:text-slate-500 font-medium">30 {labels.duration}</span>
           </div>
 
           {/* CENTER: Patient & Clinical */}
@@ -535,51 +561,44 @@ export function AppointmentsView({
                 <span>{labels.addAppointment}</span>
               </button>
             </div>
-          ) : (() => {
-            // Group filtered appointments by date
-            const grouped = new Map<string, Appointment[]>();
-            filteredListAppointments.forEach((apt) => {
-              const list = grouped.get(apt.date) || [];
-              list.push(apt);
-              grouped.set(apt.date, list);
-            });
-            const sortedDates = [...grouped.keys()].sort();
+          ) : (
+            <div className="space-y-6">
+              {groupedListAppointments.map((group) => {
+                const groupDate = new Date(`${group.date}T00:00:00`);
+                const isGroupToday = group.date === todayYMD;
+                const weekdayIndex = isNaN(groupDate.getDay()) ? 0 : groupDate.getDay();
+                const dayName = weekDayNames[weekdayIndex] || "";
 
-            return (
-              <div className="space-y-5">
-                {sortedDates.map((dateStr) => {
-                  const dayDate = new Date(`${dateStr}T00:00:00`);
-                  const dayName = weekDayNames[dayDate.getDay()];
-                  const isDateToday = dateStr === todayYMD;
-
-                  return (
-                    <div key={dateStr} className="space-y-2">
-                      {/* Date Header */}
-                      <div className="flex items-center gap-2.5 px-1">
-                        <div className={`flex items-center gap-1.5 text-xs font-bold ${isDateToday ? "text-sky-600 dark:text-sky-400" : "text-slate-500 dark:text-slate-400"}`}>
-                          <CalendarIcon className="w-3.5 h-3.5" />
-                          <span>{dayName} • {formatStaticDate(dateStr, language)}</span>
-                          {isDateToday && (
-                            <span className="px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-sky-100 dark:bg-sky-950/60 text-sky-600 dark:text-sky-400">
-                              {labels.today}
-                            </span>
-                          )}
-                        </div>
-                        <div className="flex-1 border-t border-slate-100 dark:border-slate-800" />
-                        <span className="text-[10px] font-bold text-slate-400 tabular-nums">
-                          {grouped.get(dateStr)!.length}
+                return (
+                  <div key={group.date} className="space-y-2.5">
+                    {/* Date Section Header */}
+                    <div className="flex items-center gap-2.5 px-1 pt-1">
+                      <div className="flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-sky-500 shrink-0" />
+                        <h3 className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200">
+                          {dayName} • {formatStaticDate(group.date, language)}
+                        </h3>
+                      </div>
+                      {isGroupToday && (
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-sky-100 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-800">
+                          {labels.today}
                         </span>
-                      </div>
-                      {/* Cards for this date */}
-                      <div className="space-y-2">
-                        {grouped.get(dateStr)!.map((apt) => renderAppointmentCard(apt))}
-                      </div>
+                      )}
+                      <span className="text-[11px] font-semibold text-slate-400 dark:text-slate-500">
+                        ({group.appointments.length})
+                      </span>
+                      <div className="flex-1 h-px bg-slate-100 dark:bg-slate-800/80" />
                     </div>
-                  );
-                })}
-              </div>
-            );
-          })()}
+
+                    {/* Group Appointments */}
+                    <div className="space-y-2.5">
+                      {group.appointments.map((apt) => renderAppointmentCard(apt))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       )}
 
