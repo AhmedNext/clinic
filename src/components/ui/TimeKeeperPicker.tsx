@@ -45,26 +45,19 @@ export function TimeKeeperPicker({
         id={id}
         type="button"
         onClick={() => setShowClock(true)}
-        className="w-full flex items-center justify-between ps-8 pe-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-950 text-slate-900 dark:text-slate-100 text-xs font-semibold focus:outline-hidden focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all cursor-pointer select-none text-start hover:border-slate-300 dark:hover:border-slate-600"
+        className="w-full flex items-center gap-2 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-950 text-slate-900 dark:text-slate-100 text-xs font-medium focus:outline-hidden focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all cursor-pointer select-none text-start hover:border-slate-300 dark:hover:border-slate-600"
       >
+        <Clock className="w-3.5 h-3.5 text-slate-400 shrink-0" />
         <span
           className={
             value
-              ? "text-slate-900 dark:text-slate-100 font-medium"
-              : "text-slate-400 font-normal"
+              ? "text-slate-900 dark:text-slate-100 font-medium truncate"
+              : "text-slate-400 font-normal truncate"
           }
         >
-          {value ? `🕒 ${value}` : placeholder}
-        </span>
-        <span className="text-[10px] uppercase font-bold text-sky-600 dark:text-sky-400 bg-sky-50 dark:bg-sky-950/60 px-1.5 py-0.5 rounded-md">
-          Clock
+          {value || placeholder}
         </span>
       </button>
-
-      {/* Clock Icon on the left */}
-      <div className="absolute inset-y-0 start-0 ps-2.5 flex items-center pointer-events-none text-slate-400">
-        <Clock className="w-3.5 h-3.5" />
-      </div>
 
       {/* Centered Fixed Modal Dialog for React-TimeKeeper */}
       {showClock && (

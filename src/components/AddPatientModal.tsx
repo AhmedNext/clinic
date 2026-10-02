@@ -217,10 +217,10 @@ export function AddPatientModal({
             </button>
           </div>
 
-          {/* Scrollable Form Body with generous pb-32 so sticky footer never overlaps content */}
+          {/* Scrollable Form Body with pb-24 on mobile so all fields scroll above sticky footer */}
           <form
             onSubmit={handleSubmit}
-            className="flex-1 overflow-y-auto p-4 sm:p-6 pb-28 sm:pb-32 space-y-4 text-start relative"
+            className="flex-1 overflow-y-auto px-4 pt-4 pb-24 sm:p-6 space-y-4 text-start relative"
           >
             {error && (
               <div className="p-3 text-xs rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 text-rose-700 dark:text-rose-300 flex items-center gap-2">
