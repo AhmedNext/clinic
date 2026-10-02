@@ -12,7 +12,6 @@ import { Header } from "@/components/Header";
 import { StatsOverview } from "@/components/StatsOverview";
 import { PatientTable } from "@/components/PatientTable";
 import { PatientCard } from "@/components/PatientCard";
-import { MobilePatientCard } from "@/components/MobilePatientCard";
 import { SearchBox } from "@/components/SearchBox";
 import {
   Search,
@@ -1201,10 +1200,10 @@ export default function DashboardPage() {
               </div>
             ) : (
               <>
-                {/* Mobile View (< md): Always sleek MobilePatientCard list */}
-                <div className="md:hidden space-y-3">
+                {/* Mobile View (< md): Always 1-column grid of rich PatientCard cards */}
+                <div className="md:hidden grid grid-cols-1 gap-3.5">
                   {paginatedPatients.map((patient) => (
-                    <MobilePatientCard
+                    <PatientCard
                       key={patient.id}
                       patient={patient}
                       onDeletePatient={handleDeletePatient}
@@ -1212,13 +1211,14 @@ export default function DashboardPage() {
                       onViewHistory={(patient) => setHistoryPatient(patient)}
                       onOpenDentalChart={(patient) => setDentalPatient(patient)}
                       onSettleDebt={handleSettleDebt}
+                      onUpdatePatient={handleUpdatePatient}
                       onPrintReceipt={(patient) => setReceiptPatient(patient)}
                       onPrintPrescription={(patient) => setPrescriptionPatient(patient)}
                     />
                   ))}
                 </div>
 
-                {/* Desktop View (>= md): Table or Grid based on viewMode */}
+                {/* Desktop View (>= md): Table or Grid based on user toggle */}
                 <div className="hidden md:block">
                   {viewMode === "table" ? (
                     <div className="w-full max-w-full overflow-hidden">
@@ -1234,8 +1234,8 @@ export default function DashboardPage() {
                       />
                     </div>
                   ) : (
-                    /* Grid / Card View */
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-4">
+                    /* Desktop Grid View */
+                    <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
                       {paginatedPatients.map((patient) => (
                         <PatientCard
                           key={patient.id}
