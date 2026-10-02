@@ -303,44 +303,62 @@ export function PatientHistoryModal({
           </div>
         </div>
 
-        {/* ── 2. FINANCIAL SUMMARY BANNER (KPI STRIP) ── */}
-        <div className="px-5 sm:px-6 py-3 border-b border-slate-100 dark:border-slate-800/80 bg-slate-50/70 dark:bg-slate-900/40">
-          <div className="grid grid-cols-3 gap-3 items-center">
-            {/* Total Fee */}
-            <div>
-              <span className="text-[10px] sm:text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">
-                {t.totalPrice}
-              </span>
-              <span className="text-xs sm:text-sm font-bold font-mono text-slate-800 dark:text-slate-200">
-                {formatIQD(totalCalculatedFee)}
-              </span>
-            </div>
+        {/* ── 2. FINANCIAL OVERVIEW BAR ── */}
+        <div className="px-5 sm:px-6 py-3 border-b border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-900">
+          <div className="bg-slate-50/80 dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800 rounded-xl p-3.5 shadow-2xs">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5 items-center">
+              {/* Total Fee */}
+              <div>
+                <span className="text-[10px] sm:text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">
+                  {t.totalPrice}
+                </span>
+                <span className="text-xs sm:text-sm font-bold font-mono text-slate-800 dark:text-slate-200">
+                  {formatIQD(totalCalculatedFee)}
+                </span>
+              </div>
 
-            {/* Paid Amount */}
-            <div>
-              <span className="text-[10px] sm:text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">
-                {t.paidLabel}
-              </span>
-              <span className="text-xs sm:text-sm font-bold font-mono text-emerald-600 dark:text-emerald-400">
-                {formatIQD(patient.paidAmount ?? 0)}
-              </span>
-            </div>
+              {/* Paid Amount */}
+              <div>
+                <span className="text-[10px] sm:text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">
+                  {t.paidLabel}
+                </span>
+                <span className="text-xs sm:text-sm font-bold font-mono text-emerald-600 dark:text-emerald-400">
+                  {formatIQD(patient.paidAmount ?? 0)}
+                </span>
+              </div>
 
-            {/* Balance Due / All Settled Status */}
-            <div className="text-right rtl:text-left">
-              <span className="text-[10px] sm:text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider block mb-0.5">
-                {totalDebt > 0 ? t.owesLabel : "Status"}
-              </span>
-              {totalDebt > 0 ? (
-                <span className="inline-flex items-center gap-1 font-mono font-bold text-xs sm:text-sm text-rose-600 dark:text-rose-400">
+              {/* Remaining / Balance */}
+              <div>
+                <span className="text-[10px] sm:text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">
+                  {totalDebt > 0 ? t.owesLabel : "Remaining"}
+                </span>
+                <span
+                  className={`text-xs sm:text-sm font-bold font-mono ${
+                    totalDebt > 0
+                      ? "text-rose-600 dark:text-rose-400"
+                      : "text-slate-700 dark:text-slate-300"
+                  }`}
+                >
                   {formatIQD(totalDebt)}
                 </span>
-              ) : (
-                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 ring-1 ring-emerald-600/20">
-                  <CheckCircle2 className="w-3 h-3" />
-                  <span>{t.allSettled}</span>
+              </div>
+
+              {/* Status */}
+              <div className="text-left sm:text-right rtl:text-left">
+                <span className="text-[10px] sm:text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider block mb-0.5">
+                  Status
                 </span>
-              )}
+                {totalDebt > 0 ? (
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300 ring-1 ring-rose-600/20">
+                    Debt Due
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 ring-1 ring-emerald-600/20">
+                    <CheckCircle2 className="w-3 h-3" />
+                    <span>{t.allSettled}</span>
+                  </span>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -536,11 +554,11 @@ export function PatientHistoryModal({
             </div>
           ) : (
             <div className="px-5 sm:px-6 pb-6">
-              <div className="relative pl-6 sm:pl-7">
+              <div className="relative pl-5 sm:pl-6">
                 {/* Continuous Vertical Timeline Line */}
-                <div className="absolute left-[9px] sm:left-[11px] top-4 bottom-4 w-px bg-slate-200 dark:bg-slate-800" />
+                <div className="absolute left-[7px] sm:left-[8px] top-4 bottom-4 w-px bg-slate-200 dark:bg-slate-800" />
 
-                <div className="space-y-4">
+                <div className="space-y-3.5">
                   {historyEntries.map((entry, idx) => {
                     const entryDebt = entry.debt ?? 0;
                     const entryPaid = entry.paid ?? 0;
@@ -551,9 +569,9 @@ export function PatientHistoryModal({
 
                     return (
                       <div key={entry.id} className="relative group">
-                        {/* Smooth Timeline Indicator Dot */}
+                        {/* Smooth Timeline Indicator Dot Vertically Aligned with Date/Title */}
                         <div
-                          className={`absolute -left-6 sm:-left-7 top-4 w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center bg-white dark:bg-slate-900 border-2 transition-all ${
+                          className={`absolute -left-5 sm:-left-6 top-3.5 w-4 h-4 rounded-full flex items-center justify-center bg-white dark:bg-slate-900 border-2 transition-all ${
                             isFirst
                               ? "border-indigo-600 dark:border-indigo-500 ring-4 ring-indigo-50 dark:ring-indigo-950/60"
                               : "border-slate-300 dark:border-slate-700"
@@ -562,8 +580,8 @@ export function PatientHistoryModal({
                           <div
                             className={`rounded-full ${
                               isFirst
-                                ? "w-2 h-2 bg-indigo-600 dark:bg-indigo-500"
-                                : "w-1.5 h-1.5 bg-slate-400 dark:bg-slate-600"
+                                ? "w-1.5 h-1.5 bg-indigo-600 dark:bg-indigo-500"
+                                : "w-1 h-1 bg-slate-400 dark:bg-slate-600"
                             }`}
                           />
                         </div>
@@ -709,11 +727,11 @@ export function PatientHistoryModal({
                           </form>
                         ) : (
                           /* Modern Linear-style Treatment Card */
-                          <div className="rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-2xs hover:shadow-xs hover:border-slate-300 dark:hover:border-slate-700 transition-all p-4 sm:p-5">
+                          <div className="rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-2xs hover:border-slate-300 dark:hover:border-slate-700 hover:shadow-sm transition-all p-3.5 sm:p-4">
                             {/* Card Header Row */}
-                            <div className="flex items-start justify-between gap-3">
+                            <div className="flex items-start justify-between gap-2.5">
                               <div className="min-w-0 flex-1">
-                                <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                                <div className="flex items-center gap-2 mb-1 flex-wrap">
                                   <span className="text-xs font-medium text-slate-400 dark:text-slate-500 flex items-center gap-1.5">
                                     <Calendar className="w-3.5 h-3.5" />
                                     <span>{formatDate(entry.date)}</span>
@@ -742,13 +760,13 @@ export function PatientHistoryModal({
                                 </h4>
                               </div>
 
-                              {/* Subtle Actions (Pencil & Trash) */}
-                              <div className="flex items-center gap-1 opacity-70 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                              {/* Subtle Ghost Actions in Top-Right Corner */}
+                              <div className="flex items-center gap-0.5 flex-shrink-0 -mt-0.5 -mr-1">
                                 <button
                                   type="button"
                                   onClick={() => startEditing(entry)}
                                   title={t.edit}
-                                  className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                                  className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
                                 >
                                   <Pencil className="w-3.5 h-3.5" />
                                 </button>
@@ -760,7 +778,7 @@ export function PatientHistoryModal({
                                     }
                                   }}
                                   title={t.delete}
-                                  className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
+                                  className="p-1.5 rounded-lg text-slate-400 hover:text-red-500 dark:hover:text-red-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
                                 >
                                   <Trash2 className="w-3.5 h-3.5" />
                                 </button>
