@@ -743,17 +743,6 @@ export default function DashboardPage() {
     return formatStaticMonthName(yearMonth, language);
   };
 
-  // Quick filter presets for the search box
-  const searchSuggestions = useMemo(() => {
-    if (language === "ku") {
-      return ["دەماربڕین", "حەشوە", "ڤینێر", "کێشان", "قەرز"];
-    }
-    if (language === "ar") {
-      return ["حشوة عصب", "حشوة تجميلية", "فينير", "قلع", "ديون"];
-    }
-    return ["Root Canal", "Composite", "Veneer", "Extraction", "Debt"];
-  }, [language]);
-
   // Filter and sort patients
   const filteredAndSortedPatients = useMemo(() => {
     const rawQuery = searchQuery.trim();
@@ -763,60 +752,15 @@ export default function DashboardPage() {
     return patients
       .filter((patient) => {
         if (rawQuery) {
-          // 1. Match patient name
+          // Strictly match patient name or phone number only
           const matchName = patient.name.toLowerCase().includes(q);
-
-          // 2. Match patient phone (supports full formatted string or pure digits)
           const patientPhoneClean = (patient.phone || "").replace(/\D/g, "");
           const matchPhone = Boolean(
             (patient.phone && patient.phone.toLowerCase().includes(q)) ||
             (cleanSearchDigits.length >= 2 && patientPhoneClean.includes(cleanSearchDigits))
           );
 
-          // 3. Match patient general notes
-          const matchNotes = Boolean(
-            patient.notes && patient.notes.toLowerCase().includes(q)
-          );
-
-          // 4. Match tooth number or tooth condition/material/procedure
-          const matchTeeth = Boolean(
-            patient.teeth?.some((t) => {
-              const toothNum = String(t.toothNumber);
-              return (
-                toothNum === q ||
-                toothNum.includes(q) ||
-                (t.status && t.status.toLowerCase().includes(q)) ||
-                (t.procedure && t.procedure.toLowerCase().includes(q)) ||
-                (t.material && t.material.toLowerCase().includes(q)) ||
-                (t.notes && t.notes.toLowerCase().includes(q))
-              );
-            })
-          );
-
-          // 5. Match treatment history titles or past visit notes
-          const matchHistory = Boolean(
-            patient.history?.some(
-              (h) =>
-                (h.title && h.title.toLowerCase().includes(q)) ||
-                (h.notes && h.notes.toLowerCase().includes(q))
-            )
-          );
-
-          // 6. Match "debt" / "debts" / "قەرز" / "ديون"
-          const curDebt = calculateDebt(patient.totalAmount, patient.paidAmount, patient.debtAmount);
-          const matchDebt =
-            (q === "debt" || q === "debts" || q === "قەرز" || q === "ديون" || q === "دين") &&
-            curDebt > 0;
-
-          // 7. Match "paid" / "settled" / "واصل"
-          const matchPaid =
-            (q === "paid" || q === "settled" || q === "واصل") &&
-            curDebt === 0;
-
-          const matchesSearch =
-            matchName || matchPhone || matchNotes || matchTeeth || matchHistory || matchDebt || matchPaid;
-
-          if (!matchesSearch) return false;
+          if (!matchName && !matchPhone) return false;
         }
         const matchesGender =
           genderFilter === "all" || patient.gender === genderFilter;
@@ -959,16 +903,7 @@ export default function DashboardPage() {
                 <SearchBox
                   value={searchQuery}
                   onChange={setSearchQuery}
-                  placeholder="Search patient, phone, procedure..."
-                  totalMatches={searchQuery.trim() ? filteredAndSortedPatients.length : undefined}
-                  suggestions={searchSuggestions}
-                  suggestionsTitle={
-                    language === "ku"
-                      ? "فلتەری خێرا:"
-                      : language === "ar"
-                      ? "اقتراحات البحث:"
-                      : "Quick filters:"
-                  }
+                  placeholder="Search by name or phone..."
                   className="w-full sm:w-72 md:w-80"
                   onClear={() => setSearchQuery("")}
                 />
@@ -1155,7 +1090,7 @@ export default function DashboardPage() {
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto mt-1 mb-5">
                   {searchQuery.trim()
-                    ? "Check your spelling, or try searching by phone number, tooth number (e.g. 21, 46), or diagnosis."
+                    ? "Check your spelling or verify the phone number."
                     : genderFilter !== "all" || paymentFilter !== "all" || monthFilter !== "all"
                     ? "Try clearing your filters or changing your search terms to see other patients."
                     : "No patient cases have been added yet. Click below to create your first patient case file."}
