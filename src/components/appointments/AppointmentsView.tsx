@@ -16,7 +16,6 @@ import {
 } from "lucide-react";
 import { Appointment, AppointmentStatus } from "@/types/appointment";
 import { Patient, getWhatsAppUrl, getAppointmentReminderWhatsAppUrl } from "@/types/patient";
-import { DayAppointmentsModal } from "./DayAppointmentsModal";
 import { BookAppointmentModal } from "./BookAppointmentModal";
 import { useLanguage } from "@/context/LanguageContext";
 import { useClinicSettings } from "@/context/ClinicSettingsContext";
@@ -64,8 +63,7 @@ export function AppointmentsView({
   // Day state (for Day view)
   const [currentDayString, setCurrentDayString] = useState<string>(todayYMD);
 
-  // Active modal date for booking/managing appointments
-  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  // Active modal date for fast 10-second booking
   const [bookModalDate, setBookModalDate] = useState<string | null>(null);
 
   const weekDayNames = WEEKDAY_NAMES[language] || WEEKDAY_NAMES.en;
@@ -201,10 +199,6 @@ export function AppointmentsView({
 
   const currentDayDate = new Date(`${currentDayString}T00:00:00`);
   const isCurrentDayFriday = currentDayDate.getDay() === 5;
-
-  const selectedDateAppointments = selectedDate
-    ? appointmentsByDate.get(selectedDate) || []
-    : [];
 
   return (
     <div className="w-full flex flex-col space-y-5 animate-in fade-in duration-200">
@@ -360,7 +354,7 @@ export function AppointmentsView({
                   key={cell.dateString}
                   onClick={() => {
                     setCurrentDayString(cell.dateString);
-                    setSelectedDate(cell.dateString);
+                    setBookModalDate(cell.dateString);
                   }}
                   className={`
                     min-h-[60px] sm:min-h-[120px] p-1.5 sm:p-2.5 transition-all duration-150 cursor-pointer flex flex-col justify-between group active:scale-[0.99]
@@ -656,22 +650,6 @@ export function AppointmentsView({
             </div>
           )}
         </div>
-      )}
-
-      {/* Day Appointments Modal */}
-      {selectedDate && (
-        <DayAppointmentsModal
-          isOpen={Boolean(selectedDate)}
-          dateString={selectedDate}
-          appointments={selectedDateAppointments}
-          existingPatients={patients}
-          onClose={() => setSelectedDate(null)}
-          onAddAppointment={onAddAppointment}
-          onToggleStatus={onToggleStatus}
-          onDeleteAppointment={onDeleteAppointment}
-          onOpenAddPatient={onOpenAddPatient}
-          onStartVisit={onStartVisit}
-        />
       )}
 
       {/* Fast 10-Second Book Appointment Modal */}
