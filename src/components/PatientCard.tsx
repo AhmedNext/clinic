@@ -157,7 +157,7 @@ export const PatientCard = React.memo(function PatientCard({
         </div>
 
         {/* Desktop Actions Cluster (screens >= sm) */}
-        <div className="hidden sm:flex items-center gap-0.5 flex-shrink-0 -mr-1">
+        <div className="hidden sm:flex items-center gap-0.5 flex-shrink-0 -me-1">
           {onPrintReceipt && (
             <button
               onClick={() => onPrintReceipt(patient)}
@@ -209,7 +209,7 @@ export const PatientCard = React.memo(function PatientCard({
 
           {/* Accessible Thumb-Friendly Bottom/Dropdown Sheet */}
           {isMobileMenuOpen && (
-            <div className="absolute right-0 rtl:right-auto rtl:left-0 top-full mt-1.5 w-52 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl z-50 p-1.5 space-y-0.5 animate-in fade-in zoom-in-95">
+            <div className="absolute end-0 top-full mt-1.5 w-52 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl z-50 p-1.5 space-y-0.5 animate-in fade-in zoom-in-95">
               <div className="px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-400 border-b border-slate-100 dark:border-slate-800">
                 {patient.name}
               </div>
@@ -416,10 +416,10 @@ export const PatientCard = React.memo(function PatientCard({
         <button
           type="button"
           onClick={() => onViewHistory(patient)}
-          className="flex items-center justify-between text-[11px] text-sky-700 dark:text-sky-300 bg-sky-50/40 dark:bg-sky-950/30 px-2.5 py-1 rounded-lg border border-sky-100/80 dark:border-sky-900/40 hover:bg-sky-50 text-left rtl:text-right transition-colors cursor-pointer"
+          className="flex items-center justify-between text-[11px] text-sky-700 dark:text-sky-300 bg-sky-50/40 dark:bg-sky-950/30 px-2.5 py-1 rounded-lg border border-sky-100/80 dark:border-sky-900/40 hover:bg-sky-50 text-start transition-colors cursor-pointer"
         >
           <span className="truncate">{latestProcedure}</span>
-          <span className="text-[10px] font-bold ml-1 rtl:ml-0 rtl:mr-1">→</span>
+          <span className="text-[10px] font-bold ms-1">→</span>
         </button>
       ) : null}
 

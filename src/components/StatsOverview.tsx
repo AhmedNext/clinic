@@ -80,6 +80,7 @@ export function StatsOverview({
 
   const maleCount = patients.filter((p) => p.gender === "male").length;
   const femaleCount = patients.filter((p) => p.gender === "female").length;
+  const margin = totalPaid > 0 ? Math.round((netProfit / totalPaid) * 100) : 0;
 
   return (
     <>
@@ -142,7 +143,7 @@ export function StatsOverview({
                   {formatIQD(netProfit)}
                 </div>
                 <p className="text-[9px] text-slate-400 truncate mt-0.5">
-                  {appointmentCount} {t.appointments.toLowerCase()}
+                  {totalPaid > 0 ? `Margin: ${margin}%` : t.incomeMinusExpenses}
                 </p>
               </div>
             </div>
@@ -322,6 +323,9 @@ export function StatsOverview({
               <div className="text-base sm:text-lg font-semibold tracking-tight tabular-nums text-sky-700 dark:text-sky-300 truncate font-mono">
                 {formatIQD(netProfit)}
               </div>
+              <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1 truncate font-medium">
+                {totalPaid > 0 ? `Margin: ${margin}%` : t.incomeMinusExpenses}
+              </p>
             </div>
           </div>
         )}

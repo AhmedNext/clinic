@@ -883,7 +883,7 @@ export default function DashboardPage() {
       />
 
       {/* Main Container */}
-      <main className="flex-1 w-full max-w-full px-3 sm:px-6 xl:px-10 pt-3 sm:pt-6 pb-32 md:pb-12">
+      <main className="flex-1 w-full max-w-full px-3 sm:px-6 xl:px-10 pt-3 sm:pt-6 pb-36 md:pb-12">
         {activeTab === "appointments" ? (
           /* ================= APPOINTMENTS FULL MONTH TAB ================= */
           <AppointmentsView
@@ -934,7 +934,7 @@ export default function DashboardPage() {
               {/* Left: Search input & Add Patient CTA */}
               <div className="flex items-center gap-2 flex-1 max-w-full md:max-w-lg">
                 <div className="relative flex-1">
-                  <div className="absolute inset-y-0 left-0 rtl:left-auto rtl:right-0 pl-3.5 rtl:pl-0 rtl:pr-3.5 flex items-center pointer-events-none text-slate-400">
+                  <div className="absolute inset-y-0 start-0 ps-3.5 flex items-center pointer-events-none text-slate-400">
                     <Search className="w-4 h-4" />
                   </div>
                   <input
@@ -942,12 +942,12 @@ export default function DashboardPage() {
                     placeholder={t.searchPlaceholder}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-10 pr-9 rtl:pl-9 rtl:pr-10 py-2.5 rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500/25 focus:border-sky-500 shadow-2xs transition-all"
+                    className="w-full ps-10 pe-9 py-2.5 rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-hidden focus:ring-2 focus:ring-sky-500/25 focus:border-sky-500 shadow-2xs transition-all"
                   />
                   {searchQuery && (
                     <button
                       onClick={() => setSearchQuery("")}
-                      className="absolute right-3 rtl:right-auto rtl:left-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs w-5 h-5 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 transition-colors cursor-pointer"
+                      className="absolute end-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs w-5 h-5 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 transition-colors cursor-pointer"
                     >
                       ×
                     </button>
@@ -965,9 +965,9 @@ export default function DashboardPage() {
               </div>
 
               {/* Right: Horizontally swipeable filter chips on mobile */}
-              <div className="overflow-x-auto whitespace-nowrap no-scrollbar flex items-center gap-2 pb-1 -mx-1 px-1 sm:mx-0 sm:px-0 sm:flex-wrap">
+              <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1 w-full flex-nowrap md:flex-wrap">
                 {/* Gender Filters */}
-                <div className="inline-flex rounded-2xl border border-slate-200/90 dark:border-slate-800 p-0.5 bg-slate-100/70 dark:bg-slate-900/80 backdrop-blur-md shadow-2xs flex-shrink-0">
+                <div className="inline-flex rounded-2xl border border-slate-200/90 dark:border-slate-800 p-0.5 bg-slate-100/70 dark:bg-slate-900/80 backdrop-blur-md shadow-2xs shrink-0 whitespace-nowrap">
                   <button
                     onClick={() => setGenderFilter("all")}
                     className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
@@ -1003,7 +1003,7 @@ export default function DashboardPage() {
                 </div>
 
                 {/* Payment & Debt Filter */}
-                <div className="inline-flex rounded-2xl border border-slate-200/90 dark:border-slate-800 p-0.5 bg-slate-100/70 dark:bg-slate-900/80 backdrop-blur-md shadow-2xs flex-shrink-0">
+                <div className="inline-flex rounded-2xl border border-slate-200/90 dark:border-slate-800 p-0.5 bg-slate-100/70 dark:bg-slate-900/80 backdrop-blur-md shadow-2xs shrink-0 whitespace-nowrap">
                   <button
                     onClick={() => setPaymentFilter("all")}
                     className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
@@ -1050,14 +1050,14 @@ export default function DashboardPage() {
                 </div>
 
                 {/* Month / Billing Month Filter */}
-                <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md shadow-2xs flex-shrink-0">
-                  <Calendar className="w-3.5 h-3.5 text-sky-500 flex-shrink-0" />
+                <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md shadow-2xs shrink-0 whitespace-nowrap">
+                  <Calendar className="w-3.5 h-3.5 text-sky-500 shrink-0" />
                   <label htmlFor="month-select" className="sr-only">Filter by Month</label>
                   <select
                     id="month-select"
                     value={monthFilter}
                     onChange={(e) => setMonthFilter(e.target.value)}
-                    className="bg-transparent text-xs font-bold text-slate-700 dark:text-slate-300 focus:outline-none cursor-pointer pr-1"
+                    className="bg-transparent text-xs font-bold text-slate-700 dark:text-slate-300 focus:outline-hidden cursor-pointer pe-1"
                   >
                     <option value="all">{t.allMonths}</option>
                     {availableMonths.map((ym) => (
@@ -1070,7 +1070,7 @@ export default function DashboardPage() {
                     <button
                       onClick={() => setMonthFilter("all")}
                       title="Clear month filter"
-                      className="ml-0.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs font-bold leading-none cursor-pointer"
+                      className="ms-0.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs font-bold leading-none cursor-pointer"
                     >
                       ×
                     </button>
@@ -1085,7 +1085,7 @@ export default function DashboardPage() {
                   title={`Sorted: ${
                     sortOrder === "desc" ? t.newest : t.oldest
                   }`}
-                  className="inline-flex items-center gap-1.5 px-3 py-2 rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md hover:bg-slate-50 dark:hover:bg-slate-800/60 text-xs font-bold text-slate-700 dark:text-slate-300 shadow-2xs transition-all cursor-pointer whitespace-nowrap flex-shrink-0"
+                  className="inline-flex items-center gap-1.5 px-3 py-2 rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md hover:bg-slate-50 dark:hover:bg-slate-800/60 text-xs font-bold text-slate-700 dark:text-slate-300 shadow-2xs transition-all cursor-pointer shrink-0 whitespace-nowrap"
                 >
                   <ArrowUpDown className="w-3.5 h-3.5 text-sky-500" />
                   <span>
@@ -1094,7 +1094,7 @@ export default function DashboardPage() {
                 </button>
 
                 {/* Table / Grid view switcher */}
-                <div className="inline-flex rounded-2xl border border-slate-200/90 dark:border-slate-800 p-0.5 bg-slate-100/70 dark:bg-slate-900/80 backdrop-blur-md shadow-2xs flex-shrink-0">
+                <div className="inline-flex rounded-2xl border border-slate-200/90 dark:border-slate-800 p-0.5 bg-slate-100/70 dark:bg-slate-900/80 backdrop-blur-md shadow-2xs shrink-0 whitespace-nowrap">
                   <button
                     onClick={() => setViewMode("table")}
                     aria-label={t.tableView}

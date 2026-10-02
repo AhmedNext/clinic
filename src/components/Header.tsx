@@ -23,6 +23,13 @@ import { useLanguage } from "@/context/LanguageContext";
 import { Language } from "@/i18n/translations";
 import { useAuth } from "@/context/AuthContext";
 import { useClinicSettings } from "@/context/ClinicSettingsContext";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+} from "@/components/ui/sheet";
 
 interface HeaderProps {
   activeTab: "patients" | "appointments" | "materials" | "reports";
@@ -53,6 +60,7 @@ export function Header({
   const { settings } = useClinicSettings();
 
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isMobileSheetOpen, setIsMobileSheetOpen] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
   const [currentTheme, setCurrentTheme] = useState<"light" | "dark">("light");
 
@@ -100,6 +108,235 @@ export function Header({
       document.removeEventListener("keydown", handleKeyDown);
     };
   }, [isProfileOpen]);
+
+  const renderProfileContent = (closeMenu: () => void) => (
+    <div className="space-y-2">
+      {/* Profile Header */}
+      <div className="p-3 sm:p-2.5 rounded-2xl sm:rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-100 dark:border-slate-800/80 mb-2 sm:mb-1.5">
+        <div className="flex items-center gap-3">
+          <div
+            className={`w-11 h-11 sm:w-10 sm:h-10 rounded-2xl sm:rounded-xl flex items-center justify-center font-black text-sm text-white shadow-md flex-shrink-0 ${
+              isDoctor
+                ? "bg-gradient-to-tr from-sky-600 to-teal-600"
+                : "bg-gradient-to-tr from-amber-500 to-amber-600"
+            }`}
+          >
+            {isDoctor ? (
+              <Stethoscope className="w-5 h-5 text-white" />
+            ) : (
+              <User className="w-5 h-5 text-white" />
+            )}
+          </div>
+          <div className="min-w-0 flex-1">
+            <h4 className="text-sm font-extrabold text-slate-900 dark:text-slate-100 truncate">
+              {isDoctor ? settings.doctorName || displayName : displayName}
+            </h4>
+            <p className="text-xs sm:text-[11px] text-slate-500 dark:text-slate-400 font-medium truncate">
+              {settings.clinicName || t.clinicSubtitle}
+            </p>
+          </div>
+        </div>
+
+        {/* Badges: Role + Clinic Pro + Active Cloud */}
+        <div className="flex items-center gap-1.5 mt-2.5 pt-2 border-t border-slate-200/60 dark:border-slate-800/80 flex-wrap">
+          <span
+            className={`inline-flex items-center gap-1 px-2.5 sm:px-2 py-0.5 rounded-full text-[11px] sm:text-[10px] font-bold border ${
+              isDoctor
+                ? "bg-sky-50 dark:bg-sky-950/80 text-sky-700 dark:text-sky-300 border-sky-200 dark:border-sky-800"
+                : "bg-amber-50 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800"
+            }`}
+          >
+            <span
+              className={`w-1.5 h-1.5 rounded-full ${
+                isDoctor ? "bg-sky-500" : "bg-amber-500"
+              }`}
+            />
+            <span>{badgeLabel}</span>
+          </span>
+
+          {isDoctor && (
+            <span className="inline-flex items-center gap-1 px-2.5 sm:px-2 py-0.5 rounded-full text-[11px] sm:text-[10px] font-bold bg-sky-50 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300 border border-sky-200/80 dark:border-sky-800">
+              <ShieldCheck className="w-3 h-3 text-sky-500" />
+              <span>{t.clinicPro}</span>
+            </span>
+          )}
+
+          <span className="inline-flex items-center gap-1 px-2.5 sm:px-2 py-0.5 rounded-full text-[11px] sm:text-[10px] font-bold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            <span>{t.activeCloud}</span>
+          </span>
+        </div>
+      </div>
+
+      {/* Secondary Actions */}
+      <div className="space-y-1 sm:space-y-0.5">
+        {/* Clinic Settings (Doctor Only) */}
+        {isDoctor && onOpenClinicSettings && (
+          <button
+            type="button"
+            onClick={() => {
+              closeMenu();
+              onOpenClinicSettings();
+            }}
+            className="w-full flex items-center justify-between p-2.5 sm:p-2 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-sky-50/70 dark:hover:bg-sky-950/40 hover:text-sky-600 dark:hover:text-sky-400 transition-colors cursor-pointer group"
+          >
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 sm:w-7 sm:h-7 rounded-lg bg-slate-100 dark:bg-slate-800 group-hover:bg-sky-100 dark:group-hover:bg-sky-900/60 flex items-center justify-center text-slate-500 group-hover:text-sky-600 dark:text-slate-400 dark:group-hover:text-sky-400 transition-colors">
+                <Building2 className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
+              </div>
+              <div className="text-start">
+                <div className="font-bold leading-tight text-xs">{t.clinicSettings}</div>
+                <div className="text-[10px] text-slate-400 dark:text-slate-500 font-normal">
+                  {t.editClinicProfile}
+                </div>
+              </div>
+            </div>
+          </button>
+        )}
+
+        {/* Manage Staff (Doctor Only) */}
+        {isDoctor && onOpenStaffModal && (
+          <button
+            type="button"
+            onClick={() => {
+              closeMenu();
+              onOpenStaffModal();
+            }}
+            className="w-full flex items-center justify-between p-2.5 sm:p-2 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-amber-50/70 dark:hover:bg-amber-950/40 hover:text-amber-700 dark:hover:text-amber-300 transition-colors cursor-pointer group"
+          >
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 sm:w-7 sm:h-7 rounded-lg bg-slate-100 dark:bg-slate-800 group-hover:bg-amber-100 dark:group-hover:bg-amber-900/60 flex items-center justify-center text-slate-500 group-hover:text-amber-600 dark:text-slate-400 dark:group-hover:text-amber-400 transition-colors">
+                <UserPlus className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
+              </div>
+              <div className="text-start">
+                <div className="font-bold leading-tight text-xs">{t.manageStaff}</div>
+                <div className="text-[10px] text-slate-400 dark:text-slate-500 font-normal">
+                  {t.activeStaff}
+                </div>
+              </div>
+            </div>
+          </button>
+        )}
+
+        {/* Import Database CSV (Doctor Only) */}
+        {isDoctor && onOpenImportDatabase && (
+          <button
+            type="button"
+            onClick={() => {
+              closeMenu();
+              onOpenImportDatabase();
+            }}
+            className="w-full flex items-center justify-between p-2.5 sm:p-2 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-sky-50/70 dark:hover:bg-sky-950/40 hover:text-sky-700 dark:hover:text-sky-300 transition-colors cursor-pointer group"
+          >
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 sm:w-7 sm:h-7 rounded-lg bg-slate-100 dark:bg-slate-800 group-hover:bg-sky-100 dark:group-hover:bg-sky-900/60 flex items-center justify-center text-slate-500 group-hover:text-sky-600 dark:text-slate-400 dark:group-hover:text-sky-400 transition-colors">
+                <Database className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
+              </div>
+              <div className="text-start">
+                <div className="font-bold leading-tight text-xs">{t.importDatabase}</div>
+                <div className="text-[10px] text-slate-400 dark:text-slate-500 font-normal">
+                  {t.uploadCsvFile}
+                </div>
+              </div>
+            </div>
+            <span className="px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-sky-100 dark:bg-sky-950 text-sky-700 dark:text-sky-300">
+              CSV
+            </span>
+          </button>
+        )}
+
+        {/* Theme Mode Toggle Row */}
+        <div className="flex items-center justify-between p-2.5 sm:p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 sm:w-7 sm:h-7 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 dark:text-slate-400">
+              {currentTheme === "dark" ? (
+                <Moon className="w-4 h-4 sm:w-3.5 sm:h-3.5 text-sky-400" />
+              ) : (
+                <Sun className="w-4 h-4 sm:w-3.5 sm:h-3.5 text-amber-500" />
+              )}
+            </div>
+            <div className="text-start">
+              <div className="text-xs font-bold text-slate-700 dark:text-slate-200 leading-tight">
+                {t.theme}
+              </div>
+              <div className="text-[10px] text-slate-400 dark:text-slate-500 font-normal">
+                {currentTheme === "dark" ? t.darkMode : t.lightMode}
+              </div>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={toggleTheme}
+            aria-label="Toggle theme"
+            className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden ${
+              currentTheme === "dark" ? "bg-sky-600" : "bg-slate-200"
+            }`}
+          >
+            <span
+              className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
+                currentTheme === "dark"
+                  ? "translate-x-4 rtl:-translate-x-4"
+                  : "translate-x-0"
+              }`}
+            />
+          </button>
+        </div>
+
+        {/* Language Selection */}
+        <div className="p-2.5 sm:p-2 rounded-2xl sm:rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-100 dark:border-slate-800/80">
+          <div className="flex items-center justify-between mb-1.5 px-0.5">
+            <div className="flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-slate-200">
+              <Globe className="w-3.5 h-3.5 text-sky-500" />
+              <span>{t.language}</span>
+            </div>
+            <span className="text-[10px] font-mono uppercase font-bold text-slate-400">
+              {lang.toUpperCase()}
+            </span>
+          </div>
+          <div className="grid grid-cols-3 gap-1 bg-slate-200/60 dark:bg-slate-900 p-1 rounded-xl">
+            {[
+              { code: "ku", label: "کوردی", flag: "☀️" },
+              { code: "ar", label: "العربية", flag: "🇮🇶" },
+              { code: "en", label: "English", flag: "🇬🇧" },
+            ].map((item) => (
+              <button
+                key={item.code}
+                type="button"
+                onClick={() => setLang(item.code as Language)}
+                className={`flex items-center justify-center gap-1 py-2 sm:py-1.5 px-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  lang === item.code
+                    ? "bg-white dark:bg-slate-800 text-sky-600 dark:text-sky-400 shadow-xs scale-[1.02]"
+                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-white/40 dark:hover:bg-slate-800/40"
+                }`}
+              >
+                <span className="text-xs">{item.flag}</span>
+                <span className="text-[11px] truncate">{item.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Sign Out */}
+      {handleSignOutClick && (
+        <div className="pt-2 sm:pt-1.5 mt-2 sm:mt-1.5 border-t border-slate-100 dark:border-slate-800">
+          <button
+            type="button"
+            onClick={() => {
+              closeMenu();
+              handleSignOutClick();
+            }}
+            className="w-full flex items-center gap-2.5 p-2.5 sm:p-2 rounded-xl text-xs font-bold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
+          >
+            <div className="w-8 h-8 sm:w-7 sm:h-7 rounded-lg bg-rose-50 dark:bg-rose-950/60 flex items-center justify-center text-rose-500">
+              <LogOut className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
+            </div>
+            <span>{t.signOut}</span>
+          </button>
+        </div>
+      )}
+    </div>
+  );
 
   return (
     <>
@@ -291,12 +528,18 @@ export function Header({
               <div ref={profileRef} className="relative">
                 <button
                   type="button"
-                  onClick={() => setIsProfileOpen((prev) => !prev)}
-                  aria-expanded={isProfileOpen}
+                  onClick={() => {
+                    if (typeof window !== "undefined" && window.innerWidth < 640) {
+                      setIsMobileSheetOpen(true);
+                    } else {
+                      setIsProfileOpen((prev) => !prev);
+                    }
+                  }}
+                  aria-expanded={isProfileOpen || isMobileSheetOpen}
                   aria-haspopup="true"
                   title={displayName}
                   className={`flex items-center gap-1.5 sm:gap-2 p-1 sm:px-2.5 sm:py-1 rounded-xl sm:rounded-2xl border transition-all cursor-pointer ${
-                    isProfileOpen
+                    isProfileOpen || isMobileSheetOpen
                       ? "bg-slate-100 dark:bg-slate-800 border-sky-500/50 ring-2 ring-sky-500/20 shadow-xs"
                       : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/80 hover:border-slate-300 dark:hover:border-slate-700 shadow-2xs"
                   }`}
@@ -317,7 +560,7 @@ export function Header({
                   </div>
 
                   {/* Name & Role label */}
-                  <div className="hidden md:flex flex-col text-left rtl:text-right min-w-0 max-w-[120px]">
+                  <div className="hidden md:flex flex-col text-start min-w-0 max-w-[120px]">
                     <span className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate leading-none">
                       {isDoctor ? settings.doctorName || displayName : displayName}
                     </span>
@@ -332,262 +575,33 @@ export function Header({
 
                   <ChevronDown
                     className={`w-3.5 h-3.5 text-slate-400 dark:text-slate-500 transition-transform duration-200 ${
-                      isProfileOpen ? "rotate-180 text-sky-500" : ""
+                      isProfileOpen || isMobileSheetOpen ? "rotate-180 text-sky-500" : ""
                     }`}
                   />
                 </button>
 
-                {/* Profile Menu: Bottom Sheet on Mobile (< sm), Floating Dropdown on Desktop (>= sm) */}
+                {/* Desktop Floating Dropdown (>= sm) */}
                 {isProfileOpen && (
-                  <>
-                    {/* Mobile Backdrop Overlay (< sm) */}
-                    <div
-                      className="sm:hidden fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs animate-in fade-in duration-200"
-                      onClick={() => setIsProfileOpen(false)}
-                      aria-hidden="true"
-                    />
-
-                    {/* Menu Container: Slide-up Drawer on Mobile, Popover Card on Desktop */}
-                    <div
-                      className="fixed sm:absolute bottom-0 sm:bottom-auto right-0 sm:top-full left-0 sm:left-auto rtl:sm:right-auto rtl:sm:left-0 sm:mt-2 w-full sm:w-80 bg-white dark:bg-slate-900 border-t sm:border border-slate-200 dark:border-slate-800 rounded-t-3xl sm:rounded-2xl shadow-2xl sm:shadow-xl p-3 sm:p-2 z-50 animate-in slide-in-from-bottom sm:slide-in-from-top-2 sm:fade-in sm:zoom-in-95 duration-200 max-h-[85dvh] overflow-y-auto no-scrollbar ring-1 ring-black/5 dark:ring-white/5"
-                    >
-                      {/* Mobile Bottom Sheet Drag Handle (< sm) */}
-                      <div className="sm:hidden flex justify-center pb-2 pt-0.5">
-                        <div className="w-10 h-1 rounded-full bg-slate-300 dark:bg-slate-700" />
-                      </div>
-
-                      {/* Profile Header */}
-                      <div className="p-3 sm:p-2.5 rounded-2xl sm:rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-100 dark:border-slate-800/80 mb-2 sm:mb-1.5">
-                        <div className="flex items-center gap-3">
-                          <div
-                            className={`w-11 h-11 sm:w-10 sm:h-10 rounded-2xl sm:rounded-xl flex items-center justify-center font-black text-sm text-white shadow-md flex-shrink-0 ${
-                              isDoctor
-                                ? "bg-gradient-to-tr from-sky-600 to-teal-600"
-                                : "bg-gradient-to-tr from-amber-500 to-amber-600"
-                            }`}
-                          >
-                            {isDoctor ? (
-                              <Stethoscope className="w-5 h-5 text-white" />
-                            ) : (
-                              <User className="w-5 h-5 text-white" />
-                            )}
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <h4 className="text-sm sm:text-sm font-extrabold text-slate-900 dark:text-slate-100 truncate">
-                              {isDoctor ? settings.doctorName || displayName : displayName}
-                            </h4>
-                            <p className="text-xs sm:text-[11px] text-slate-500 dark:text-slate-400 font-medium truncate">
-                              {settings.clinicName || t.clinicSubtitle}
-                            </p>
-                          </div>
-                        </div>
-
-                        {/* Badges: Role + Clinic Pro + Active Cloud */}
-                        <div className="flex items-center gap-1.5 mt-2.5 pt-2 border-t border-slate-200/60 dark:border-slate-800/80 flex-wrap">
-                          <span
-                            className={`inline-flex items-center gap-1 px-2.5 sm:px-2 py-0.5 rounded-full text-[11px] sm:text-[10px] font-bold border ${
-                              isDoctor
-                                ? "bg-sky-50 dark:bg-sky-950/80 text-sky-700 dark:text-sky-300 border-sky-200 dark:border-sky-800"
-                                : "bg-amber-50 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800"
-                            }`}
-                          >
-                            <span
-                              className={`w-1.5 h-1.5 rounded-full ${
-                                isDoctor ? "bg-sky-500" : "bg-amber-500"
-                              }`}
-                            />
-                            <span>{badgeLabel}</span>
-                          </span>
-
-                          {isDoctor && (
-                            <span className="inline-flex items-center gap-1 px-2.5 sm:px-2 py-0.5 rounded-full text-[11px] sm:text-[10px] font-bold bg-sky-50 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300 border border-sky-200/80 dark:border-sky-800">
-                              <ShieldCheck className="w-3 h-3 text-sky-500" />
-                              <span>{t.clinicPro}</span>
-                            </span>
-                          )}
-
-                          <span className="inline-flex items-center gap-1 px-2.5 sm:px-2 py-0.5 rounded-full text-[11px] sm:text-[10px] font-bold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800">
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                            <span>{t.activeCloud}</span>
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Secondary Actions */}
-                      <div className="space-y-1 sm:space-y-0.5">
-                        {/* Clinic Settings (Doctor Only) */}
-                        {isDoctor && onOpenClinicSettings && (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setIsProfileOpen(false);
-                              onOpenClinicSettings();
-                            }}
-                            className="w-full flex items-center justify-between p-2.5 sm:p-2 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-sky-50/70 dark:hover:bg-sky-950/40 hover:text-sky-600 dark:hover:text-sky-400 transition-colors cursor-pointer group"
-                          >
-                            <div className="flex items-center gap-2.5">
-                              <div className="w-8 h-8 sm:w-7 sm:h-7 rounded-lg bg-slate-100 dark:bg-slate-800 group-hover:bg-sky-100 dark:group-hover:bg-sky-900/60 flex items-center justify-center text-slate-500 group-hover:text-sky-600 dark:text-slate-400 dark:group-hover:text-sky-400 transition-colors">
-                                <Building2 className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
-                              </div>
-                              <div className="text-left rtl:text-right">
-                                <div className="font-bold leading-tight text-xs">{t.clinicSettings}</div>
-                                <div className="text-[10px] text-slate-400 dark:text-slate-500 font-normal">
-                                  {t.editClinicProfile}
-                                </div>
-                              </div>
-                            </div>
-                          </button>
-                        )}
-
-                        {/* Manage Staff (Doctor Only) */}
-                        {isDoctor && onOpenStaffModal && (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setIsProfileOpen(false);
-                              onOpenStaffModal();
-                            }}
-                            className="w-full flex items-center justify-between p-2.5 sm:p-2 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-amber-50/70 dark:hover:bg-amber-950/40 hover:text-amber-700 dark:hover:text-amber-300 transition-colors cursor-pointer group"
-                          >
-                            <div className="flex items-center gap-2.5">
-                              <div className="w-8 h-8 sm:w-7 sm:h-7 rounded-lg bg-slate-100 dark:bg-slate-800 group-hover:bg-amber-100 dark:group-hover:bg-amber-900/60 flex items-center justify-center text-slate-500 group-hover:text-amber-600 dark:text-slate-400 dark:group-hover:text-amber-400 transition-colors">
-                                <UserPlus className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
-                              </div>
-                              <div className="text-left rtl:text-right">
-                                <div className="font-bold leading-tight text-xs">{t.manageStaff}</div>
-                                <div className="text-[10px] text-slate-400 dark:text-slate-500 font-normal">
-                                  {t.activeStaff}
-                                </div>
-                              </div>
-                            </div>
-                          </button>
-                        )}
-
-                        {/* Import Database CSV (Doctor Only) */}
-                        {isDoctor && onOpenImportDatabase && (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setIsProfileOpen(false);
-                              onOpenImportDatabase();
-                            }}
-                            className="w-full flex items-center justify-between p-2.5 sm:p-2 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-sky-50/70 dark:hover:bg-sky-950/40 hover:text-sky-700 dark:hover:text-sky-300 transition-colors cursor-pointer group"
-                          >
-                            <div className="flex items-center gap-2.5">
-                              <div className="w-8 h-8 sm:w-7 sm:h-7 rounded-lg bg-slate-100 dark:bg-slate-800 group-hover:bg-sky-100 dark:group-hover:bg-sky-900/60 flex items-center justify-center text-slate-500 group-hover:text-sky-600 dark:text-slate-400 dark:group-hover:text-sky-400 transition-colors">
-                                <Database className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
-                              </div>
-                              <div className="text-left rtl:text-right">
-                                <div className="font-bold leading-tight text-xs">{t.importDatabase}</div>
-                                <div className="text-[10px] text-slate-400 dark:text-slate-500 font-normal">
-                                  {t.uploadCsvFile}
-                                </div>
-                              </div>
-                            </div>
-                            <span className="px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-sky-100 dark:bg-sky-950 text-sky-700 dark:text-sky-300">
-                              CSV
-                            </span>
-                          </button>
-                        )}
-
-                        {/* Theme Mode Toggle Row */}
-                        <div className="flex items-center justify-between p-2.5 sm:p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors">
-                          <div className="flex items-center gap-2.5">
-                            <div className="w-8 h-8 sm:w-7 sm:h-7 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 dark:text-slate-400">
-                              {currentTheme === "dark" ? (
-                                <Moon className="w-4 h-4 sm:w-3.5 sm:h-3.5 text-sky-400" />
-                              ) : (
-                                <Sun className="w-4 h-4 sm:w-3.5 sm:h-3.5 text-amber-500" />
-                              )}
-                            </div>
-                            <div className="text-left rtl:text-right">
-                              <div className="text-xs font-bold text-slate-700 dark:text-slate-200 leading-tight">
-                                {t.theme}
-                              </div>
-                              <div className="text-[10px] text-slate-400 dark:text-slate-500 font-normal">
-                                {currentTheme === "dark" ? t.darkMode : t.lightMode}
-                              </div>
-                            </div>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={toggleTheme}
-                            aria-label="Toggle theme"
-                            className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                              currentTheme === "dark" ? "bg-sky-600" : "bg-slate-200"
-                            }`}
-                          >
-                            <span
-                              className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
-                                currentTheme === "dark"
-                                  ? "translate-x-4 rtl:-translate-x-4"
-                                  : "translate-x-0"
-                              }`}
-                            />
-                          </button>
-                        </div>
-
-                        {/* Language Selection */}
-                        <div className="p-2.5 sm:p-2 rounded-2xl sm:rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-100 dark:border-slate-800/80">
-                          <div className="flex items-center justify-between mb-1.5 px-0.5">
-                            <div className="flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-slate-200">
-                              <Globe className="w-3.5 h-3.5 text-sky-500" />
-                              <span>{t.language}</span>
-                            </div>
-                            <span className="text-[10px] font-mono uppercase font-bold text-slate-400">
-                              {lang.toUpperCase()}
-                            </span>
-                          </div>
-                          <div className="grid grid-cols-3 gap-1 bg-slate-200/60 dark:bg-slate-900 p-1 rounded-xl">
-                            {[
-                              { code: "ku", label: "کوردی", flag: "☀️" },
-                              { code: "ar", label: "العربية", flag: "🇮🇶" },
-                              { code: "en", label: "English", flag: "🇬🇧" },
-                            ].map((item) => (
-                              <button
-                                key={item.code}
-                                type="button"
-                                onClick={() => setLang(item.code as Language)}
-                                className={`flex items-center justify-center gap-1 py-2 sm:py-1.5 px-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                                  lang === item.code
-                                    ? "bg-white dark:bg-slate-800 text-sky-600 dark:text-sky-400 shadow-xs scale-[1.02]"
-                                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-white/40 dark:hover:bg-slate-800/40"
-                                }`}
-                              >
-                                <span className="text-xs">{item.flag}</span>
-                                <span className="text-[11px] truncate">{item.label}</span>
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Sign Out */}
-                      {handleSignOutClick && (
-                        <div className="pt-2 sm:pt-1.5 mt-2 sm:mt-1.5 border-t border-slate-100 dark:border-slate-800">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setIsProfileOpen(false);
-                              handleSignOutClick();
-                            }}
-                            className="w-full flex items-center gap-2.5 p-2.5 sm:p-2 rounded-xl text-xs font-bold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
-                          >
-                            <div className="w-8 h-8 sm:w-7 sm:h-7 rounded-lg bg-rose-50 dark:bg-rose-950/60 flex items-center justify-center text-rose-500">
-                              <LogOut className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
-                            </div>
-                            <span>{t.signOut}</span>
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  </>
+                  <div className="hidden sm:block absolute top-full end-0 mt-2 w-80 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl p-2 z-50 animate-in fade-in zoom-in-95 duration-200 ring-1 ring-black/5 dark:ring-white/5">
+                    {renderProfileContent(() => setIsProfileOpen(false))}
+                  </div>
                 )}
               </div>
             </div>
           </div>
         </div>
       </header>
+
+      {/* Mobile Profile Sheet Drawer (< sm) */}
+      <Sheet open={isMobileSheetOpen} onOpenChange={setIsMobileSheetOpen}>
+        <SheetContent side="bottom" className="p-4 sm:hidden">
+          <SheetHeader className="sr-only">
+            <SheetTitle>{displayName}</SheetTitle>
+            <SheetDescription>{badgeLabel}</SheetDescription>
+          </SheetHeader>
+          {renderProfileContent(() => setIsMobileSheetOpen(false))}
+        </SheetContent>
+      </Sheet>
 
       {/* Mobile Floating Island Bottom Navigation */}
       <div

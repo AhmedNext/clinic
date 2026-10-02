@@ -39,3 +39,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# temp dump & script files
+batch_*.sql
+dump_*.json
+generate_*.ps1
+
