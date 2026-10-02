@@ -179,104 +179,117 @@ export function PatientHistoryModal({
       aria-modal="true"
       aria-labelledby="history-modal-title"
     >
-      <div className="w-full max-w-xl bg-white dark:bg-slate-900 rounded-t-3xl sm:rounded-2xl shadow-2xl flex flex-col h-[90vh] max-h-[90vh] border-0 sm:border border-slate-200 dark:border-slate-800 animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-200">
+      <div className="w-full max-w-2xl bg-white dark:bg-slate-900 rounded-t-3xl sm:rounded-3xl shadow-2xl flex flex-col h-[92vh] max-h-[92vh] border-0 sm:border border-slate-200/80 dark:border-slate-800 animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-200 overflow-hidden">
 
         {/* ── HEADER ── */}
-        <div className="flex items-center justify-between gap-3 px-4 pt-4 pb-3 border-b border-slate-100 dark:border-slate-800">
-          <div className="flex items-center gap-3 min-w-0">
-            <PatientAvatar gender={patient.gender} size="md" />
-            <div className="min-w-0">
-              <h2
-                id="history-modal-title"
-                className="font-bold text-slate-900 dark:text-slate-100 text-base truncate"
-              >
-                {patient.name}
-              </h2>
-              <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                <span
-                  className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-semibold border ${
-                    patient.gender === "male"
-                      ? "bg-sky-50 dark:bg-sky-950/40 text-sky-700 dark:text-sky-300 border-sky-200 dark:border-sky-800"
-                      : "bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800"
-                  }`}
-                >
-                  {patient.gender === "male" ? `♂ ${t.male}` : `♀ ${t.female}`}
-                </span>
-                {patient.age && (
-                  <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
-                    {patient.age}y
+        <div className="px-5 sm:px-6 py-4 border-b border-slate-100 dark:border-slate-800/80 bg-slate-50/70 dark:bg-slate-900/70 backdrop-blur-md">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3 min-w-0">
+              <PatientAvatar gender={patient.gender} size="lg" />
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h2
+                    id="history-modal-title"
+                    className="font-bold text-slate-900 dark:text-slate-100 text-lg leading-tight truncate"
+                  >
+                    {patient.name}
+                  </h2>
+                  <span
+                    className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold border shadow-2xs ${
+                      patient.gender === "male"
+                        ? "bg-sky-50 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300 border-sky-200 dark:border-sky-800"
+                        : "bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800"
+                    }`}
+                  >
+                    {patient.gender === "male" ? `♂ ${t.male}` : `♀ ${t.female}`}
                   </span>
-                )}
-                <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
-                  <Activity className="w-2.5 h-2.5 text-indigo-500" />
-                  <span>{historyEntries.length} {t.totalVisitsCount}</span>
-                </span>
-                <span className="inline-flex items-center gap-1 text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold bg-emerald-50 dark:bg-emerald-950/50 px-1.5 py-0.5 rounded-md border border-emerald-200 dark:border-emerald-900/60">
-                  <span>☁️</span>
-                  <span>{t.supabaseLive}</span>
-                </span>
+                  {patient.age && (
+                    <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                      {patient.age} {t.yearsOld}
+                    </span>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-2 mt-1.5 flex-wrap text-xs">
+                  <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
+                    <Activity className="w-3 h-3 text-indigo-500" />
+                    <span>{historyEntries.length} {historyEntries.length === 1 ? t.entry : t.entries}</span>
+                  </span>
+                  {patient.phone && (
+                    <span className="text-slate-500 dark:text-slate-400 font-mono text-[11px]">
+                      {patient.phone}
+                    </span>
+                  )}
+                </div>
               </div>
+            </div>
+
+            {/* Actions & Close Button */}
+            <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
+              {onPrintReceipt && (
+                <button
+                  type="button"
+                  onClick={() => onPrintReceipt(patient)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 hover:bg-indigo-50 dark:hover:bg-indigo-950/60 text-slate-700 hover:text-indigo-600 dark:text-slate-200 dark:hover:text-indigo-300 border border-slate-200 dark:border-slate-700 text-xs font-semibold transition-all cursor-pointer shadow-2xs hover:scale-102 active:scale-98"
+                  title={t.printReceipt}
+                >
+                  <Printer className="w-3.5 h-3.5 text-indigo-500" />
+                  <span className="hidden sm:inline">{t.printReceipt}</span>
+                </button>
+              )}
+
+              {onPrintPrescription && (
+                <button
+                  type="button"
+                  onClick={() => onPrintPrescription(patient)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/60 text-slate-700 hover:text-emerald-600 dark:text-slate-200 dark:hover:text-emerald-300 border border-slate-200 dark:border-slate-700 text-xs font-semibold transition-all cursor-pointer shadow-2xs hover:scale-102 active:scale-98"
+                  title={t.printPrescription}
+                >
+                  <Stethoscope className="w-3.5 h-3.5 text-emerald-500" />
+                  <span className="hidden sm:inline">{t.prescription}</span>
+                </button>
+              )}
+
+              <button
+                onClick={onClose}
+                aria-label="Close"
+                className="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
             </div>
           </div>
 
-          {/* Financial summary + Actions + close */}
-          <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
-            {onPrintReceipt && (
-              <button
-                type="button"
-                onClick={() => onPrintReceipt(patient)}
-                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-indigo-50 dark:bg-slate-800 dark:hover:bg-indigo-950/60 text-slate-700 hover:text-indigo-600 dark:text-slate-300 dark:hover:text-indigo-400 border border-slate-200 dark:border-slate-700 text-xs font-semibold transition-all cursor-pointer shadow-2xs"
-                title={t.printReceipt}
-              >
-                <Printer className="w-3.5 h-3.5 text-indigo-500" />
-                <span className="hidden md:inline">{t.printReceipt}</span>
-              </button>
-            )}
-
-            {onPrintPrescription && (
-              <button
-                type="button"
-                onClick={() => onPrintPrescription(patient)}
-                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-emerald-50 dark:bg-slate-800 dark:hover:bg-emerald-950/60 text-slate-700 hover:text-emerald-600 dark:text-slate-300 dark:hover:text-emerald-400 border border-slate-200 dark:border-slate-700 text-xs font-semibold transition-all cursor-pointer shadow-2xs"
-                title={t.printPrescription}
-              >
-                <Stethoscope className="w-3.5 h-3.5 text-emerald-500" />
-                <span className="hidden md:inline">{t.prescription}</span>
-              </button>
-            )}
-
-            <div className="text-right rtl:text-left text-xs hidden lg:block">
-              <div className="font-semibold text-slate-800 dark:text-slate-200">
-                {formatIQD(patient.paidAmount ?? 0)}
+          {/* Clean Financial Balance Card inside Header */}
+          <div className="mt-3.5 pt-3 border-t border-slate-200/60 dark:border-slate-800/80 flex items-center justify-between gap-3 text-xs">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-1.5">
+                <span className="text-slate-400 dark:text-slate-500">{t.paidLabel}:</span>
+                <span className="font-bold text-slate-900 dark:text-slate-100 font-mono text-sm">
+                  {formatIQD(patient.paidAmount ?? 0)}
+                </span>
               </div>
-              {totalDebt > 0 ? (
-                <div className="text-rose-600 dark:text-rose-400 font-bold">
-                  {t.owesLabel} {formatIQD(totalDebt)}
+              {patient.totalAmount !== undefined && patient.totalAmount > 0 && (
+                <div className="hidden sm:flex items-center gap-1 text-slate-400 dark:text-slate-500 text-[11px]">
+                  <span>({t.total}: {formatIQD(patient.totalAmount)})</span>
                 </div>
-              ) : (
-                <div className="text-emerald-600 dark:text-emerald-400 font-medium">{t.allSettled}</div>
               )}
             </div>
-            <button
-              onClick={onClose}
-              aria-label="Close"
-              className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-        </div>
 
-        {/* Financial summary — mobile only */}
-        <div className="sm:hidden flex items-center justify-between px-4 py-2.5 bg-slate-50 dark:bg-slate-800/40 border-b border-slate-100 dark:border-slate-800 text-xs">
-          <span className="text-slate-500 dark:text-slate-400">
-            {t.paidLabel}: <strong className="text-slate-800 dark:text-slate-200">{formatIQD(patient.paidAmount ?? 0)}</strong>
-          </span>
-          {totalDebt > 0 ? (
-            <span className="font-bold text-rose-600 dark:text-rose-400">{t.owesLabel} {formatIQD(totalDebt)}</span>
-          ) : (
-            <span className="font-semibold text-emerald-600 dark:text-emerald-400">{t.allSettled}</span>
-          )}
+            <div>
+              {totalDebt > 0 ? (
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-900/60 font-mono">
+                  <span>{t.owesLabel}:</span>
+                  <span>{formatIQD(totalDebt)}</span>
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900/60">
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  <span>{t.allSettled}</span>
+                </span>
+              )}
+            </div>
+          </div>
         </div>
 
         {/* Medical history alert */}
@@ -636,34 +649,34 @@ export function PatientHistoryModal({
                             </form>
                           ) : (
                             /* ── DISPLAY CARD ── */
-                            <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/80 overflow-hidden hover:border-slate-300 dark:hover:border-slate-700 transition-colors">
+                            <div className="rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-2xs hover:shadow-xs hover:border-indigo-200 dark:hover:border-indigo-900/60 transition-all overflow-hidden">
                               {/* Card header */}
-                              <div className="flex items-start justify-between gap-2 px-4 pt-3 pb-2.5">
+                              <div className="flex items-start justify-between gap-3 px-4.5 pt-3.5 pb-2.5">
                                 <div className="min-w-0">
-                                  {/* Date */}
-                                  <div className="flex items-center gap-1.5 mb-1 flex-wrap">
-                                    <Calendar className="w-3 h-3 text-slate-400 flex-shrink-0" />
-                                    <span className="text-[11px] font-medium text-slate-400 dark:text-slate-500">
-                                      {formatDate(entry.date)}
+                                  {/* Date & Latest badge */}
+                                  <div className="flex items-center gap-2 mb-1 flex-wrap">
+                                    <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 dark:text-slate-400">
+                                      <Calendar className="w-3.5 h-3.5 text-indigo-500 dark:text-indigo-400" />
+                                      <span>{formatDate(entry.date)}</span>
                                     </span>
                                     {isFirst && (
-                                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800">
+                                      <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 tracking-wide uppercase">
                                         {t.latest}
                                       </span>
                                     )}
                                   </div>
                                   {/* Title */}
-                                  <p className="text-sm font-bold text-slate-900 dark:text-slate-100 leading-snug">
+                                  <h4 className="text-sm sm:text-base font-bold text-slate-900 dark:text-slate-100 leading-snug">
                                     {entry.title}
-                                  </p>
+                                  </h4>
                                 </div>
 
                                 {/* Actions: Edit + Delete */}
-                                <div className="flex items-center gap-1 flex-shrink-0">
+                                <div className="flex items-center gap-1 flex-shrink-0 pt-0.5">
                                   <button
                                     onClick={() => startEditing(entry)}
                                     title={t.edit}
-                                    className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 transition-all cursor-pointer"
+                                    className="p-1.5 rounded-xl text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 transition-all cursor-pointer"
                                   >
                                     <Pencil className="w-3.5 h-3.5" />
                                   </button>
@@ -674,7 +687,7 @@ export function PatientHistoryModal({
                                       }
                                     }}
                                     title={t.delete}
-                                    className="p-1.5 rounded-lg text-slate-300 dark:text-slate-700 hover:text-rose-500 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-all cursor-pointer"
+                                    className="p-1.5 rounded-xl text-slate-300 dark:text-slate-600 hover:text-rose-500 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/50 transition-all cursor-pointer"
                                   >
                                     <Trash2 className="w-3.5 h-3.5" />
                                   </button>
@@ -683,10 +696,10 @@ export function PatientHistoryModal({
 
                               {/* Notes */}
                               {entry.notes && (
-                                <div className="px-4 pb-3">
-                                  <div className="flex items-start gap-2 p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
-                                    <FileText className="w-3.5 h-3.5 text-slate-400 flex-shrink-0 mt-0.5" />
-                                    <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-wrap">
+                                <div className="px-4.5 pb-3">
+                                  <div className="flex items-start gap-2.5 p-3 rounded-xl bg-slate-50/80 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800/70 text-xs text-slate-600 dark:text-slate-300">
+                                    <FileText className="w-4 h-4 text-indigo-400 flex-shrink-0 mt-0.5" />
+                                    <p className="leading-relaxed whitespace-pre-wrap">
                                       {entry.notes}
                                     </p>
                                   </div>
@@ -695,23 +708,24 @@ export function PatientHistoryModal({
 
                               {/* Financial row */}
                               {(entry.fee !== undefined || entry.paid !== undefined || entry.debt !== undefined) && (
-                                <div className="flex items-center justify-between px-4 py-2.5 border-t border-slate-100 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/30">
+                                <div className="flex items-center justify-between px-4.5 py-2.5 border-t border-slate-100 dark:border-slate-800/70 bg-slate-50/40 dark:bg-slate-900/40">
                                   <div className="flex items-center gap-1.5">
                                     <Banknote className="w-3.5 h-3.5 text-slate-400" />
                                     <span className="text-xs text-slate-500 dark:text-slate-400">
                                       {t.paidLabel}:{" "}
-                                      <strong className="text-slate-700 dark:text-slate-200 font-semibold">
+                                      <strong className="text-slate-800 dark:text-slate-200 font-mono font-bold">
                                         {formatIQD(entryPaid)}
                                       </strong>
                                     </span>
                                   </div>
                                   {entryDebt > 0 ? (
-                                    <span className="text-xs font-bold text-rose-600 dark:text-rose-400">
+                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-bold bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-900/40 font-mono">
                                       {t.owesLabel}: {formatIQD(entryDebt)}
                                     </span>
                                   ) : (
-                                    <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">
-                                      ✓ {t.paid}
+                                    <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                                      <CheckCircle2 className="w-3.5 h-3.5" />
+                                      <span>{t.paid}</span>
                                     </span>
                                   )}
                                 </div>
