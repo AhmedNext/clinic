@@ -205,7 +205,7 @@ export function PatientHistoryModal({
                   </span>
                   {patient.age && (
                     <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
-                      {patient.age} {t.yearsOld}
+                      {patient.age}y
                     </span>
                   )}
                 </div>
@@ -271,7 +271,7 @@ export function PatientHistoryModal({
               </div>
               {patient.totalAmount !== undefined && patient.totalAmount > 0 && (
                 <div className="hidden sm:flex items-center gap-1 text-slate-400 dark:text-slate-500 text-[11px]">
-                  <span>({t.total}: {formatIQD(patient.totalAmount)})</span>
+                  <span>({t.totalPrice}: {formatIQD(patient.totalAmount)})</span>
                 </div>
               )}
             </div>
