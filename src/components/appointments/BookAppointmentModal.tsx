@@ -450,13 +450,14 @@ export function BookAppointmentModal({
                 />
 
                 {/* Quick Time Presets */}
-                <div className="flex flex-wrap gap-1">
+                <div className="flex flex-wrap gap-1" dir="ltr">
                   {TIME_CHIPS.map((chip) => (
                     <button
                       key={chip}
                       type="button"
+                      dir="ltr"
                       onClick={() => setTime(chip)}
-                      className={`px-2 py-0.5 rounded-lg text-[10px] font-mono font-bold transition-all cursor-pointer border ${
+                      className={`px-2 py-0.5 rounded-lg text-[10px] font-mono font-bold transition-all cursor-pointer border tabular-nums ${
                         time === chip
                           ? "bg-sky-600 text-white border-sky-600 shadow-2xs"
                           : "bg-slate-50 dark:bg-slate-950 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-800 hover:border-sky-300"

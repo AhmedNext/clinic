@@ -75,7 +75,7 @@ export function CircleClockPickerModal({
         </DialogHeader>
 
         {/* Circular Analog Clock Face via react-timekeeper */}
-        <div className="flex flex-col items-center justify-center my-1">
+        <div dir="ltr" className="flex flex-col items-center justify-center my-1 [direction:ltr]">
           <TimeKeeper
             time={selectedTime}
             onChange={handleTimeChange}

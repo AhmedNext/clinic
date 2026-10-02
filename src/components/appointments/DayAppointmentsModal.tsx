@@ -296,13 +296,14 @@ export function DayAppointmentsModal({
                 </div>
 
                 {/* Time presets */}
-                <div className="flex flex-wrap gap-1.5 text-[11px]">
+                <div className="flex flex-wrap gap-1.5 text-[11px]" dir="ltr">
                   {TIME_PRESETS.map((tPreset) => (
                     <button
                       key={tPreset}
                       type="button"
+                      dir="ltr"
                       onClick={() => setTime(tPreset)}
-                      className={`px-2 py-0.5 rounded-lg border transition-colors cursor-pointer ${
+                      className={`px-2 py-0.5 rounded-lg border font-mono transition-colors cursor-pointer tabular-nums ${
                         time === tPreset
                           ? "bg-indigo-600 text-white border-indigo-600 font-semibold"
                           : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-indigo-400"

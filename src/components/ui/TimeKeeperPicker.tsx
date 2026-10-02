@@ -15,6 +15,8 @@ const TimeKeeper = dynamic(() => import("react-timekeeper"), {
   ),
 });
 
+import { useLanguage } from "@/context/LanguageContext";
+
 interface TimeKeeperPickerProps {
   value: string; // e.g. "10:30 AM" or ""
   onChange: (newTime: string) => void;
@@ -27,10 +29,18 @@ export function TimeKeeperPicker({
   value,
   onChange,
   id,
-  placeholder = "Select Time",
+  placeholder,
   className = "",
 }: TimeKeeperPickerProps) {
+  const { language } = useLanguage();
   const [showClock, setShowClock] = useState(false);
+
+  const defaultPlaceholder =
+    language === "ar"
+      ? "اختر الوقت"
+      : language === "ku"
+      ? "کات دیاریبکە"
+      : "Select Time";
 
   const handleTimeChange = (data: TimeOutput) => {
     // Formatted as standard 12-hour: e.g. "10:30 AM"
@@ -49,24 +59,26 @@ export function TimeKeeperPicker({
       >
         <Clock className="w-3.5 h-3.5 text-slate-400 shrink-0" />
         <span
+          dir="ltr"
           className={
             value
-              ? "text-slate-900 dark:text-slate-100 font-medium truncate"
+              ? "text-slate-900 dark:text-slate-100 font-semibold font-mono truncate"
               : "text-slate-400 font-normal truncate"
           }
         >
-          {value || placeholder}
+          {value || placeholder || defaultPlaceholder}
         </span>
       </button>
 
       {/* Centered Fixed Modal Dialog for React-TimeKeeper */}
       {showClock && (
         <div
-          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-xs p-4 animate-in fade-in"
+          className="fixed inset-0 z-[70] flex items-center justify-center bg-black/50 backdrop-blur-xs p-4 animate-in fade-in"
           onClick={() => setShowClock(false)}
         >
           <div
-            className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl overflow-hidden scale-100 animate-in zoom-in-95 flex flex-col items-center border border-slate-200 dark:border-slate-800"
+            dir="ltr"
+            className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl overflow-hidden scale-100 animate-in zoom-in-95 flex flex-col items-center border border-slate-200 dark:border-slate-800 [direction:ltr]"
             onClick={(e) => e.stopPropagation()}
           >
             <TimeKeeper
@@ -78,9 +90,9 @@ export function TimeKeeperPicker({
                 <button
                   type="button"
                   onClick={() => setShowClock(false)}
-                  className="w-full py-3 bg-sky-600 hover:bg-sky-500 text-white font-semibold text-xs transition-colors cursor-pointer"
+                  className="w-full py-3 bg-sky-600 hover:bg-sky-500 text-white font-bold text-xs transition-colors cursor-pointer"
                 >
-                  Done
+                  {language === "ar" ? "تم" : language === "ku" ? "تەواو" : "Done"}
                 </button>
               )}
             />
