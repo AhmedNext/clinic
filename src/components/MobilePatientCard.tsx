@@ -198,7 +198,11 @@ export const MobilePatientCard = React.memo(function MobilePatientCard({
               >
                 <History className="w-4 h-4 text-indigo-500" />
                 <span>
-                  {t.visit} ({visitsCount})
+                  {language === "ar"
+                    ? `عرض السجل (${visitsCount} ${visitsCount === 1 ? "زيارة" : "زيارات"})`
+                    : language === "ku"
+                    ? `مێژووی سەردان (${visitsCount} سەردان)`
+                    : `View History (${visitsCount} ${visitsCount === 1 ? "visit" : "visits"})`}
                 </span>
               </DropdownMenuItem>
 

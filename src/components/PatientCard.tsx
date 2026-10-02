@@ -251,7 +251,13 @@ export const PatientCard = React.memo(function PatientCard({
                 className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 hover:text-indigo-600 transition-colors min-h-[44px]"
               >
                 <History className="w-4 h-4 text-indigo-500" />
-                <span>{t.visit} ({visitsCount})</span>
+                <span>
+                  {language === "ar"
+                    ? `عرض السجل (${visitsCount} ${visitsCount === 1 ? "زيارة" : "زيارات"})`
+                    : language === "ku"
+                    ? `مێژووی سەردان (${visitsCount} سەردان)`
+                    : `View History (${visitsCount} ${visitsCount === 1 ? "visit" : "visits"})`}
+                </span>
               </button>
 
               <button

@@ -12,6 +12,7 @@ import { Header } from "@/components/Header";
 import { StatsOverview } from "@/components/StatsOverview";
 import { PatientTable } from "@/components/PatientTable";
 import { PatientCard } from "@/components/PatientCard";
+import { MobilePatientCard } from "@/components/MobilePatientCard";
 import { SearchBox } from "@/components/SearchBox";
 import {
   Search,
@@ -1115,8 +1116,8 @@ export default function DashboardPage() {
                   </span>
                 </button>
 
-                {/* Table / Grid view switcher */}
-                <div className="inline-flex rounded-2xl border border-slate-200/90 dark:border-slate-800 p-0.5 bg-slate-100/70 dark:bg-slate-900/80 backdrop-blur-md shadow-2xs shrink-0 whitespace-nowrap">
+                {/* Table / Grid view switcher (Hidden on mobile < md) */}
+                <div className="hidden md:inline-flex rounded-2xl border border-slate-200/90 dark:border-slate-800 p-0.5 bg-slate-100/70 dark:bg-slate-900/80 backdrop-blur-md shadow-2xs shrink-0 whitespace-nowrap">
                   <button
                     onClick={() => setViewMode("table")}
                     aria-label={t.tableView}
@@ -1200,11 +1201,12 @@ export default function DashboardPage() {
               </div>
             ) : (
               <>
-                {/* Table View */}
-                {viewMode === "table" ? (
-                  <div className="w-full max-w-full overflow-hidden">
-                    <PatientTable
-                      patients={paginatedPatients}
+                {/* Mobile View (< md): Always sleek MobilePatientCard list */}
+                <div className="md:hidden space-y-3">
+                  {paginatedPatients.map((patient) => (
+                    <MobilePatientCard
+                      key={patient.id}
+                      patient={patient}
                       onDeletePatient={handleDeletePatient}
                       onEditPatient={(patient) => setEditingPatient(patient)}
                       onViewHistory={(patient) => setHistoryPatient(patient)}
@@ -1213,26 +1215,44 @@ export default function DashboardPage() {
                       onPrintReceipt={(patient) => setReceiptPatient(patient)}
                       onPrintPrescription={(patient) => setPrescriptionPatient(patient)}
                     />
-                  </div>
-                ) : (
-                  /* Grid / Card View */
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-4">
-                    {paginatedPatients.map((patient) => (
-                      <PatientCard
-                        key={patient.id}
-                        patient={patient}
+                  ))}
+                </div>
+
+                {/* Desktop View (>= md): Table or Grid based on viewMode */}
+                <div className="hidden md:block">
+                  {viewMode === "table" ? (
+                    <div className="w-full max-w-full overflow-hidden">
+                      <PatientTable
+                        patients={paginatedPatients}
                         onDeletePatient={handleDeletePatient}
                         onEditPatient={(patient) => setEditingPatient(patient)}
                         onViewHistory={(patient) => setHistoryPatient(patient)}
                         onOpenDentalChart={(patient) => setDentalPatient(patient)}
                         onSettleDebt={handleSettleDebt}
-                        onUpdatePatient={handleUpdatePatient}
                         onPrintReceipt={(patient) => setReceiptPatient(patient)}
                         onPrintPrescription={(patient) => setPrescriptionPatient(patient)}
                       />
-                    ))}
-                  </div>
-                )}
+                    </div>
+                  ) : (
+                    /* Grid / Card View */
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-4">
+                      {paginatedPatients.map((patient) => (
+                        <PatientCard
+                          key={patient.id}
+                          patient={patient}
+                          onDeletePatient={handleDeletePatient}
+                          onEditPatient={(patient) => setEditingPatient(patient)}
+                          onViewHistory={(patient) => setHistoryPatient(patient)}
+                          onOpenDentalChart={(patient) => setDentalPatient(patient)}
+                          onSettleDebt={handleSettleDebt}
+                          onUpdatePatient={handleUpdatePatient}
+                          onPrintReceipt={(patient) => setReceiptPatient(patient)}
+                          onPrintPrescription={(patient) => setPrescriptionPatient(patient)}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
 
                 {/* Pagination Controls */}
                 <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4 py-3 px-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/70 dark:bg-slate-900/70 backdrop-blur-md shadow-xs">

@@ -1127,8 +1127,11 @@ export function DentalChart({
       )}
 
       {/* ================= 5. SLEEK MINIMAL SELECTED TOOTH INSPECTOR ================= */}
-      {selectedCount === 1 && activeTooth && (
-        <div className="mt-3 p-3 sm:p-4 rounded-2xl bg-white dark:bg-slate-900 border border-indigo-200 dark:border-indigo-800/80 shadow-md animate-in slide-in-from-top-2">
+      {selectedCount === 1 && activeTooth && (() => {
+        const currentRecord = recordsMap.get(activeTooth.number);
+        const currentStatus = currentRecord?.status;
+        return (
+          <div className="mt-3 p-3 sm:p-4 rounded-2xl bg-white dark:bg-slate-900 border border-indigo-200 dark:border-indigo-800/80 shadow-md animate-in slide-in-from-top-2">
           {/* Header */}
           <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800 mb-2.5">
             <div className="flex items-center gap-2 min-w-0">
@@ -1154,22 +1157,48 @@ export function DentalChart({
             </div>
           </div>
 
-          {/* Controls Grid */}
-          <div className="grid grid-cols-1 gap-2.5">
-            {/* 1. Condition Selector */}
-            <div>
-              <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
+          {/* Controls Grid - Clean Procedure Pills */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">
                 {t.condition}
               </label>
-              <select
-                value={recordsMap.get(activeTooth.number)?.status || "treated"}
-                onChange={(e) => handleActiveToothStatusChange(e.target.value as ToothTreatment)}
-                className="w-full px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-semibold text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
-              >
-                {ALL_TREATMENTS.map((s) => (
-                  <option key={s} value={s}>{PROCEDURE_TRANSLATIONS[s]?.[language] || TREATMENT_METADATA[s].label}</option>
-                ))}
-              </select>
+              {currentStatus && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800">
+                  <Check className="w-3 h-3 stroke-[3]" />
+                  {PROCEDURE_TRANSLATIONS[currentStatus]?.[language] || TREATMENT_METADATA[currentStatus]?.label || currentStatus}
+                </span>
+              )}
+            </div>
+
+            <div className="flex flex-wrap gap-1.5">
+              {[
+                { status: "filling" as ToothTreatment, label: "Composite Filling", ar: "حشوة دائمية (Composite)", ku: "پڕکردنەوە", color: "bg-amber-500 hover:bg-amber-600 text-white border-amber-600" },
+                { status: "root_canal" as ToothTreatment, label: "Root Canal (Endo)", ar: "علاج عصب (Endo)", ku: "دەماربڕین (Endo)", color: "bg-purple-600 hover:bg-purple-700 text-white border-purple-700" },
+                { status: "crown" as ToothTreatment, label: "Crown / Bridge", ar: "تاج / جسر (Crown)", ku: "داپۆشین / پرد", color: "bg-blue-600 hover:bg-blue-700 text-white border-blue-700" },
+                { status: "extraction" as ToothTreatment, label: "Extraction", ar: "قلع سن (Extraction)", ku: "کێشانی ددان", color: "bg-rose-600 hover:bg-rose-700 text-white border-rose-700" },
+                { status: "scaling_polishing" as ToothTreatment, label: "Scaling & Cleaning", ar: "تنظيف وتلميع (Scaling)", ku: "پاککردنەوە (Scaling)", color: "bg-teal-600 hover:bg-teal-700 text-white border-teal-700" },
+                { status: "whitening" as ToothTreatment, label: "Whitening", ar: "تبييض أسنان", ku: "سپی کردنەوە", color: "bg-indigo-600 hover:bg-indigo-700 text-white border-indigo-700" },
+                { status: "implant" as ToothTreatment, label: "Implant", ar: "زراعة أسنان (Implant)", ku: "چاندنی ددان", color: "bg-slate-800 hover:bg-slate-900 text-white border-slate-900" },
+              ].map((chip) => {
+                const isActive = currentStatus === chip.status;
+                const displayLabel = language === "ar" ? chip.ar : language === "ku" ? chip.ku : chip.label;
+                return (
+                  <button
+                    key={chip.status}
+                    type="button"
+                    onClick={() => handleActiveToothStatusChange(chip.status)}
+                    className={`px-2.5 py-1.5 rounded-xl text-xs font-semibold border transition-all cursor-pointer inline-flex items-center gap-1.5 shadow-2xs active:scale-95 ${
+                      isActive
+                        ? `${chip.color} shadow-sm ring-2 ring-offset-1 ring-indigo-500`
+                        : "bg-slate-100 hover:bg-slate-200/80 dark:bg-slate-800 dark:hover:bg-slate-700/80 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-700"
+                    }`}
+                  >
+                    {isActive && <Check className="w-3 h-3 stroke-[3]" />}
+                    <span>{displayLabel}</span>
+                  </button>
+                );
+              })}
             </div>
           </div>
 
@@ -1198,7 +1227,8 @@ export function DentalChart({
             </button>
           </div>
         </div>
-      )}
+          );
+        })()}
 
       {/* ================= 6. SUMMARY OF WORKED TEETH & TOTAL FEES ================= */}
       <div className="mt-2.5 pt-2 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 text-xs text-slate-500 dark:text-slate-400">
