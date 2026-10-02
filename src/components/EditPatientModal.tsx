@@ -8,6 +8,7 @@ import { DentalChart } from "./dental/DentalChart";
 import { PatientAvatar } from "./PatientAvatar";
 import { CircleClockPickerModal } from "./ui/CircleClockPickerModal";
 import { BetterDatePickerModal } from "./ui/BetterDatePickerModal";
+import { TimeKeeperPicker } from "./ui/TimeKeeperPicker";
 import { useLanguage } from "@/context/LanguageContext";
 
 interface EditPatientModalProps {
@@ -328,7 +329,7 @@ export function EditPatientModal({
               </div>
             </div>
 
-            {/* Visit Time (Circle Clock) */}
+            {/* Visit Time (Analog Clock) */}
             <div>
               <div className="flex items-center justify-between mb-1">
                 <label
@@ -338,26 +339,12 @@ export function EditPatientModal({
                   {t.time}
                 </label>
               </div>
-              <div className="relative flex items-center">
-                <div className="absolute inset-y-0 start-0 ps-3.5 flex items-center pointer-events-none text-slate-400">
-                  <Clock className="w-4 h-4" />
-                </div>
-                <input
-                  id="edit-patient-time"
-                  type="text"
-                  placeholder={t.timePlaceholder}
-                  value={time}
-                  onChange={(e) => setTime(e.target.value)}
-                  className="w-full ps-10 pe-20 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-hidden focus:ring-2 focus:ring-sky-500/30 focus:border-sky-500 text-sm transition-all"
-                />
-                <button
-                  type="button"
-                  onClick={() => setIsClockPickerOpen(true)}
-                  className="absolute end-1.5 px-2.5 py-1 rounded-lg bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-400 border border-sky-200 dark:border-sky-800 hover:bg-sky-100 dark:hover:bg-sky-900/40 text-xs font-bold cursor-pointer"
-                >
-                  {t.clockBtn}
-                </button>
-              </div>
+              <TimeKeeperPicker
+                id="edit-patient-time"
+                value={time}
+                onChange={(newTime) => setTime(newTime)}
+                placeholder="🕒 10:00 AM"
+              />
             </div>
           </div>
 

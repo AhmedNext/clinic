@@ -25,6 +25,7 @@ import { DentalChart } from "./dental/DentalChart";
 import { useLanguage } from "@/context/LanguageContext";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { TimeKeeperPicker } from "@/components/ui/TimeKeeperPicker";
 
 interface AddPatientModalProps {
   isOpen: boolean;
@@ -373,18 +374,12 @@ export function AddPatientModal({
                     >
                       {t.time}
                     </label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 start-0 ps-2.5 flex items-center pointer-events-none text-slate-400">
-                        <Clock className="w-3.5 h-3.5" />
-                      </div>
-                      <input
-                        id="patient-time-input"
-                        type="time"
-                        value={time}
-                        onChange={(e) => setTime(e.target.value)}
-                        className="w-full ps-8 pe-2 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-950 text-slate-900 dark:text-slate-100 text-xs font-medium focus:outline-hidden focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all cursor-pointer"
-                      />
-                    </div>
+                    <TimeKeeperPicker
+                      id="patient-time-input"
+                      value={time}
+                      onChange={(newTime) => setTime(newTime)}
+                      placeholder="🕒 10:00 AM"
+                    />
                   </div>
                 </div>
 
