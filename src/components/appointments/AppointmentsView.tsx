@@ -180,7 +180,7 @@ export function AppointmentsView({
       .toUpperCase() || "P";
 
   return (
-    <div className="w-full flex flex-col space-y-4 sm:space-y-5 animate-in fade-in duration-200 pb-32 md:pb-4">
+    <div className="w-full max-w-6xl mx-auto flex flex-col space-y-4 sm:space-y-5 animate-in fade-in duration-200 pb-32 md:pb-4">
       {/* ════════════════════════ HEADER & NAVIGATION BAR ════════════════════════ */}
       <div className="p-4 sm:p-5 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm space-y-4">
         {/* ── Row 1: Title + Book Appointment Button ── */}
@@ -464,23 +464,23 @@ export function AppointmentsView({
             return (
               <div
                 key={apt.id}
-                className={`relative group p-4 sm:p-5 rounded-2xl border transition-all duration-200 shadow-sm ${
+                className={`relative group p-4 sm:p-5 rounded-xl border transition-all duration-200 ${
                   isDone
-                    ? "bg-slate-50/70 dark:bg-slate-900/40 border-slate-200/70 dark:border-slate-800/60 opacity-75"
+                    ? "bg-slate-50/70 dark:bg-slate-900/40 border-slate-200/70 dark:border-slate-800/60 opacity-75 shadow-none"
                     : isCancelled
-                    ? "bg-slate-50/50 dark:bg-slate-950/30 border-slate-200/50 dark:border-slate-800/40 opacity-60"
-                    : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-sky-300 dark:hover:border-sky-700/50 hover:shadow-md"
+                    ? "bg-slate-50/50 dark:bg-slate-950/30 border-slate-200/50 dark:border-slate-800/40 opacity-60 shadow-none"
+                    : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 shadow-sm hover:border-slate-300 dark:hover:border-slate-700 hover:shadow-md"
                 }`}
               >
                 <div className="flex flex-col sm:flex-row gap-3.5 sm:gap-4">
                   {/* ── LEFT: Time Block ── */}
                   <div className="flex sm:flex-col items-center sm:items-start gap-2 sm:gap-1 sm:w-[90px] flex-shrink-0">
-                    <div className={`px-3 py-2 rounded-xl text-center font-mono font-bold text-sm border shadow-2xs ${
+                    <div className={`px-3 py-2 rounded-xl text-center font-mono text-sm ${
                       isDone
-                        ? "bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/60"
+                        ? "bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 font-semibold ring-1 ring-emerald-200 dark:ring-emerald-800/60"
                         : isCancelled
-                        ? "bg-slate-100 dark:bg-slate-800 text-slate-400 border-slate-200 dark:border-slate-700 line-through"
-                        : "bg-sky-50 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300 border-sky-100 dark:border-sky-900/50"
+                        ? "bg-slate-100 dark:bg-slate-800 text-slate-400 font-medium ring-1 ring-slate-200 dark:ring-slate-700 line-through"
+                        : "bg-slate-50 dark:bg-slate-800/80 text-slate-800 dark:text-slate-200 font-semibold ring-1 ring-slate-200 dark:ring-slate-700"
                     }`}>
                       {apt.time || "—"}
                     </div>
@@ -499,7 +499,7 @@ export function AppointmentsView({
                         </span>
                       </div>
                       <div className="min-w-0">
-                        <h4 className={`text-sm font-bold truncate ${
+                        <h4 className={`text-base font-semibold capitalize truncate ${
                           isCancelled
                             ? "text-slate-400 dark:text-slate-500 line-through"
                             : "text-slate-900 dark:text-slate-100"
@@ -552,7 +552,7 @@ export function AppointmentsView({
                         <button
                           type="button"
                           onClick={() => onStartVisit(apt)}
-                          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow-xs hover:shadow-emerald-600/20 active:scale-95 transition-all cursor-pointer min-h-[36px]"
+                          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium bg-sky-600 hover:bg-sky-700 text-white shadow-sm active:scale-95 transition-all cursor-pointer min-h-[36px]"
                           title={labels.startVisit}
                         >
                           <span>🩺</span>
@@ -567,7 +567,7 @@ export function AppointmentsView({
                           target="_blank"
                           rel="noopener noreferrer"
                           title={labels.whatsappReminder}
-                          className="inline-flex items-center gap-1 px-2.5 py-2 rounded-xl text-xs font-bold bg-[#25D366] hover:bg-[#1ebe5d] text-white shadow-2xs active:scale-95 transition-all cursor-pointer min-h-[36px]"
+                          className="inline-flex items-center gap-1 px-2.5 py-2 rounded-xl text-xs font-medium bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 dark:hover:bg-emerald-950/60 active:scale-95 transition-all cursor-pointer min-h-[36px]"
                         >
                           <MessageCircle className="w-3.5 h-3.5 fill-current" />
                           <span className="hidden sm:inline text-[11px]">{labels.whatsappReminder}</span>
