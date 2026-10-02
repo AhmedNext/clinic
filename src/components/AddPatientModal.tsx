@@ -131,7 +131,7 @@ export function AddPatientModal({
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, showTeethChart, onClose]);
+  }, [isOpen, onClose, showTeethChart]);
 
   if (!isOpen) return null;
 
