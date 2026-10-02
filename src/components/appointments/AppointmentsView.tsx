@@ -10,16 +10,21 @@ import {
   Phone,
   CheckCircle2,
   Trash2,
-  Check,
   CalendarClock,
   MessageCircle,
+  X,
+  MoreHorizontal,
+  Stethoscope,
 } from "lucide-react";
 import { Appointment, AppointmentStatus } from "@/types/appointment";
-import { Patient, getWhatsAppUrl, getAppointmentReminderWhatsAppUrl } from "@/types/patient";
+import { Patient, getAppointmentReminderWhatsAppUrl } from "@/types/patient";
 import { BookAppointmentModal } from "./BookAppointmentModal";
 import { useLanguage } from "@/context/LanguageContext";
 import { useClinicSettings } from "@/context/ClinicSettingsContext";
 import { getMonthName, WEEKDAY_NAMES, formatStaticDate } from "@/utils/date";
+
+// ─── Status filter type (UI-only, not a DB status) ───
+type StatusFilter = "all" | "scheduled" | "completed" | "cancelled";
 
 interface AppointmentsViewProps {
   appointments: Appointment[];
@@ -43,10 +48,7 @@ export function AppointmentsView({
   const { language, t } = useLanguage();
   const { settings } = useClinicSettings();
 
-  // View mode: Month overview or detailed Day schedule
-  const [viewMode, setViewMode] = useState<"month" | "day">("month");
-
-  // Helper to format YYYY-MM-DD
+  // ─── Date helpers ───
   const toYMD = (year: number, monthIndex: number, day: number) => {
     const mStr = String(monthIndex + 1).padStart(2, "0");
     const dStr = String(day).padStart(2, "0");
@@ -55,45 +57,18 @@ export function AppointmentsView({
 
   const today = new Date();
   const todayYMD = toYMD(today.getFullYear(), today.getMonth(), today.getDate());
+  const tomorrowDate = new Date(today);
+  tomorrowDate.setDate(tomorrowDate.getDate() + 1);
+  const tomorrowYMD = toYMD(tomorrowDate.getFullYear(), tomorrowDate.getMonth(), tomorrowDate.getDate());
 
-  // Month state (for Month view)
-  const [currentYear, setCurrentYear] = useState(today.getFullYear());
-  const [currentMonth, setCurrentMonth] = useState(today.getMonth()); // 0-indexed
-
-  // Day state (for Day view)
+  // ─── State ───
   const [currentDayString, setCurrentDayString] = useState<string>(todayYMD);
-
-  // Active modal date for fast 10-second booking
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [bookModalDate, setBookModalDate] = useState<string | null>(null);
+  const [showDatePickerPopover, setShowDatePickerPopover] = useState(false);
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
 
-  const weekDayNames = WEEKDAY_NAMES[language] || WEEKDAY_NAMES.en;
-
-  // Month navigation handlers
-  const handlePrevMonth = () => {
-    if (currentMonth === 0) {
-      setCurrentMonth(11);
-      setCurrentYear((y) => y - 1);
-    } else {
-      setCurrentMonth((m) => m - 1);
-    }
-  };
-
-  const handleNextMonth = () => {
-    if (currentMonth === 11) {
-      setCurrentMonth(0);
-      setCurrentYear((y) => y + 1);
-    } else {
-      setCurrentMonth((m) => m + 1);
-    }
-  };
-
-  const handleGoTodayMonth = () => {
-    const now = new Date();
-    setCurrentYear(now.getFullYear());
-    setCurrentMonth(now.getMonth());
-  };
-
-  // Day navigation handlers
+  // ─── Day navigation ───
   const handlePrevDay = () => {
     const d = new Date(`${currentDayString}T00:00:00`);
     d.setDate(d.getDate() - 1);
@@ -106,69 +81,21 @@ export function AppointmentsView({
     setCurrentDayString(toYMD(d.getFullYear(), d.getMonth(), d.getDate()));
   };
 
-  const handleGoTodayDay = () => {
-    setCurrentDayString(todayYMD);
+  // ─── Compute this week range (Sun–Sat) ───
+  const getWeekRange = () => {
+    const now = new Date();
+    const dayOfWeek = now.getDay(); // 0 = Sun
+    const startOfWeek = new Date(now);
+    startOfWeek.setDate(now.getDate() - dayOfWeek);
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(startOfWeek.getDate() + 6);
+    return {
+      start: toYMD(startOfWeek.getFullYear(), startOfWeek.getMonth(), startOfWeek.getDate()),
+      end: toYMD(endOfWeek.getFullYear(), endOfWeek.getMonth(), endOfWeek.getDate()),
+    };
   };
 
-  // Build grid of days for the full month
-  const calendarDays = useMemo(() => {
-    const firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay();
-    const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
-    const daysInPrevMonth = new Date(currentYear, currentMonth, 0).getDate();
-
-    const days: {
-      dateString: string;
-      dayNumber: number;
-      isCurrentMonth: boolean;
-      isToday: boolean;
-    }[] = [];
-
-    // 1. Previous month trailing days
-    for (let i = firstDayOfMonth - 1; i >= 0; i--) {
-      const dayNum = daysInPrevMonth - i;
-      const prevMonthIdx = currentMonth === 0 ? 11 : currentMonth - 1;
-      const prevYear = currentMonth === 0 ? currentYear - 1 : currentYear;
-      const dateStr = toYMD(prevYear, prevMonthIdx, dayNum);
-
-      days.push({
-        dateString: dateStr,
-        dayNumber: dayNum,
-        isCurrentMonth: false,
-        isToday: dateStr === todayYMD,
-      });
-    }
-
-    // 2. Current month days
-    for (let day = 1; day <= daysInMonth; day++) {
-      const dateStr = toYMD(currentYear, currentMonth, day);
-      days.push({
-        dateString: dateStr,
-        dayNumber: day,
-        isCurrentMonth: true,
-        isToday: dateStr === todayYMD,
-      });
-    }
-
-    // 3. Next month leading days (to complete 35 or 42 grid cells)
-    const totalSlots = days.length <= 35 ? 35 : 42;
-    const remainingSlots = totalSlots - days.length;
-    for (let day = 1; day <= remainingSlots; day++) {
-      const nextMonthIdx = currentMonth === 11 ? 0 : currentMonth + 1;
-      const nextYear = currentMonth === 11 ? currentYear + 1 : currentYear;
-      const dateStr = toYMD(nextYear, nextMonthIdx, day);
-
-      days.push({
-        dateString: dateStr,
-        dayNumber: day,
-        isCurrentMonth: false,
-        isToday: dateStr === todayYMD,
-      });
-    }
-
-    return days;
-  }, [currentYear, currentMonth, todayYMD]);
-
-  // Index appointments by dateString
+  // ─── Index appointments by date ───
   const appointmentsByDate = useMemo(() => {
     const map = new Map<string, Appointment[]>();
     appointments.forEach((apt) => {
@@ -179,480 +106,575 @@ export function AppointmentsView({
     return map;
   }, [appointments]);
 
-  // Filtered month statistics
-  const currentMonthPrefix = `${currentYear}-${String(currentMonth + 1).padStart(2, "0")}`;
-  const currentMonthAppointments = useMemo(() => {
-    return appointments.filter((a) => a.date.startsWith(currentMonthPrefix));
-  }, [appointments, currentMonthPrefix]);
-
-  const scheduledMonthCount = currentMonthAppointments.filter((a) => a.status === "scheduled").length;
-  const completedMonthCount = currentMonthAppointments.filter((a) => a.status === "completed").length;
-
-  // Selected day appointments list for Day view
+  // ─── Day appointments for selected day ───
   const dayAppointments = useMemo(() => {
     const list = appointmentsByDate.get(currentDayString) || [];
     return [...list].sort((a, b) => (a.time || "").localeCompare(b.time || ""));
   }, [appointmentsByDate, currentDayString]);
 
-  const scheduledDayCount = dayAppointments.filter((a) => a.status === "scheduled").length;
-  const completedDayCount = dayAppointments.filter((a) => a.status === "completed").length;
+  // ─── Filtered appointments by status ───
+  const filteredAppointments = useMemo(() => {
+    if (statusFilter === "all") return dayAppointments;
+    return dayAppointments.filter((a) => a.status === statusFilter);
+  }, [dayAppointments, statusFilter]);
 
+  // ─── Stats ───
+  const scheduledCount = dayAppointments.filter((a) => a.status === "scheduled").length;
+  const completedCount = dayAppointments.filter((a) => a.status === "completed").length;
+  const cancelledCount = dayAppointments.filter((a) => a.status === "cancelled").length;
+
+  // ─── Date display helpers ───
   const currentDayDate = new Date(`${currentDayString}T00:00:00`);
   const isCurrentDayFriday = currentDayDate.getDay() === 5;
+  const isToday = currentDayString === todayYMD;
+  const isTomorrow = currentDayString === tomorrowYMD;
+
+  const weekDayNames = WEEKDAY_NAMES[language] || WEEKDAY_NAMES.en;
+  const currentDayWeekday = weekDayNames[currentDayDate.getDay()];
+
+  // Localized labels
+  const labels = {
+    title: language === "ar" ? "المواعيد والجدول" : language === "ku" ? "مەوعیدەکان و خشتە" : "Appointments & Schedule",
+    bookAppointment: language === "ar" ? "حجز موعد" : language === "ku" ? "نۆرە دابنێ" : "Book Appointment",
+    today: language === "ar" ? "اليوم" : language === "ku" ? "ئەمڕۆ" : "Today",
+    tomorrow: language === "ar" ? "غداً" : language === "ku" ? "سبەی" : "Tomorrow",
+    thisWeek: language === "ar" ? "هذا الأسبوع" : language === "ku" ? "ئەم هەفتە" : "This Week",
+    all: language === "ar" ? "الكل" : language === "ku" ? "هەمووی" : "All",
+    scheduled: language === "ar" ? "مجدول" : language === "ku" ? "دانراو" : "Scheduled",
+    completed: language === "ar" ? "مكتمل" : language === "ku" ? "تەواوبوو" : "Completed",
+    cancelled: language === "ar" ? "ملغي" : language === "ku" ? "هەڵوەشاوە" : "Cancelled",
+    noAppointments: language === "ar" ? "لا توجد مواعيد لهذا اليوم" : language === "ku" ? "هیچ مەوعیدێک نییە بۆ ئەم ڕۆژە" : "No appointments booked for this day",
+    noAppointmentsDesc: language === "ar" ? "اضغط على الزر أدناه لحجز موعد جديد" : language === "ku" ? "دوگمەی خوارەوە دابگرە بۆ دانانی مەوعیدی نوێ" : "Tap the button below to schedule a consultation or procedure",
+    addAppointment: language === "ar" ? "إضافة موعد" : language === "ku" ? "مەوعیدی نوێ" : "Add Appointment",
+    startVisit: language === "ar" ? "بدء الزيارة" : language === "ku" ? "دەستپێکردنی سەردان" : "Start Visit",
+    whatsappReminder: language === "ar" ? "تذكير" : language === "ku" ? "بیرخستنەوە" : "Remind",
+    reschedule: language === "ar" ? "إعادة جدولة" : language === "ku" ? "نوێکردنەوەی کات" : "Reschedule",
+    cancel: language === "ar" ? "إلغاء الموعد" : language === "ku" ? "هەڵوەشاندنەوە" : "Cancel Appointment",
+    deleteAppt: language === "ar" ? "حذف" : language === "ku" ? "سڕینەوە" : "Delete",
+    markScheduled: language === "ar" ? "إرجاع لمجدول" : language === "ku" ? "بگۆڕە بۆ دانراو" : "Mark as Scheduled",
+    markCompleted: language === "ar" ? "اكتمل" : language === "ku" ? "تەواو بوو" : "Mark as Completed",
+    duration: language === "ar" ? "دقيقة" : language === "ku" ? "خولەک" : "min",
+  };
+
+  // ─── Status badge styles ───
+  const statusBadgeStyles: Record<AppointmentStatus, string> = {
+    scheduled: "bg-sky-50 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300 ring-1 ring-sky-200 dark:ring-sky-800",
+    completed: "bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 ring-1 ring-emerald-200 dark:ring-emerald-800",
+    cancelled: "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 ring-1 ring-slate-200 dark:ring-slate-700 line-through",
+  };
+
+  const statusLabels: Record<AppointmentStatus, string> = {
+    scheduled: labels.scheduled,
+    completed: labels.completed,
+    cancelled: labels.cancelled,
+  };
+
+  // Patient initials
+  const getInitials = (name: string) =>
+    name
+      .trim()
+      .split(" ")
+      .slice(0, 2)
+      .map((w) => w[0])
+      .join("")
+      .toUpperCase() || "P";
 
   return (
-    <div className="w-full flex flex-col space-y-5 animate-in fade-in duration-200">
-      {/* ── Main Schedule Top Bar ── */}
-      <div className="p-4 sm:p-5 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
-        {/* Left: View Mode Title & Subtitle */}
-        <div className="flex items-center gap-3">
-          <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-400 border border-sky-100 dark:border-sky-900/40 flex items-center justify-center flex-shrink-0">
-            {viewMode === "month" ? (
-              <CalendarIcon className="w-5 h-5 sm:w-6 sm:h-6 stroke-[2.2]" />
-            ) : (
+    <div className="w-full flex flex-col space-y-4 sm:space-y-5 animate-in fade-in duration-200 pb-32 md:pb-4">
+      {/* ════════════════════════ HEADER & NAVIGATION BAR ════════════════════════ */}
+      <div className="p-4 sm:p-5 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm space-y-4">
+        {/* ── Row 1: Title + Book Appointment Button ── */}
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-400 border border-sky-100 dark:border-sky-900/40 flex items-center justify-center flex-shrink-0">
               <CalendarClock className="w-5 h-5 sm:w-6 sm:h-6 stroke-[2.2]" />
-            )}
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tight">
-                {viewMode === "month"
-                  ? `${getMonthName(currentMonth, language)} ${currentYear}`
-                  : formatStaticDate(currentDayString, language)}
-              </h2>
-              {viewMode === "day" && isCurrentDayFriday && (
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300 border border-rose-200 dark:border-rose-800">
-                  Weekend
-                </span>
-              )}
             </div>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
-              {viewMode === "month" ? t.scheduleSubtitle : `${dayAppointments.length} ${t.booked} • ${formatStaticDate(currentDayString, language)}`}
-            </p>
+            <div>
+              <div className="flex items-center gap-2">
+                <h2 className="text-lg sm:text-xl font-black text-slate-900 dark:text-slate-100 tracking-tight">
+                  {labels.title}
+                </h2>
+                {dayAppointments.length > 0 && (
+                  <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-sky-100 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-800 tabular-nums">
+                    {dayAppointments.length}
+                  </span>
+                )}
+              </div>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                {isToday && `${labels.today} • `}{formatStaticDate(currentDayString, language)}
+              </p>
+            </div>
           </div>
+
+          <button
+            type="button"
+            onClick={() => setBookModalDate(currentDayString)}
+            className="inline-flex items-center gap-1.5 px-3.5 sm:px-4 py-2.5 rounded-xl text-xs font-bold bg-sky-600 hover:bg-sky-700 dark:bg-sky-500 dark:hover:bg-sky-600 text-white shadow-sm shadow-sky-600/20 active:scale-[0.98] transition-all cursor-pointer"
+          >
+            <Plus className="w-4 h-4 stroke-[2.5]" />
+            <span>{labels.bookAppointment}</span>
+          </button>
         </div>
 
-        {/* Right: Controls & Actions */}
-        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-          {/* [ Month | Day ] Segmented View Toggle */}
-          <div className="inline-flex rounded-xl border border-slate-200 dark:border-slate-800 p-0.5 bg-slate-100 dark:bg-slate-800/80 shadow-2xs">
+        {/* ── Row 2: Quick Date Pills + Date Navigator ── */}
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Quick pills */}
+          <div className="flex items-center gap-1.5">
             <button
               type="button"
-              onClick={() => setViewMode("month")}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                viewMode === "month"
-                  ? "bg-white dark:bg-slate-900 text-sky-600 dark:text-sky-400 shadow-xs"
-                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100"
+              onClick={() => setCurrentDayString(todayYMD)}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
+                isToday
+                  ? "bg-sky-600 text-white border-sky-600 shadow-sm"
+                  : "bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-sky-50 dark:hover:bg-sky-950/40 hover:border-sky-300"
               }`}
             >
-              {t.monthView}
+              {labels.today}
             </button>
             <button
               type="button"
-              onClick={() => setViewMode("day")}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                viewMode === "day"
-                  ? "bg-white dark:bg-slate-900 text-sky-600 dark:text-sky-400 shadow-xs"
-                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100"
+              onClick={() => setCurrentDayString(tomorrowYMD)}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
+                isTomorrow
+                  ? "bg-sky-600 text-white border-sky-600 shadow-sm"
+                  : "bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-sky-50 dark:hover:bg-sky-950/40 hover:border-sky-300"
               }`}
             >
-              {t.dayView}
+              {labels.tomorrow}
             </button>
           </div>
 
-          {/* Quick Metrics Badges (Desktop) */}
-          <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-800 text-xs">
-            <span className="font-semibold text-slate-700 dark:text-slate-300">
-              {viewMode === "month" ? currentMonthAppointments.length : dayAppointments.length} {t.booked}
-            </span>
-            <span className="text-slate-300 dark:text-slate-700">•</span>
-            <span className="text-sky-600 dark:text-sky-400 font-medium">
-              {viewMode === "month" ? scheduledMonthCount : scheduledDayCount} {t.scheduled}
-            </span>
-            <span className="text-slate-300 dark:text-slate-700">•</span>
-            <span className="text-emerald-600 dark:text-emerald-400 font-medium">
-              {viewMode === "month" ? completedMonthCount : completedDayCount} {t.doneStatus}
-            </span>
-          </div>
+          {/* Separator dot */}
+          <span className="text-slate-300 dark:text-slate-700 select-none hidden sm:inline">•</span>
 
-          {/* Date Navigation Buttons */}
-          <div className="inline-flex rounded-xl border border-slate-200 dark:border-slate-800 p-0.5 bg-slate-50 dark:bg-slate-950">
+          {/* Date Navigator: < Day • Month DD, YYYY > */}
+          <div className="inline-flex items-center rounded-xl border border-slate-200 dark:border-slate-800 p-0.5 bg-slate-50 dark:bg-slate-950">
             <button
-              onClick={viewMode === "month" ? handlePrevMonth : handlePrevDay}
-              aria-label="Previous"
+              onClick={handlePrevDay}
+              aria-label="Previous day"
               className="p-2 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-800 transition-colors cursor-pointer"
             >
               <ChevronLeft className="w-4 h-4 rtl:rotate-180" />
             </button>
             <button
-              onClick={viewMode === "month" ? handleGoTodayMonth : handleGoTodayDay}
-              className="px-3 py-1 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-white dark:hover:bg-slate-800 rounded-lg transition-colors cursor-pointer"
+              type="button"
+              onClick={() => setShowDatePickerPopover(!showDatePickerPopover)}
+              className="px-3 py-1 text-xs font-semibold text-slate-800 dark:text-slate-200 hover:bg-white dark:hover:bg-slate-800 rounded-lg transition-colors cursor-pointer flex items-center gap-1.5"
             >
-              {t.today}
+              <CalendarIcon className="w-3.5 h-3.5 text-sky-500" />
+              <span>{currentDayWeekday} • {formatStaticDate(currentDayString, language)}</span>
             </button>
             <button
-              onClick={viewMode === "month" ? handleNextMonth : handleNextDay}
-              aria-label="Next"
+              onClick={handleNextDay}
+              aria-label="Next day"
               className="p-2 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-800 transition-colors cursor-pointer"
             >
               <ChevronRight className="w-4 h-4 rtl:rotate-180" />
             </button>
           </div>
+        </div>
 
-          {/* + New Appointment Button */}
-          <button
-            type="button"
-            onClick={() => {
-              const targetDate = viewMode === "day" ? currentDayString : todayYMD;
-              setBookModalDate(targetDate);
-            }}
-            className="inline-flex items-center gap-1.5 px-3.5 sm:px-4 py-2 rounded-xl text-xs font-bold bg-sky-600 hover:bg-sky-700 dark:bg-sky-500 dark:hover:bg-sky-600 text-white shadow-sm shadow-sky-600/20 active:scale-[0.98] transition-all cursor-pointer"
-          >
-            <Plus className="w-4 h-4 stroke-[2.5]" />
-            <span>{t.newAppointment}</span>
-          </button>
+        {/* ── Calendar Popover (Centered Modal with inline mini-calendar) ── */}
+        {showDatePickerPopover && (() => {
+          const viewDate = new Date(`${currentDayString}T00:00:00`);
+          const calViewYear = viewDate.getFullYear();
+          const calViewMonth = viewDate.getMonth();
+          const firstDay = new Date(calViewYear, calViewMonth, 1).getDay();
+          const daysInMonth = new Date(calViewYear, calViewMonth + 1, 0).getDate();
+          const calDays: number[] = [];
+          for (let i = 0; i < firstDay; i++) calDays.push(0);
+          for (let d = 1; d <= daysInMonth; d++) calDays.push(d);
+
+          return (
+            <div
+              className="fixed inset-0 z-[70] flex items-center justify-center bg-black/40 backdrop-blur-[2px] p-4 animate-in fade-in"
+              onClick={() => setShowDatePickerPopover(false)}
+            >
+              <div
+                className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl p-4 border border-slate-100 dark:border-slate-800 w-72 scale-100 animate-in zoom-in-95"
+                onClick={(e) => e.stopPropagation()}
+                dir="ltr"
+              >
+                {/* Month/Year header with nav */}
+                <div className="flex items-center justify-between mb-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const prev = new Date(calViewYear, calViewMonth - 1, 1);
+                      setCurrentDayString(toYMD(prev.getFullYear(), prev.getMonth(), Math.min(parseInt(currentDayString.split("-")[2]), new Date(prev.getFullYear(), prev.getMonth() + 1, 0).getDate())));
+                    }}
+                    className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 cursor-pointer"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </button>
+                  <span className="text-sm font-bold text-slate-900 dark:text-slate-100">
+                    {getMonthName(calViewMonth, language)} {calViewYear}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const next = new Date(calViewYear, calViewMonth + 1, 1);
+                      setCurrentDayString(toYMD(next.getFullYear(), next.getMonth(), Math.min(parseInt(currentDayString.split("-")[2]), new Date(next.getFullYear(), next.getMonth() + 1, 0).getDate())));
+                    }}
+                    className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 cursor-pointer"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+                {/* Weekday header */}
+                <div className="grid grid-cols-7 gap-0.5 mb-1">
+                  {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map((wd) => (
+                    <div key={wd} className="text-center text-[10px] font-bold text-slate-400 py-1">
+                      {wd}
+                    </div>
+                  ))}
+                </div>
+                {/* Day cells */}
+                <div className="grid grid-cols-7 gap-0.5">
+                  {calDays.map((day, i) => {
+                    if (day === 0) return <div key={`empty-${i}`} />;
+                    const dayStr = toYMD(calViewYear, calViewMonth, day);
+                    const isSelected = dayStr === currentDayString;
+                    const isTodayCell = dayStr === todayYMD;
+                    const hasApts = (appointmentsByDate.get(dayStr) || []).length > 0;
+                    return (
+                      <button
+                        key={dayStr}
+                        type="button"
+                        onClick={() => {
+                          setCurrentDayString(dayStr);
+                          setShowDatePickerPopover(false);
+                        }}
+                        className={`relative w-9 h-9 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                          isSelected
+                            ? "bg-sky-600 text-white shadow-sm font-bold"
+                            : isTodayCell
+                            ? "bg-sky-50 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300 font-bold ring-1 ring-sky-300 dark:ring-sky-700"
+                            : "text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
+                        }`}
+                      >
+                        {day}
+                        {hasApts && !isSelected && (
+                          <span className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-sky-500" />
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+                <div className="mt-3 pt-2 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCurrentDayString(todayYMD);
+                      setShowDatePickerPopover(false);
+                    }}
+                    className="text-xs font-semibold text-sky-600 hover:text-sky-700 px-3 py-1.5 cursor-pointer"
+                  >
+                    {labels.today}
+                  </button>
+                  <button
+                    onClick={() => setShowDatePickerPopover(false)}
+                    className="text-xs font-medium text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 px-3 py-1.5 cursor-pointer"
+                  >
+                    {language === "ar" ? "إغلاق" : language === "ku" ? "داخستن" : "Close"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
+
+        {/* ── Row 3: Status Filter Tabs ── */}
+        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar -mx-1 px-1">
+          {([
+            { key: "all" as StatusFilter, label: labels.all, count: dayAppointments.length, color: "sky" },
+            { key: "scheduled" as StatusFilter, label: labels.scheduled, count: scheduledCount, color: "sky" },
+            { key: "completed" as StatusFilter, label: labels.completed, count: completedCount, color: "emerald" },
+            { key: "cancelled" as StatusFilter, label: labels.cancelled, count: cancelledCount, color: "slate" },
+          ]).map((tab) => (
+            <button
+              key={tab.key}
+              type="button"
+              onClick={() => setStatusFilter(tab.key)}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer whitespace-nowrap border shrink-0 ${
+                statusFilter === tab.key
+                  ? "bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 border-slate-900 dark:border-slate-100 shadow-sm"
+                  : "bg-white dark:bg-slate-800/80 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800"
+              }`}
+            >
+              <span>{tab.label}</span>
+              {tab.count > 0 && (
+                <span className={`px-1.5 py-0.5 rounded-md text-[10px] font-bold tabular-nums ${
+                  statusFilter === tab.key
+                    ? "bg-white/20 dark:bg-slate-900/30 text-white dark:text-slate-900"
+                    : "bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400"
+                }`}>
+                  {tab.count}
+                </span>
+              )}
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* ── VIEW 1: MONTH OVERVIEW (CALENDAR BOARD) ── */}
-      {viewMode === "month" ? (
-        <div className="w-full overflow-hidden rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
-          {/* Days of week header (Friday highlighted with subtle muted tint) */}
-          <div className="grid grid-cols-7 border-b border-slate-200 dark:border-slate-800/80 bg-slate-50/80 dark:bg-slate-950/60 text-center">
-            {weekDayNames.map((day, idx) => {
-              const isFriday = idx === 5;
-              return (
-                <div
-                  key={day}
-                  className={`py-3 text-[11px] sm:text-xs font-bold uppercase tracking-wider ${
-                    isFriday
-                      ? "bg-slate-100/60 dark:bg-slate-900/40 text-rose-600 dark:text-rose-400 font-extrabold"
-                      : "text-slate-500 dark:text-slate-400"
-                  }`}
-                >
-                  <span>{day}</span>
-                  {isFriday && (
-                    <span className="hidden sm:inline-block text-[9px] font-normal opacity-70 ml-1">
-                      (Weekend)
-                    </span>
-                  )}
-                </div>
-              );
-            })}
+      {/* ════════════════════════ DAILY AGENDA LIST (CORE VIEW) ════════════════════════ */}
+      {filteredAppointments.length === 0 ? (
+        /* ── Empty State ── */
+        <div className="p-10 sm:p-14 text-center rounded-3xl border border-dashed border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/30">
+          <div className="w-14 h-14 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-400 mx-auto flex items-center justify-center mb-4">
+            <CalendarClock className="w-7 h-7" />
           </div>
-
-          {/* Calendar days grid (Friday cells highlighted with subtle muted tint) */}
-          <div className="grid grid-cols-7 divide-x divide-y divide-slate-100 dark:divide-slate-800/60 bg-slate-100/30 dark:bg-slate-950/20">
-            {calendarDays.map((cell) => {
-              const dayAppointments = appointmentsByDate.get(cell.dateString) || [];
-              const hasAppointments = dayAppointments.length > 0;
-              const cellDate = new Date(`${cell.dateString}T00:00:00`);
-              const isFriday = cellDate.getDay() === 5;
-
-              return (
-                <div
-                  key={cell.dateString}
-                  onClick={() => {
-                    setCurrentDayString(cell.dateString);
-                    setBookModalDate(cell.dateString);
-                  }}
-                  className={`
-                    min-h-[60px] sm:min-h-[120px] p-1.5 sm:p-2.5 transition-all duration-150 cursor-pointer flex flex-col justify-between group active:scale-[0.99]
-                    ${
-                      isFriday
-                        ? "bg-slate-100/60 dark:bg-slate-900/40"
-                        : cell.isCurrentMonth
-                        ? "bg-white dark:bg-slate-900 hover:bg-sky-50/40 dark:hover:bg-sky-950/20"
-                        : "bg-slate-50/60 dark:bg-slate-950/40 opacity-40 hover:opacity-80"
-                    }
-                    ${cell.isToday ? "ring-2 ring-sky-500 ring-inset" : ""}
-                  `}
-                >
-                  {/* Day Number Header */}
-                  <div className="flex items-center justify-between">
-                    <span
-                      className={`
-                        w-6 h-6 sm:w-7 sm:h-7 rounded-lg sm:rounded-xl flex items-center justify-center text-xs font-bold font-mono transition-transform group-hover:scale-105
-                        ${
-                          cell.isToday
-                            ? "bg-sky-600 text-white shadow-xs font-extrabold"
-                            : isFriday
-                            ? "text-rose-600 dark:text-rose-400 font-extrabold"
-                            : cell.isCurrentMonth
-                            ? "text-slate-800 dark:text-slate-200"
-                            : "text-slate-400 dark:text-slate-600"
-                        }
-                      `}
-                    >
-                      {cell.dayNumber}
-                    </span>
-
-                    {hasAppointments && (
-                      <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-sky-50 dark:bg-sky-950/80 text-sky-600 dark:text-sky-400 border border-sky-200 dark:border-sky-800">
-                        {dayAppointments.length}
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Mobile indicators (< sm): colored dots */}
-                  <div className="sm:hidden flex items-center justify-center gap-1 mt-1">
-                    {dayAppointments.slice(0, 3).map((apt) => (
-                      <span
-                        key={apt.id}
-                        className={`w-1.5 h-1.5 rounded-full ${
-                          apt.status === "completed" ? "bg-emerald-500" : "bg-sky-500"
-                        }`}
-                      />
-                    ))}
-                    {dayAppointments.length > 3 && (
-                      <span className="text-[8px] font-bold text-slate-400">+</span>
-                    )}
-                  </div>
-
-                  {/* Desktop Previews (>= sm) */}
-                  <div className="hidden sm:flex mt-1 space-y-1 overflow-hidden flex-1 flex-col justify-start">
-                    {dayAppointments.slice(0, 2).map((apt) => {
-                      const isDone = apt.status === "completed";
-                      return (
-                        <div
-                          key={apt.id}
-                          className={`text-[10px] sm:text-[11px] px-1.5 py-1 rounded-lg border font-medium truncate flex items-center justify-between gap-1 shadow-2xs ${
-                            isDone
-                              ? "bg-emerald-50/80 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border-emerald-200/80 dark:border-emerald-800/60 line-through"
-                              : "bg-sky-50/90 dark:bg-sky-950/60 text-sky-900 dark:text-sky-200 border-sky-200/80 dark:border-sky-800/60"
-                          }`}
-                          title={`${apt.patientName} (${apt.time}) - ${apt.phone}`}
-                        >
-                          <span className="truncate font-semibold">{apt.patientName}</span>
-                          <span className="text-[9px] opacity-75 font-mono flex-shrink-0">
-                            {apt.time.split(" ")[0]}
-                          </span>
-                        </div>
-                      );
-                    })}
-
-                    {dayAppointments.length > 2 && (
-                      <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 pl-1">
-                        +{dayAppointments.length - 2} more
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Subtle Hover Action prompt */}
-                  <div className="hidden sm:flex opacity-0 group-hover:opacity-100 transition-opacity pt-1 text-[10px] font-semibold text-sky-600 dark:text-sky-400 items-center justify-end">
-                    <span>+ {t.booked}</span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+          <h3 className="text-base font-bold text-slate-800 dark:text-slate-200">
+            {labels.noAppointments}
+          </h3>
+          <p className="text-xs text-slate-400 max-w-sm mx-auto mt-1.5 mb-5 leading-relaxed">
+            {labels.noAppointmentsDesc}
+          </p>
+          <button
+            type="button"
+            onClick={() => setBookModalDate(currentDayString)}
+            className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold cursor-pointer transition-all shadow-xs active:scale-[0.98]"
+          >
+            <Plus className="w-4 h-4 stroke-[2.5]" />
+            <span>{labels.addAppointment}</span>
+          </button>
         </div>
       ) : (
-        /* ── VIEW 2: DETAILED DAILY SCHEDULE BREAKDOWN ── */
-        <div className="space-y-4">
-          {/* Day Status Summary Strip */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
-            <div className="flex items-center gap-2.5">
-              <div className="p-2 rounded-xl bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-400">
-                <Clock className="w-4 h-4" />
-              </div>
-              <div>
-                <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
-                  {formatStaticDate(currentDayString, language)}
-                </h3>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                  {dayAppointments.length} appointments scheduled for today
-                </p>
-              </div>
-            </div>
+        /* ── Appointment Cards Timeline ── */
+        <div className="space-y-3">
+          {filteredAppointments.map((apt) => {
+            const isDone = apt.status === "completed";
+            const isCancelled = apt.status === "cancelled";
+            const isScheduled = apt.status === "scheduled";
+            const initials = getInitials(apt.patientName);
+            const isMenuOpen = openMenuId === apt.id;
 
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => setBookModalDate(currentDayString)}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-sky-600 hover:bg-sky-700 text-white shadow-sm shadow-sky-600/20 cursor-pointer"
+            const whatsAppUrl = apt.phone
+              ? getAppointmentReminderWhatsAppUrl({
+                  phone: apt.phone,
+                  patientName: apt.patientName,
+                  clinicName: settings.clinicName,
+                  doctorName: settings.doctorName,
+                  date: apt.date,
+                  time: apt.time,
+                  language,
+                })
+              : "";
+
+            return (
+              <div
+                key={apt.id}
+                className={`relative group p-4 sm:p-5 rounded-2xl border transition-all duration-200 shadow-sm ${
+                  isDone
+                    ? "bg-slate-50/70 dark:bg-slate-900/40 border-slate-200/70 dark:border-slate-800/60 opacity-75"
+                    : isCancelled
+                    ? "bg-slate-50/50 dark:bg-slate-950/30 border-slate-200/50 dark:border-slate-800/40 opacity-60"
+                    : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-sky-300 dark:hover:border-sky-700/50 hover:shadow-md"
+                }`}
               >
-                <Plus className="w-3.5 h-3.5" />
-                <span>{t.addAppointment}</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Daily Schedule List */}
-          {dayAppointments.length === 0 ? (
-            <div className="p-12 text-center rounded-3xl border border-dashed border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/30">
-              <div className="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-400 mx-auto flex items-center justify-center mb-3">
-                <CalendarClock className="w-6 h-6" />
-              </div>
-              <h3 className="text-sm sm:text-base font-bold text-slate-800 dark:text-slate-200">
-                No appointments for this day
-              </h3>
-              <p className="text-xs text-slate-400 max-w-sm mx-auto mt-1 mb-4">
-                Schedule a consultation, procedure, or follow-up visit for this patient.
-              </p>
-              <button
-                type="button"
-                onClick={() => setBookModalDate(currentDayString)}
-                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold cursor-pointer transition-all shadow-xs"
-              >
-                <Plus className="w-4 h-4" />
-                <span>{t.newAppointment}</span>
-              </button>
-            </div>
-          ) : (
-            <div className="space-y-2.5">
-              {dayAppointments.map((apt) => {
-                const isDone = apt.status === "completed";
-                const whatsAppUrl = apt.phone
-                  ? getWhatsAppUrl({
-                      phone: apt.phone,
-                      patientName: apt.patientName,
-                      clinicName: settings.clinicName,
-                      date: apt.date,
-                      time: apt.time,
-                      language,
-                    })
-                  : "";
-
-                return (
-                  <div
-                    key={apt.id}
-                    className={`p-3.5 sm:p-4 rounded-2xl border transition-all duration-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm ${
+                <div className="flex flex-col sm:flex-row gap-3.5 sm:gap-4">
+                  {/* ── LEFT: Time Block ── */}
+                  <div className="flex sm:flex-col items-center sm:items-start gap-2 sm:gap-1 sm:w-[90px] flex-shrink-0">
+                    <div className={`px-3 py-2 rounded-xl text-center font-mono font-bold text-sm border shadow-2xs ${
                       isDone
-                        ? "bg-slate-50/70 dark:bg-slate-900/40 border-slate-200/70 dark:border-slate-800/60 opacity-80"
-                        : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-sky-300 dark:hover:border-sky-700/50"
-                    }`}
-                  >
-                    {/* Left: Time + Patient Info */}
-                    <div className="flex items-start sm:items-center gap-3 min-w-0">
-                      {/* Time capsule */}
-                      <div className="flex-shrink-0 px-2.5 py-1.5 rounded-xl bg-sky-50 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300 border border-sky-100 dark:border-sky-900/50 flex items-center gap-1.5 font-mono font-bold text-xs">
-                        <Clock className="w-3.5 h-3.5 text-sky-500" />
-                        <span>{apt.time || "No time"}</span>
-                      </div>
+                        ? "bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/60"
+                        : isCancelled
+                        ? "bg-slate-100 dark:bg-slate-800 text-slate-400 border-slate-200 dark:border-slate-700 line-through"
+                        : "bg-sky-50 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300 border-sky-100 dark:border-sky-900/50"
+                    }`}>
+                      {apt.time || "—"}
+                    </div>
+                    <span className="text-[10px] font-medium text-slate-400 dark:text-slate-500">
+                      30 {labels.duration}
+                    </span>
+                  </div>
 
+                  {/* ── CENTER: Patient & Clinical ── */}
+                  <div className="flex-1 min-w-0 space-y-2">
+                    <div className="flex items-center gap-2.5">
+                      {/* Avatar */}
+                      <div className="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center flex-shrink-0">
+                        <span className="text-xs font-bold text-slate-600 dark:text-slate-300">
+                          {initials}
+                        </span>
+                      </div>
                       <div className="min-w-0">
-                        <div className="flex items-center gap-2">
-                          <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100 truncate">
-                            {apt.patientName}
-                          </h4>
-                          {apt.treatment && (
-                            <span className="hidden xs:inline-block px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
-                              {apt.treatment}
-                            </span>
-                          )}
-                        </div>
-                        {apt.notes && (
-                          <p className="text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5">
-                            {apt.notes}
-                          </p>
+                        <h4 className={`text-sm font-bold truncate ${
+                          isCancelled
+                            ? "text-slate-400 dark:text-slate-500 line-through"
+                            : "text-slate-900 dark:text-slate-100"
+                        }`}>
+                          {apt.patientName}
+                        </h4>
+                        {apt.phone && (
+                          <a
+                            href={`tel:${apt.phone}`}
+                            className="flex items-center gap-1 text-[11px] text-slate-500 dark:text-slate-400 hover:text-sky-600 dark:hover:text-sky-400 transition-colors group/phone"
+                          >
+                            <Phone className="w-3 h-3 text-slate-400 group-hover/phone:text-sky-500" />
+                            <span className="font-mono">{apt.phone}</span>
+                          </a>
                         )}
                       </div>
                     </div>
 
-                    {/* Right: Status Switcher, Start Visit & Contact Actions */}
-                    <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap justify-between sm:justify-end">
-                      {/* Start Visit / Open Chart (When Patient Arrives) */}
-                      {onStartVisit && !isDone && (
+                    {/* Clinical Tag / Treatment */}
+                    {apt.treatment && (
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[11px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700">
+                          <Stethoscope className="w-3 h-3 text-slate-400" />
+                          {apt.treatment}
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Notes */}
+                    {apt.notes && !isCancelled && (
+                      <p className="text-xs text-slate-400 dark:text-slate-500 truncate leading-relaxed">
+                        {apt.notes}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* ── RIGHT: Status & Actions ── */}
+                  <div className="flex items-start sm:items-center gap-2 flex-wrap sm:flex-nowrap justify-between sm:justify-end sm:w-auto">
+                    {/* Status Badge */}
+                    <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-[11px] font-bold whitespace-nowrap ${statusBadgeStyles[apt.status]}`}>
+                      {apt.status === "completed" && <CheckCircle2 className="w-3 h-3" />}
+                      {apt.status === "scheduled" && <Clock className="w-3 h-3" />}
+                      {statusLabels[apt.status]}
+                    </span>
+
+                    {/* Action Buttons */}
+                    <div className="flex items-center gap-1.5">
+                      {/* Start Visit (only for scheduled) */}
+                      {onStartVisit && isScheduled && (
                         <button
                           type="button"
                           onClick={() => onStartVisit(apt)}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow-xs hover:shadow-emerald-600/20 active:scale-95 transition-all cursor-pointer min-h-[38px]"
-                          title="Open patient profile & start visit"
+                          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow-xs hover:shadow-emerald-600/20 active:scale-95 transition-all cursor-pointer min-h-[36px]"
+                          title={labels.startVisit}
                         >
-                          <span>🦷</span>
-                          <span>
-                            {language === "ar"
-                              ? "بدء الزيارة / فتح المخطط"
-                              : language === "ku"
-                              ? "دەستپێکردنی سەردان"
-                              : "Start Visit / Open Chart"}
-                          </span>
+                          <span>🩺</span>
+                          <span className="hidden sm:inline">{labels.startVisit}</span>
                         </button>
                       )}
 
-                      {/* Status Toggle Button */}
-                      <button
-                        type="button"
-                        onClick={() =>
-                          onToggleStatus(
-                            apt.id,
-                            isDone ? "scheduled" : "completed"
-                          )
-                        }
-                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition-all cursor-pointer min-h-[38px] ${
-                          isDone
-                            ? "bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100"
-                            : "bg-sky-50 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300 border-sky-200 dark:border-sky-800 hover:bg-sky-100"
-                        }`}
-                      >
-                        {isDone ? (
-                          <>
-                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-                            <span>{t.doneStatus}</span>
-                          </>
-                        ) : (
-                          <>
-                            <Clock className="w-3.5 h-3.5 text-sky-500" />
-                            <span>{t.scheduled}</span>
-                          </>
-                        )}
-                      </button>
-
-                      {/* Phone Call Button */}
-                      {apt.phone && (
+                      {/* WhatsApp Reminder (only for scheduled) */}
+                      {apt.phone && isScheduled && (
                         <a
-                          href={`tel:${apt.phone}`}
-                          title={`Call ${apt.phone}`}
-                          className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-600 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700 transition-colors"
-                        >
-                          <Phone className="w-3.5 h-3.5" />
-                        </a>
-                      )}
-
-                      {/* WhatsApp 1-Click Reminder Button */}
-                      {apt.phone && (
-                        <a
-                          href={getAppointmentReminderWhatsAppUrl({
-                            phone: apt.phone,
-                            patientName: apt.patientName,
-                            clinicName: settings.clinicName,
-                            doctorName: settings.doctorName,
-                            date: apt.date,
-                            time: apt.time,
-                            language,
-                          })}
+                          href={whatsAppUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          title="Open 1-Click WhatsApp reminder"
-                          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-bold bg-[#25D366] hover:bg-[#1ebe5d] text-white shadow-2xs hover:shadow-sm transition-all cursor-pointer min-h-[38px]"
+                          title={labels.whatsappReminder}
+                          className="inline-flex items-center gap-1 px-2.5 py-2 rounded-xl text-xs font-bold bg-[#25D366] hover:bg-[#1ebe5d] text-white shadow-2xs active:scale-95 transition-all cursor-pointer min-h-[36px]"
                         >
                           <MessageCircle className="w-3.5 h-3.5 fill-current" />
-                          <span className="hidden sm:inline text-[11px]">
-                            {language === "ar" ? "تذكير واتساب" : t.whatsApp}
-                          </span>
+                          <span className="hidden sm:inline text-[11px]">{labels.whatsappReminder}</span>
                         </a>
                       )}
 
-                      {/* Delete Appointment */}
-                      <button
-                        type="button"
-                        onClick={() => onDeleteAppointment(apt.id)}
-                        title="Delete appointment"
-                        className="p-2 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
+                      {/* ••• More Menu */}
+                      <div className="relative">
+                        <button
+                          type="button"
+                          onClick={() => setOpenMenuId(isMenuOpen ? null : apt.id)}
+                          className="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                          aria-label="More actions"
+                        >
+                          <MoreHorizontal className="w-4 h-4" />
+                        </button>
+
+                        {/* Dropdown */}
+                        {isMenuOpen && (
+                          <>
+                            <div className="fixed inset-0 z-40" onClick={() => setOpenMenuId(null)} />
+                            <div className="absolute end-0 top-full mt-1 w-48 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl z-50 p-1.5 space-y-0.5 animate-in fade-in zoom-in-95">
+                              {/* Toggle Status */}
+                              {isScheduled && (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    onToggleStatus(apt.id, "completed");
+                                    setOpenMenuId(null);
+                                  }}
+                                  className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-semibold text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 transition-colors min-h-[40px] cursor-pointer"
+                                >
+                                  <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                                  <span>{labels.markCompleted}</span>
+                                </button>
+                              )}
+                              {isDone && (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    onToggleStatus(apt.id, "scheduled");
+                                    setOpenMenuId(null);
+                                  }}
+                                  className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-semibold text-sky-700 dark:text-sky-400 hover:bg-sky-50 dark:hover:bg-sky-950/50 transition-colors min-h-[40px] cursor-pointer"
+                                >
+                                  <Clock className="w-4 h-4 text-sky-500" />
+                                  <span>{labels.markScheduled}</span>
+                                </button>
+                              )}
+
+                              {/* Cancel / Uncancel */}
+                              {!isCancelled && (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    onToggleStatus(apt.id, "cancelled");
+                                    setOpenMenuId(null);
+                                  }}
+                                  className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-semibold text-amber-700 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/50 transition-colors min-h-[40px] cursor-pointer"
+                                >
+                                  <X className="w-4 h-4 text-amber-500" />
+                                  <span>{labels.cancel}</span>
+                                </button>
+                              )}
+                              {isCancelled && (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    onToggleStatus(apt.id, "scheduled");
+                                    setOpenMenuId(null);
+                                  }}
+                                  className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-semibold text-sky-700 dark:text-sky-400 hover:bg-sky-50 dark:hover:bg-sky-950/50 transition-colors min-h-[40px] cursor-pointer"
+                                >
+                                  <CalendarIcon className="w-4 h-4 text-sky-500" />
+                                  <span>{labels.reschedule}</span>
+                                </button>
+                              )}
+
+                              {/* Separator */}
+                              <div className="my-1 border-t border-slate-100 dark:border-slate-800" />
+
+                              {/* Delete */}
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  onDeleteAppointment(apt.id);
+                                  setOpenMenuId(null);
+                                }}
+                                className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/50 transition-colors min-h-[40px] cursor-pointer"
+                              >
+                                <Trash2 className="w-4 h-4 text-rose-500" />
+                                <span>{labels.deleteAppt}</span>
+                              </button>
+                            </div>
+                          </>
+                        )}
+                      </div>
                     </div>
                   </div>
-                );
-              })}
-            </div>
-          )}
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
 
-      {/* Fast 10-Second Book Appointment Modal */}
+      {/* ════════════════════════ BOOK APPOINTMENT MODAL ════════════════════════ */}
       {bookModalDate && (
         <BookAppointmentModal
           isOpen={Boolean(bookModalDate)}
