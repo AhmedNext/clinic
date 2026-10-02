@@ -163,6 +163,7 @@ export default function DashboardPage() {
     treatment?: string;
     notes?: string;
   } | null>(null);
+  const [activeAppointmentId, setActiveAppointmentId] = useState<string | null>(null);
 
   // Reset to first page whenever search or filters change
   useEffect(() => {
@@ -285,8 +286,11 @@ export default function DashboardPage() {
     setPatients((prev) => [newPatient, ...prev]);
     showToast(`Added case for "${newPatient.name}"`);
 
-    // Auto-schedule appointment in calendar when enabled
-    if (options?.autoBookAppointment !== false && data.date) {
+    // Auto-schedule appointment in calendar when enabled (skip if adding from an existing appointment)
+    if (activeAppointmentId) {
+      await handleToggleAppointmentStatus(activeAppointmentId, "completed");
+      setActiveAppointmentId(null);
+    } else if (options?.autoBookAppointment !== false && data.date) {
       const aptTime = data.time || "10:00 AM";
       const newApt: Appointment = {
         id: `apt-${now}-${Math.random().toString(36).substring(2, 6)}`,
@@ -315,6 +319,12 @@ export default function DashboardPage() {
   };
 
   const handleUpdatePatient = async (updatedPatient: Patient) => {
+    // If this update was initiated from an appointment visit, mark appointment completed now
+    if (activeAppointmentId) {
+      await handleToggleAppointmentStatus(activeAppointmentId, "completed");
+      setActiveAppointmentId(null);
+    }
+
     setPatients((prev) =>
       prev.map((p) => (p.id === updatedPatient.id ? updatedPatient : p))
     );
@@ -646,10 +656,10 @@ export default function DashboardPage() {
 
   // Start Visit / Open Chart when patient arrives for appointment
   const handleStartVisitFromAppointment = async (apt: Appointment) => {
-    // 1. Automatically mark appointment as completed
-    await handleToggleAppointmentStatus(apt.id, "completed");
+    // Keep track of the active appointment being processed
+    setActiveAppointmentId(apt.id);
 
-    // 2. Look up matching existing patient by phone digits or name
+    // Look up matching existing patient by phone digits or name
     const cleanDigits = (s?: string) => (s ? s.replace(/\D/g, "") : "");
     const aptDigits = cleanDigits(apt.phone);
 
@@ -665,10 +675,10 @@ export default function DashboardPage() {
       setEditingPatient(matchedPatient);
       showToast(
         language === "ar"
-          ? `✓ تم بدء الزيارة للمراجع "${matchedPatient.name}" وتم إكمال الموعد`
+          ? `✓ تم فتح ملف المراجع "${matchedPatient.name}"`
           : language === "ku"
-          ? `✓ سەردان بۆ "${matchedPatient.name}" دەستی پێکرد`
-          : `✓ Visit started for "${matchedPatient.name}" • Chart opened`
+          ? `✓ پەڕەی نەخۆش "${matchedPatient.name}" کرایەوە`
+          : `✓ Opened profile for "${matchedPatient.name}"`
       );
     } else {
       // New patient: Open AddPatientModal prefilled with appointment info
@@ -683,10 +693,10 @@ export default function DashboardPage() {
       setIsModalOpen(true);
       showToast(
         language === "ar"
-          ? `✓ تم بدء الزيارة لمراجع جديد "${apt.patientName}"`
+          ? `✓ تسجيل مراجع جديد للموعد "${apt.patientName}"`
           : language === "ku"
-          ? `✓ سەردان بۆ نەخۆشی نوێ "${apt.patientName}" دەستی پێکرد`
-          : `✓ Visit started for new patient "${apt.patientName}"`
+          ? `✓ تۆمارکردنی نەخۆشی نوێ "${apt.patientName}"`
+          : `✓ Registering new patient for "${apt.patientName}"`
       );
     }
   };
@@ -1425,6 +1435,7 @@ export default function DashboardPage() {
           setIsModalOpen(false);
           setAddPatientInitialDate(null);
           setAddPatientInitialData(null);
+          setActiveAppointmentId(null);
         }}
         onAddPatient={handleAddPatient}
       />
@@ -1433,7 +1444,10 @@ export default function DashboardPage() {
       <EditPatientModal
         isOpen={Boolean(editingPatient)}
         patient={editingPatient}
-        onClose={() => setEditingPatient(null)}
+        onClose={() => {
+          setEditingPatient(null);
+          setActiveAppointmentId(null);
+        }}
         onUpdatePatient={handleUpdatePatient}
       />
 
