@@ -394,7 +394,7 @@ export const translations: Record<Language, Translations> = {
     visit: "visit",
     visits: "visits",
     date: "Date",
-    time: "Time (Clock)",
+    time: "Time",
     setTime: "Set Time",
     paidLabel: "Paid",
     quickPickFees: "Quick-Pick (IQD)",
