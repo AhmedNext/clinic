@@ -28,6 +28,10 @@ import {
   Trash2,
   X,
   Database,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
 } from "lucide-react";
 
 import {
@@ -146,8 +150,15 @@ export default function DashboardPage() {
   const [monthFilter, setMonthFilter] = useState<string>("all"); // 'all' or 'YYYY-MM'
   const [viewMode, setViewMode] = useState<"table" | "grid">("table");
   const [sortOrder, setSortOrder] = useState<"desc" | "asc">("desc"); // 'desc' = newest first
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
   const [notification, setNotification] = useState<string | null>(null);
   const [addPatientInitialDate, setAddPatientInitialDate] = useState<string | null>(null);
+
+  // Reset to first page whenever search or filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, genderFilter, paymentFilter, monthFilter, sortOrder]);
 
   // Undo Delete State & Pending Timer
   interface UndoDeletePatientState {
@@ -817,6 +828,13 @@ export default function DashboardPage() {
       });
   }, [patients, searchQuery, genderFilter, paymentFilter, monthFilter, sortOrder]);
 
+  const totalPages = Math.max(1, Math.ceil(filteredAndSortedPatients.length / pageSize));
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+  const paginatedPatients = useMemo(() => {
+    const startIndex = (safeCurrentPage - 1) * pageSize;
+    return filteredAndSortedPatients.slice(startIndex, startIndex + pageSize);
+  }, [filteredAndSortedPatients, safeCurrentPage, pageSize]);
+
   // Show loading splash while checking local stored session
   if (!sessionChecked) {
     return (
@@ -1160,7 +1178,7 @@ export default function DashboardPage() {
                 {viewMode === "table" ? (
                   <div className="w-full max-w-full overflow-hidden">
                     <PatientTable
-                      patients={filteredAndSortedPatients}
+                      patients={paginatedPatients}
                       onDeletePatient={handleDeletePatient}
                       onEditPatient={(patient) => setEditingPatient(patient)}
                       onViewHistory={(patient) => setHistoryPatient(patient)}
@@ -1173,7 +1191,7 @@ export default function DashboardPage() {
                 ) : (
                   /* Grid / Card View */
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-4">
-                    {filteredAndSortedPatients.map((patient) => (
+                    {paginatedPatients.map((patient) => (
                       <PatientCard
                         key={patient.id}
                         patient={patient}
@@ -1189,11 +1207,149 @@ export default function DashboardPage() {
                     ))}
                   </div>
                 )}
+
+                {/* Pagination Controls */}
+                <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4 py-3 px-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/70 dark:bg-slate-900/70 backdrop-blur-md shadow-xs">
+                  {/* Left: Range and Per-page select */}
+                  <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
+                    <div>
+                      Showing{" "}
+                      <span className="font-semibold text-slate-900 dark:text-slate-100 tabular-nums">
+                        {filteredAndSortedPatients.length === 0
+                          ? 0
+                          : (safeCurrentPage - 1) * pageSize + 1}
+                        –
+                        {Math.min(safeCurrentPage * pageSize, filteredAndSortedPatients.length)}
+                      </span>{" "}
+                      of{" "}
+                      <span className="font-semibold text-slate-900 dark:text-slate-100 tabular-nums">
+                        {filteredAndSortedPatients.length}
+                      </span>
+                    </div>
+
+                    <div className="h-3.5 w-px bg-slate-200 dark:bg-slate-700" />
+
+                    <div className="flex items-center gap-1.5">
+                      <label htmlFor="page-size-select" className="text-slate-400">Per page:</label>
+                      <select
+                        id="page-size-select"
+                        value={pageSize}
+                        onChange={(e) => {
+                          setPageSize(Number(e.target.value));
+                          setCurrentPage(1);
+                        }}
+                        className="py-1 px-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-1 focus:ring-sky-500 cursor-pointer"
+                      >
+                        <option value={10}>10</option>
+                        <option value={25}>25</option>
+                        <option value={50}>50</option>
+                        <option value={100}>100</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Right: Page Buttons */}
+                  {totalPages > 1 && (
+                    <div className="flex items-center gap-1">
+                      {/* First page */}
+                      <button
+                        type="button"
+                        onClick={() => setCurrentPage(1)}
+                        disabled={safeCurrentPage === 1}
+                        title="First page"
+                        aria-label="First page"
+                        className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
+                      >
+                        <ChevronsLeft className="w-4 h-4 rtl:rotate-180" />
+                      </button>
+
+                      {/* Prev page */}
+                      <button
+                        type="button"
+                        onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                        disabled={safeCurrentPage === 1}
+                        title="Previous page"
+                        aria-label="Previous page"
+                        className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
+                      >
+                        <ChevronLeft className="w-4 h-4 rtl:rotate-180" />
+                      </button>
+
+                      {/* Page number buttons */}
+                      <div className="flex items-center gap-1 px-1">
+                        {Array.from({ length: totalPages }, (_, i) => i + 1)
+                          .filter((pageNum) => {
+                            if (totalPages <= 7) return true;
+                            if (pageNum === 1 || pageNum === totalPages) return true;
+                            return Math.abs(pageNum - safeCurrentPage) <= 1;
+                          })
+                          .reduce<(number | string)[]>((acc, pageNum, idx, arr) => {
+                            if (idx > 0 && typeof arr[idx - 1] === "number" && pageNum - (arr[idx - 1] as number) > 1) {
+                              acc.push(`dots-${pageNum}`);
+                            }
+                            acc.push(pageNum);
+                            return acc;
+                          }, [])
+                          .map((item) => {
+                            if (typeof item === "string") {
+                              return (
+                                <span
+                                  key={item}
+                                  className="px-1 text-slate-400 text-xs select-none"
+                                >
+                                  …
+                                </span>
+                              );
+                            }
+                            const isCurrent = item === safeCurrentPage;
+                            return (
+                              <button
+                                key={item}
+                                type="button"
+                                onClick={() => setCurrentPage(item)}
+                                className={`min-w-[28px] h-7 px-2 rounded-lg text-xs font-semibold tabular-nums transition-all cursor-pointer ${
+                                  isCurrent
+                                    ? "bg-sky-600 text-white shadow-xs font-bold"
+                                    : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-100"
+                                }`}
+                              >
+                                {item}
+                              </button>
+                            );
+                          })}
+                      </div>
+
+                      {/* Next page */}
+                      <button
+                        type="button"
+                        onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                        disabled={safeCurrentPage === totalPages}
+                        title="Next page"
+                        aria-label="Next page"
+                        className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
+                      >
+                        <ChevronRight className="w-4 h-4 rtl:rotate-180" />
+                      </button>
+
+                      {/* Last page */}
+                      <button
+                        type="button"
+                        onClick={() => setCurrentPage(totalPages)}
+                        disabled={safeCurrentPage === totalPages}
+                        title="Last page"
+                        aria-label="Last page"
+                        className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
+                      >
+                        <ChevronsRight className="w-4 h-4 rtl:rotate-180" />
+                      </button>
+                    </div>
+                  )}
+                </div>
               </>
             )}
 
             {/* Footer */}
-            <footer className="mt-12 pt-6 border-t border-slate-200/80 dark:border-slate-800/60 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-400 dark:text-slate-500">
+            <footer className="mt-8 pt-6 border-t border-slate-200/80 dark:border-slate-800/60 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-400 dark:text-slate-500">
               <div>
                 Showing{" "}
                 <span className="font-semibold text-slate-700 dark:text-slate-300">
