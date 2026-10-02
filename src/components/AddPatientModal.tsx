@@ -41,7 +41,7 @@ export function AddPatientModal({
   const [phone, setPhone] = useState<string>("");
   const [date, setDate] = useState(initialDate || getTodayString());
   const [time, setTime] = useState("");
-  const [autoBookAppointment, setAutoBookAppointment] = useState(true);
+  const [autoBookAppointment, setAutoBookAppointment] = useState(false);
   const [isClockPickerOpen, setIsClockPickerOpen] = useState(false);
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
   const [paidAmount, setPaidAmount] = useState<string>("0");
@@ -87,7 +87,7 @@ export function AddPatientModal({
       setPhone("");
       setDate(initialDate || getTodayString());
       setTime("");
-      setAutoBookAppointment(true);
+      setAutoBookAppointment(false);
       setPaidAmount("0");
       setDebtAmount("0");
       setNotes("");
