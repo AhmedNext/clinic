@@ -15,8 +15,9 @@ import {
   MessageCircle,
 } from "lucide-react";
 import { Appointment, AppointmentStatus } from "@/types/appointment";
-import { Patient, getWhatsAppUrl } from "@/types/patient";
+import { Patient, getWhatsAppUrl, getAppointmentReminderWhatsAppUrl } from "@/types/patient";
 import { DayAppointmentsModal } from "./DayAppointmentsModal";
+import { BookAppointmentModal } from "./BookAppointmentModal";
 import { useLanguage } from "@/context/LanguageContext";
 import { useClinicSettings } from "@/context/ClinicSettingsContext";
 import { getMonthName, WEEKDAY_NAMES, formatStaticDate } from "@/utils/date";
@@ -28,6 +29,7 @@ interface AppointmentsViewProps {
   onToggleStatus: (id: string, newStatus: AppointmentStatus) => void;
   onDeleteAppointment: (id: string) => void;
   onOpenAddPatient?: (dateString: string) => void;
+  onStartVisit?: (appointment: Appointment) => void;
 }
 
 export function AppointmentsView({
@@ -37,6 +39,7 @@ export function AppointmentsView({
   onToggleStatus,
   onDeleteAppointment,
   onOpenAddPatient,
+  onStartVisit,
 }: AppointmentsViewProps) {
   const { language, t } = useLanguage();
   const { settings } = useClinicSettings();
@@ -63,6 +66,7 @@ export function AppointmentsView({
 
   // Active modal date for booking/managing appointments
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [bookModalDate, setBookModalDate] = useState<string | null>(null);
 
   const weekDayNames = WEEKDAY_NAMES[language] || WEEKDAY_NAMES.en;
 
@@ -306,7 +310,7 @@ export function AppointmentsView({
             type="button"
             onClick={() => {
               const targetDate = viewMode === "day" ? currentDayString : todayYMD;
-              setSelectedDate(targetDate);
+              setBookModalDate(targetDate);
             }}
             className="inline-flex items-center gap-1.5 px-3.5 sm:px-4 py-2 rounded-xl text-xs font-bold bg-sky-600 hover:bg-sky-700 dark:bg-sky-500 dark:hover:bg-sky-600 text-white shadow-sm shadow-sky-600/20 active:scale-[0.98] transition-all cursor-pointer"
           >
@@ -471,7 +475,7 @@ export function AppointmentsView({
             <div className="flex items-center gap-2">
               <button
                 type="button"
-                onClick={() => setSelectedDate(currentDayString)}
+                onClick={() => setBookModalDate(currentDayString)}
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-sky-600 hover:bg-sky-700 text-white shadow-sm shadow-sky-600/20 cursor-pointer"
               >
                 <Plus className="w-3.5 h-3.5" />
@@ -494,7 +498,7 @@ export function AppointmentsView({
               </p>
               <button
                 type="button"
-                onClick={() => setSelectedDate(currentDayString)}
+                onClick={() => setBookModalDate(currentDayString)}
                 className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold cursor-pointer transition-all shadow-xs"
               >
                 <Plus className="w-4 h-4" />
@@ -552,8 +556,27 @@ export function AppointmentsView({
                       </div>
                     </div>
 
-                    {/* Right: Status Switcher & Contact Actions */}
+                    {/* Right: Status Switcher, Start Visit & Contact Actions */}
                     <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap justify-between sm:justify-end">
+                      {/* Start Visit / Open Chart (When Patient Arrives) */}
+                      {onStartVisit && !isDone && (
+                        <button
+                          type="button"
+                          onClick={() => onStartVisit(apt)}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow-xs hover:shadow-emerald-600/20 active:scale-95 transition-all cursor-pointer min-h-[38px]"
+                          title="Open patient profile & start visit"
+                        >
+                          <span>🦷</span>
+                          <span>
+                            {language === "ar"
+                              ? "بدء الزيارة / فتح المخطط"
+                              : language === "ku"
+                              ? "دەستپێکردنی سەردان"
+                              : "Start Visit / Open Chart"}
+                          </span>
+                        </button>
+                      )}
+
                       {/* Status Toggle Button */}
                       <button
                         type="button"
@@ -593,17 +616,27 @@ export function AppointmentsView({
                         </a>
                       )}
 
-                      {/* WhatsApp Button */}
-                      {apt.phone && whatsAppUrl && (
+                      {/* WhatsApp 1-Click Reminder Button */}
+                      {apt.phone && (
                         <a
-                          href={whatsAppUrl}
+                          href={getAppointmentReminderWhatsAppUrl({
+                            phone: apt.phone,
+                            patientName: apt.patientName,
+                            clinicName: settings.clinicName,
+                            doctorName: settings.doctorName,
+                            date: apt.date,
+                            time: apt.time,
+                            language,
+                          })}
                           target="_blank"
                           rel="noopener noreferrer"
-                          title="Open WhatsApp reminder"
-                          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-bold bg-[#22C55E] hover:bg-[#16A34A] text-white shadow-2xs transition-all cursor-pointer min-h-[38px]"
+                          title="Open 1-Click WhatsApp reminder"
+                          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-bold bg-[#25D366] hover:bg-[#1ebe5d] text-white shadow-2xs hover:shadow-sm transition-all cursor-pointer min-h-[38px]"
                         >
-                          <MessageCircle className="w-3.5 h-3.5" />
-                          <span className="hidden sm:inline text-[11px]">{t.whatsApp}</span>
+                          <MessageCircle className="w-3.5 h-3.5 fill-current" />
+                          <span className="hidden sm:inline text-[11px]">
+                            {language === "ar" ? "تذكير واتساب" : t.whatsApp}
+                          </span>
                         </a>
                       )}
 
@@ -637,6 +670,21 @@ export function AppointmentsView({
           onToggleStatus={onToggleStatus}
           onDeleteAppointment={onDeleteAppointment}
           onOpenAddPatient={onOpenAddPatient}
+          onStartVisit={onStartVisit}
+        />
+      )}
+
+      {/* Fast 10-Second Book Appointment Modal */}
+      {bookModalDate && (
+        <BookAppointmentModal
+          isOpen={Boolean(bookModalDate)}
+          initialDate={bookModalDate}
+          existingPatients={patients}
+          onClose={() => setBookModalDate(null)}
+          onBookAppointment={(data) => {
+            onAddAppointment(data);
+            setBookModalDate(null);
+          }}
         />
       )}
     </div>

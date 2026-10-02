@@ -84,6 +84,7 @@ export interface WhatsAppMessageParams {
   phone?: string;
   patientName?: string;
   clinicName?: string;
+  doctorName?: string;
   date?: string;
   time?: string;
   language?: "en" | "ar" | "ku";
@@ -158,6 +159,36 @@ export function getWhatsAppUrl(
     } else {
       message = `${greeting}, from ${clinic}. Regarding your dental consultation and appointment, please let us know if you have any questions.`;
     }
+  }
+
+  return `https://wa.me/${num}?text=${encodeURIComponent(message.trim())}`;
+}
+
+/**
+ * 1-Click WhatsApp appointment reminder formatted specifically for appointment reminders:
+ * "مرحباً [Name]، نذكركم بموعدكم في عيادة الأسنان بتاريخ [Date] الساعة [Time]. Dr. Muhammed Rashid"
+ */
+export function getAppointmentReminderWhatsAppUrl(params: WhatsAppMessageParams): string {
+  const num = getWhatsAppNumber(params.phone);
+  if (!num) return "#";
+
+  const lang = params.language || "ar";
+  const name = params.patientName?.trim() || "";
+  const dateStr = params.date?.trim() || "";
+  const timeStr = params.time?.trim() || "";
+  const doctor =
+    params.doctorName && params.doctorName.trim() && params.doctorName !== "Doctor"
+      ? params.doctorName.trim()
+      : params.clinicName?.trim() || "Dr. Muhammed Rashid";
+
+  let message = "";
+  if (lang === "ku") {
+    message = `سڵاو ${name}، نۆرەکەت لە کلینیکی ددان لە بەرواری ${dateStr} کاتژمێر ${timeStr} بیردەخەینەوە. ${doctor}`;
+  } else if (lang === "en") {
+    message = `Hello ${name}, this is a reminder for your dental appointment on ${dateStr} at ${timeStr}. ${doctor}`;
+  } else {
+    // Arabic
+    message = `مرحباً ${name}، نذكركم بموعدكم في عيادة الأسنان بتاريخ ${dateStr} الساعة ${timeStr}. ${doctor}`;
   }
 
   return `https://wa.me/${num}?text=${encodeURIComponent(message.trim())}`;

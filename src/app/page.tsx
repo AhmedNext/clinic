@@ -155,6 +155,14 @@ export default function DashboardPage() {
   const [pageSize, setPageSize] = useState(25);
   const [notification, setNotification] = useState<string | null>(null);
   const [addPatientInitialDate, setAddPatientInitialDate] = useState<string | null>(null);
+  const [addPatientInitialData, setAddPatientInitialData] = useState<{
+    name?: string;
+    phone?: string;
+    date?: string;
+    time?: string;
+    treatment?: string;
+    notes?: string;
+  } | null>(null);
 
   // Reset to first page whenever search or filters change
   useEffect(() => {
@@ -636,6 +644,53 @@ export default function DashboardPage() {
     }
   };
 
+  // Start Visit / Open Chart when patient arrives for appointment
+  const handleStartVisitFromAppointment = async (apt: Appointment) => {
+    // 1. Automatically mark appointment as completed
+    await handleToggleAppointmentStatus(apt.id, "completed");
+
+    // 2. Look up matching existing patient by phone digits or name
+    const cleanDigits = (s?: string) => (s ? s.replace(/\D/g, "") : "");
+    const aptDigits = cleanDigits(apt.phone);
+
+    const matchedPatient = patients.find((p) => {
+      if (aptDigits && p.phone && cleanDigits(p.phone) === aptDigits) {
+        return true;
+      }
+      return p.name.trim().toLowerCase() === apt.patientName.trim().toLowerCase();
+    });
+
+    if (matchedPatient) {
+      // Existing patient: Open full profile for Odontogram, notes, and payment
+      setEditingPatient(matchedPatient);
+      showToast(
+        language === "ar"
+          ? `✓ تم بدء الزيارة للمراجع "${matchedPatient.name}" وتم إكمال الموعد`
+          : language === "ku"
+          ? `✓ سەردان بۆ "${matchedPatient.name}" دەستی پێکرد`
+          : `✓ Visit started for "${matchedPatient.name}" • Chart opened`
+      );
+    } else {
+      // New patient: Open AddPatientModal prefilled with appointment info
+      setAddPatientInitialData({
+        name: apt.patientName,
+        phone: apt.phone,
+        date: apt.date,
+        time: apt.time,
+        treatment: apt.treatment,
+        notes: apt.notes,
+      });
+      setIsModalOpen(true);
+      showToast(
+        language === "ar"
+          ? `✓ تم بدء الزيارة لمراجع جديد "${apt.patientName}"`
+          : language === "ku"
+          ? `✓ سەردان بۆ نەخۆشی نوێ "${apt.patientName}" دەستی پێکرد`
+          : `✓ Visit started for new patient "${apt.patientName}"`
+      );
+    }
+  };
+
   // Quick settle patient debt (one-click check to mark as fully paid)
   const handleSettleDebt = async (patient: Patient) => {
     const curPaid = patient.paidAmount ?? 0;
@@ -875,6 +930,7 @@ export default function DashboardPage() {
               setAddPatientInitialDate(dateStr);
               setIsModalOpen(true);
             }}
+            onStartVisit={handleStartVisitFromAppointment}
           />
         ) : activeTab === "materials" && isDoctor ? (
           /* ================= CLINIC MATERIALS & EXPENSES TAB ================= */
@@ -1344,9 +1400,11 @@ export default function DashboardPage() {
           addPatientInitialDate ||
           (monthFilter !== "all" ? `${monthFilter}-01` : undefined)
         }
+        initialData={addPatientInitialData}
         onClose={() => {
           setIsModalOpen(false);
           setAddPatientInitialDate(null);
+          setAddPatientInitialData(null);
         }}
         onAddPatient={handleAddPatient}
       />

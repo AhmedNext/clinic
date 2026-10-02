@@ -15,11 +15,11 @@ import {
   Sparkles,
 } from "lucide-react";
 import { Appointment, AppointmentStatus } from "@/types/appointment";
-import { Patient, getWhatsAppUrl } from "@/types/patient";
+import { Patient, getWhatsAppUrl, getAppointmentReminderWhatsAppUrl } from "@/types/patient";
 import { useLanguage } from "@/context/LanguageContext";
 import { useClinicSettings } from "@/context/ClinicSettingsContext";
 import { formatStaticDate, WEEKDAY_NAMES } from "@/utils/date";
-import { CircleClockPickerModal } from "@/components/ui/CircleClockPickerModal";
+import { TimeKeeperPicker } from "@/components/ui/TimeKeeperPicker";
 
 interface DayAppointmentsModalProps {
   isOpen: boolean;
@@ -31,6 +31,7 @@ interface DayAppointmentsModalProps {
   onToggleStatus: (id: string, newStatus: AppointmentStatus) => void;
   onDeleteAppointment: (id: string) => void;
   onOpenAddPatient?: (dateString: string) => void;
+  onStartVisit?: (appointment: Appointment) => void;
 }
 
 const COMMON_PROCEDURES = [
@@ -65,13 +66,13 @@ export function DayAppointmentsModal({
   onToggleStatus,
   onDeleteAppointment,
   onOpenAddPatient,
+  onStartVisit,
 }: DayAppointmentsModalProps) {
   const { language, t } = useLanguage();
   const { settings } = useClinicSettings();
   const [patientName, setPatientName] = useState("");
   const [phone, setPhone] = useState("");
   const [time, setTime] = useState("10:00 AM");
-  const [isClockPickerOpen, setIsClockPickerOpen] = useState(false);
   const [treatment, setTreatment] = useState("");
   const [notes, setNotes] = useState("");
   const [showAddForm, setShowAddForm] = useState(appointments.length === 0);
@@ -283,37 +284,14 @@ export function DayAppointmentsModal({
                   </div>
 
                   <div>
-                    <div className="flex items-center justify-between mb-1">
-                      <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
-                        {t.time}
-                      </label>
-                      <button
-                        type="button"
-                        onClick={() => setIsClockPickerOpen(true)}
-                        className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer"
-                      >
-                        {t.circleClock}
-                      </button>
-                    </div>
-                    <div className="relative flex items-center">
-                      <div className="absolute inset-y-0 left-0 rtl:left-auto rtl:right-0 pl-3 rtl:pl-0 rtl:pr-3 flex items-center pointer-events-none text-slate-400">
-                        <Clock className="w-4 h-4" />
-                      </div>
-                      <input
-                        type="text"
-                        placeholder={t.timePlaceholder}
-                        value={time}
-                        onChange={(e) => setTime(e.target.value)}
-                        className="w-full pl-9 rtl:pl-20 rtl:pr-9 pr-20 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setIsClockPickerOpen(true)}
-                        className="absolute right-1.5 rtl:right-auto rtl:left-1.5 px-2.5 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 hover:bg-indigo-100 text-xs font-bold cursor-pointer"
-                      >
-                        {t.clockBtn}
-                      </button>
-                    </div>
+                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                      {t.time}
+                    </label>
+                    <TimeKeeperPicker
+                      value={time}
+                      onChange={(newTime) => setTime(newTime)}
+                      className="w-full"
+                    />
                   </div>
                 </div>
 
@@ -393,10 +371,16 @@ export function DayAppointmentsModal({
                   )}
                   <button
                     type="submit"
-                    className="inline-flex items-center gap-2 px-5 py-2 rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white shadow-xs cursor-pointer"
+                    className="inline-flex items-center gap-2 px-5 py-2 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow-xs cursor-pointer"
                   >
                     <Plus className="w-3.5 h-3.5" />
-                    <span>{t.save}</span>
+                    <span>
+                      {language === "ar"
+                        ? "تأكيد الحجز"
+                        : language === "ku"
+                        ? "پشتڕاستکردنەوەی نۆرە"
+                        : "Confirm Booking"}
+                    </span>
                   </button>
                 </div>
               </form>
@@ -496,27 +480,26 @@ export function DayAppointmentsModal({
                             <span className="font-mono">{apt.phone}</span>
                           </a>
 
-                          <a
-                            href={getWhatsAppUrl({
-                              phone: apt.phone,
-                              patientName: apt.patientName,
-                              clinicName: settings.clinicName,
-                              date: apt.date || dateString,
-                              time: apt.time,
-                              language,
-                              gender: existingPatients.find(
-                                (p) =>
-                                  p.name.toLowerCase() === apt.patientName.toLowerCase() ||
-                                  (apt.phone && p.phone === apt.phone)
-                              )?.gender,
-                            })}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 font-semibold border border-emerald-200 dark:border-emerald-800 text-[11px] hover:scale-105 active:scale-95 transition-transform"
-                          >
-                            <span>💬</span>
-                            <span>WhatsApp</span>
-                          </a>
+                          {apt.phone && (
+                            <a
+                              href={getAppointmentReminderWhatsAppUrl({
+                                phone: apt.phone,
+                                patientName: apt.patientName,
+                                clinicName: settings.clinicName,
+                                doctorName: settings.doctorName,
+                                date: apt.date || dateString,
+                                time: apt.time,
+                                language,
+                              })}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 font-bold border border-emerald-200 dark:border-emerald-800 text-[11px] hover:scale-105 active:scale-95 transition-transform"
+                              title="Send 1-Click WhatsApp reminder"
+                            >
+                              <span>💬</span>
+                              <span>{language === "ar" ? "تذكير واتساب" : "WhatsApp"}</span>
+                            </a>
+                          )}
 
                           <span className="inline-flex items-center gap-1 font-medium">
                             <Clock className="w-3.5 h-3.5 text-slate-400" />
@@ -538,7 +521,28 @@ export function DayAppointmentsModal({
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-end gap-1 sm:self-center">
+                    <div className="flex items-center justify-end gap-1.5 sm:self-center flex-wrap">
+                      {onStartVisit && !isDone && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            onStartVisit(apt);
+                            onClose();
+                          }}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow-xs hover:shadow-emerald-600/20 active:scale-95 transition-all cursor-pointer"
+                          title="Start Visit & Open Patient Chart"
+                        >
+                          <span>🦷</span>
+                          <span>
+                            {language === "ar"
+                              ? "بدء الزيارة / فتح المخطط"
+                              : language === "ku"
+                              ? "دەستپێکردنی سەردان"
+                              : "Start Visit / Open Chart"}
+                          </span>
+                        </button>
+                      )}
+
                       <button
                         type="button"
                         onClick={() => onDeleteAppointment(apt.id)}
@@ -566,15 +570,6 @@ export function DayAppointmentsModal({
           </button>
         </div>
       </div>
-
-      {/* Circle Clock Picker Modal (Analog Clock Dial) */}
-      <CircleClockPickerModal
-        isOpen={isClockPickerOpen}
-        initialTime={time}
-        patientName={patientName || "Appointment"}
-        onClose={() => setIsClockPickerOpen(false)}
-        onSaveTime={(newTime) => setTime(newTime)}
-      />
     </div>
   );
 }

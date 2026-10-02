@@ -36,6 +36,14 @@ interface AddPatientModalProps {
     options?: { autoBookAppointment?: boolean }
   ) => void;
   initialDate?: string;
+  initialData?: {
+    name?: string;
+    phone?: string;
+    date?: string;
+    time?: string;
+    treatment?: string;
+    notes?: string;
+  } | null;
 }
 
 export function AddPatientModal({
@@ -43,6 +51,7 @@ export function AddPatientModal({
   onClose,
   onAddPatient,
   initialDate,
+  initialData,
 }: AddPatientModalProps) {
   const { t } = useLanguage();
   const getTodayString = () => {
@@ -104,21 +113,22 @@ export function AddPatientModal({
   // Reset form when modal opens
   useEffect(() => {
     if (isOpen) {
-      setName("");
+      setName(initialData?.name || "");
       setGender("male");
       setAge("");
-      setPhone("");
-      setDate(initialDate || getTodayString());
-      setTime("");
+      setPhone(initialData?.phone || "");
+      setDate(initialData?.date || initialDate || getTodayString());
+      setTime(initialData?.time || "");
       setAutoBookAppointment(false);
       setTotalPrice("0");
       setPaidAmount("0");
-      setNotes("");
+      const initNotes = [initialData?.treatment, initialData?.notes].filter(Boolean).join(" - ");
+      setNotes(initNotes || "");
       setTeeth([]);
       setShowTeethChart(false);
       setError(null);
     }
-  }, [isOpen, initialDate]);
+  }, [isOpen, initialDate, initialData]);
 
   // Handle escape key
   useEffect(() => {
