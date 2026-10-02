@@ -931,12 +931,12 @@ export default function DashboardPage() {
               </div>
 
               {/* Right: Horizontally swipeable filter chips on mobile */}
-              <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1 w-full md:w-auto flex-nowrap md:flex-wrap shrink-0">
+              <div className="flex items-center gap-2 overflow-x-auto no-scrollbar px-1 py-1 w-full md:w-auto flex-nowrap md:flex-wrap shrink-0">
                 {/* Gender Filters */}
                 <div className="inline-flex rounded-2xl border border-slate-200/90 dark:border-slate-800 p-0.5 bg-slate-100/70 dark:bg-slate-900/80 backdrop-blur-md shadow-2xs shrink-0 whitespace-nowrap">
                   <button
                     onClick={() => setGenderFilter("all")}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap flex-shrink-0 ${
                       genderFilter === "all"
                         ? "bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 shadow-xs"
                         : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
@@ -946,7 +946,7 @@ export default function DashboardPage() {
                   </button>
                   <button
                     onClick={() => setGenderFilter("male")}
-                    className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                    className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap flex-shrink-0 ${
                       genderFilter === "male"
                         ? "bg-sky-50 dark:bg-sky-950/80 text-sky-700 dark:text-sky-300 border border-sky-200/80 dark:border-sky-800 shadow-xs"
                         : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
@@ -957,7 +957,7 @@ export default function DashboardPage() {
                   </button>
                   <button
                     onClick={() => setGenderFilter("female")}
-                    className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                    className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap flex-shrink-0 ${
                       genderFilter === "female"
                         ? "bg-rose-50 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300 border border-rose-200/80 dark:border-rose-800 shadow-xs"
                         : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
@@ -972,7 +972,7 @@ export default function DashboardPage() {
                 <div className="inline-flex rounded-2xl border border-slate-200/90 dark:border-slate-800 p-0.5 bg-slate-100/70 dark:bg-slate-900/80 backdrop-blur-md shadow-2xs shrink-0 whitespace-nowrap">
                   <button
                     onClick={() => setPaymentFilter("all")}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap flex-shrink-0 ${
                       paymentFilter === "all"
                         ? "bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 shadow-xs"
                         : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
@@ -982,7 +982,7 @@ export default function DashboardPage() {
                   </button>
                   <button
                     onClick={() => setPaymentFilter("paid")}
-                    className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                    className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap flex-shrink-0 ${
                       paymentFilter === "paid"
                         ? "bg-emerald-50 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800 shadow-xs"
                         : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
@@ -993,7 +993,7 @@ export default function DashboardPage() {
                   </button>
                   <button
                     onClick={() => setPaymentFilter("debt")}
-                    className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                    className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap flex-shrink-0 ${
                       paymentFilter === "debt"
                         ? "bg-rose-50 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300 border border-rose-200/80 dark:border-rose-800 shadow-xs"
                         : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
@@ -1016,7 +1016,7 @@ export default function DashboardPage() {
                 </div>
 
                 {/* Month / Billing Month Filter */}
-                <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md shadow-2xs shrink-0 whitespace-nowrap">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md shadow-2xs shrink-0 whitespace-nowrap flex-shrink-0">
                   <Calendar className="w-3.5 h-3.5 text-sky-500 shrink-0" />
                   <label htmlFor="month-select" className="sr-only">Filter by Month</label>
                   <select

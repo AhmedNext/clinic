@@ -124,9 +124,21 @@ export const MobilePatientCard = React.memo(function MobilePatientCard({
             <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100 truncate leading-snug">
               {patient.name}
             </h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400 font-normal truncate mt-0.5">
-              {subline}
-            </p>
+            <div className="text-xs text-slate-500 dark:text-slate-400 font-normal mt-0.5 space-y-0.5">
+              <div className="flex items-center gap-1.5 flex-wrap">
+                {genderAge && <span className="shrink-0">{genderAge}</span>}
+                {genderAge && (dateFormatted || patient.time) && (
+                  <span className="text-slate-300 dark:text-slate-600">•</span>
+                )}
+                {dateFormatted && <span className="font-medium shrink-0">{dateFormatted}</span>}
+                {patient.time && (
+                  <>
+                    <span className="text-slate-300 dark:text-slate-600">•</span>
+                    <span className="shrink-0">{patient.time}</span>
+                  </>
+                )}
+              </div>
+            </div>
           </div>
         </div>
 
