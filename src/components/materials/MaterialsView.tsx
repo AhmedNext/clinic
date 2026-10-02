@@ -353,83 +353,156 @@ export function MaterialsView({
           </button>
         </div>
       ) : (
-        <div className="rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-2xs overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b border-slate-100 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40 text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                  <th className="py-3 px-4">{t.date}</th>
-                  <th className="py-3 px-4">{t.category}</th>
-                  <th className="py-3 px-4">{t.supplierMaterialCol}</th>
-                  <th className="py-3 px-4 text-right">{t.totalMoneySpentCol}</th>
-                  <th className="py-3 px-4 text-right">{t.actions}</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 text-xs">
-                {filteredMaterials.map((item) => {
-                  const badge = getCategoryBadge(item.category);
-                  return (
-                    <tr
-                      key={item.id}
-                      className="hover:bg-slate-50/60 dark:hover:bg-slate-800/30 transition-colors"
-                    >
-                      {/* Date */}
-                      <td className="py-3 px-4 whitespace-nowrap">
-                        <div className="inline-flex items-center gap-1.5 font-medium text-slate-700 dark:text-slate-300">
-                          <Calendar className="w-3.5 h-3.5 text-slate-400" />
-                          <span>{item.date}</span>
-                        </div>
-                      </td>
+        <div className="space-y-3">
+          {/* Mobile Expense Cards (Screens < sm) */}
+          <div className="sm:hidden space-y-2.5">
+            {filteredMaterials.map((item) => {
+              const badge = getCategoryBadge(item.category);
+              return (
+                <div
+                  key={item.id}
+                  className="p-3.5 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-2xs space-y-2"
+                >
+                  {/* Row 1: Description / Payee on left, Expense Amount on right */}
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-center gap-2 min-w-0 flex-1">
+                      <div className="p-1.5 rounded-lg bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex-shrink-0">
+                        <Store className="w-4 h-4" />
+                      </div>
+                      <span className="font-bold text-sm text-slate-900 dark:text-slate-100 truncate">
+                        {item.supplier}
+                      </span>
+                    </div>
 
-                      {/* Category Badge */}
-                      <td className="py-3 px-4 whitespace-nowrap">
-                        <span
-                          className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold border shadow-2xs ${badge.className}`}
+                    <div className="text-right flex-shrink-0">
+                      <span className="font-mono font-bold text-sm text-slate-900 dark:text-slate-100 tabular-nums">
+                        -{formatIQD(item.costPrice)}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Row 2: Date + Category Badge on left, Actions on right */}
+                  <div className="flex items-center justify-between gap-2 pt-1 border-t border-slate-100 dark:border-slate-800/60">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span
+                        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border shadow-2xs ${badge.className}`}
+                      >
+                        {badge.icon}
+                        <span>{badge.label}</span>
+                      </span>
+
+                      <div className="inline-flex items-center gap-1 text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                        <Calendar className="w-3 h-3 text-slate-400" />
+                        <span>{item.date}</span>
+                      </div>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="inline-flex items-center gap-1">
+                      {onUpdateMaterial && (
+                        <button
+                          onClick={() => handleOpenEdit(item)}
+                          title={t.edit}
+                          aria-label={t.edit}
+                          className="p-1.5 rounded-lg text-slate-400 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/50 transition-colors cursor-pointer"
                         >
-                          {badge.icon}
-                          <span>{badge.label}</span>
-                        </span>
-                      </td>
+                          <Pencil className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                      <button
+                        onClick={() => onDeleteMaterial(item.id)}
+                        title={t.delete}
+                        aria-label={t.delete}
+                        className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/50 transition-colors cursor-pointer"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
 
-                      {/* Description / Supplier */}
-                      <td className="py-3 px-4 font-bold text-slate-900 dark:text-slate-100">
-                        <div className="flex items-center gap-2">
-                          <Store className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />
-                          <span>{item.supplier}</span>
-                        </div>
-                      </td>
+          {/* Desktop Table (Screens >= sm) */}
+          <div className="hidden sm:block rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-2xs overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-slate-100 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40 text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                    <th className="py-3 px-4">{t.date}</th>
+                    <th className="py-3 px-4">{t.category}</th>
+                    <th className="py-3 px-4">{t.supplierMaterialCol}</th>
+                    <th className="py-3 px-4 text-right">{t.totalMoneySpentCol}</th>
+                    <th className="py-3 px-4 text-right">{t.actions}</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 text-xs">
+                  {filteredMaterials.map((item) => {
+                    const badge = getCategoryBadge(item.category);
+                    return (
+                      <tr
+                        key={item.id}
+                        className="hover:bg-slate-50/60 dark:hover:bg-slate-800/30 transition-colors"
+                      >
+                        {/* Date */}
+                        <td className="py-3 px-4 whitespace-nowrap">
+                          <div className="inline-flex items-center gap-1.5 font-medium text-slate-700 dark:text-slate-300">
+                            <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                            <span>{item.date}</span>
+                          </div>
+                        </td>
 
-                      {/* Total Money Spent */}
-                      <td className="py-3 px-4 text-right font-mono font-bold text-sm text-amber-700 dark:text-amber-400 whitespace-nowrap">
-                        {formatIQD(item.costPrice)}
-                      </td>
-
-                      {/* Actions */}
-                      <td className="py-3 px-4 text-right whitespace-nowrap">
-                        <div className="inline-flex items-center gap-1">
-                          {onUpdateMaterial && (
-                            <button
-                              onClick={() => handleOpenEdit(item)}
-                              title={t.edit}
-                              className="p-1.5 rounded-lg text-slate-400 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/50 transition-colors cursor-pointer"
-                            >
-                              <Pencil className="w-4 h-4" />
-                            </button>
-                          )}
-                          <button
-                            onClick={() => onDeleteMaterial(item.id)}
-                            title={t.delete}
-                            className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/50 transition-colors cursor-pointer"
+                        {/* Category Badge */}
+                        <td className="py-3 px-4 whitespace-nowrap">
+                          <span
+                            className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold border shadow-2xs ${badge.className}`}
                           >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                            {badge.icon}
+                            <span>{badge.label}</span>
+                          </span>
+                        </td>
+
+                        {/* Description / Supplier */}
+                        <td className="py-3 px-4 font-bold text-slate-900 dark:text-slate-100">
+                          <div className="flex items-center gap-2">
+                            <Store className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />
+                            <span>{item.supplier}</span>
+                          </div>
+                        </td>
+
+                        {/* Total Money Spent */}
+                        <td className="py-3 px-4 text-right font-mono font-bold text-sm text-amber-700 dark:text-amber-400 whitespace-nowrap">
+                          {formatIQD(item.costPrice)}
+                        </td>
+
+                        {/* Actions */}
+                        <td className="py-3 px-4 text-right whitespace-nowrap">
+                          <div className="inline-flex items-center gap-1">
+                            {onUpdateMaterial && (
+                              <button
+                                onClick={() => handleOpenEdit(item)}
+                                title={t.edit}
+                                className="p-1.5 rounded-lg text-slate-400 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/50 transition-colors cursor-pointer"
+                              >
+                                <Pencil className="w-4 h-4" />
+                              </button>
+                            )}
+                            <button
+                              onClick={() => onDeleteMaterial(item.id)}
+                              title={t.delete}
+                              className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/50 transition-colors cursor-pointer"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       )}

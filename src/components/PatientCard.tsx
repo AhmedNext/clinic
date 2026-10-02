@@ -16,6 +16,7 @@ import {
   Stethoscope,
   MoreHorizontal,
   X,
+  Banknote,
 } from "lucide-react";
 import { formatStaticDate } from "@/utils/date";
 import { CircleClockPickerModal } from "./ui/CircleClockPickerModal";
@@ -316,12 +317,12 @@ export const PatientCard = React.memo(function PatientCard({
           </button>
         </div>
 
-        {/* Financial Status (Strict Semantic Status Colors) */}
+        {/* Financial Status */}
         <div>
           {debt > 0 ? (
-            <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded-xl text-xs font-semibold bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-900/60">
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-semibold bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border border-rose-200/90 dark:border-rose-900/60 shadow-2xs">
               <span className="text-[11px] font-bold">
-                {t.owesLabel} {formatIQD(debt)}
+                {t.owesLabel}: {formatIQD(debt)}
               </span>
               {onSettleDebt && (
                 <button
@@ -330,19 +331,18 @@ export const PatientCard = React.memo(function PatientCard({
                     e.stopPropagation();
                     onSettleDebt(patient);
                   }}
-                  className="ml-0.5 px-1.5 py-0.5 rounded-md bg-emerald-600 hover:bg-emerald-500 text-white shadow-2xs cursor-pointer active:scale-90 transition-all text-[10px] font-bold inline-flex items-center gap-0.5"
+                  className="px-1.5 py-0.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white shadow-2xs cursor-pointer active:scale-90 transition-all text-[10px] font-bold inline-flex items-center gap-1"
                   title={t.markDebtPaid}
                 >
-                  <Check className="w-3 h-3" />
+                  <Banknote className="w-3 h-3" />
                   <span>{t.markDebtPaid}</span>
                 </button>
               )}
             </div>
           ) : (
-            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-medium bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 ring-1 ring-emerald-600/20">
               <span>✓</span>
-              <span className="text-[11px] font-bold">{t.fullyPaid}</span>
-              <span className="text-[10px] opacity-75 font-mono">({formatIQD(paid)})</span>
+              <span className="text-[11px] font-semibold">{t.fullyPaid}</span>
             </span>
           )}
         </div>

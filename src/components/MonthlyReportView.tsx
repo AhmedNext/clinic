@@ -129,84 +129,92 @@ export function MonthlyReportView({
 
   return (
     <div className="space-y-6">
-      {/* ── Summary Cards (Neutral Surfaces with Semantic Icon Badges) ── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+      {/* ── Summary Cards (Compact 2x2 on mobile, 4-column on desktop) ── */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
         {/* Total Income */}
-        <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+        <div className="p-3 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between">
+          <div className="flex items-center justify-between mb-1.5 sm:mb-2">
+            <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 truncate">
               {t.totalIncome}
             </span>
-            <div className="p-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400">
-              <CheckCircle className="w-4 h-4" />
+            <div className="p-1.5 sm:p-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 flex-shrink-0">
+              <CheckCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </div>
           </div>
-          <div className="text-xl sm:text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tight font-mono">
-            {formatIQD(grandPaid)}
+          <div>
+            <div className="text-base sm:text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tight font-mono tabular-nums truncate">
+              {formatIQD(grandPaid)}
+            </div>
+            <p className="text-[9px] sm:text-xs text-slate-400 dark:text-slate-500 mt-0.5 sm:mt-1 truncate">
+              {t.paidByPatients}
+            </p>
           </div>
-          <p className="text-[10px] sm:text-xs text-slate-400 dark:text-slate-500 mt-1">
-            {t.paidByPatients}
-          </p>
         </div>
 
         {/* Total Expenses */}
-        <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+        <div className="p-3 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between">
+          <div className="flex items-center justify-between mb-1.5 sm:mb-2">
+            <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 truncate">
               {t.totalExpenses}
             </span>
-            <div className="p-2 rounded-xl bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400">
-              <Boxes className="w-4 h-4" />
+            <div className="p-1.5 sm:p-2 rounded-xl bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 flex-shrink-0">
+              <Boxes className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </div>
           </div>
-          <div className="text-xl sm:text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tight font-mono">
-            {formatIQD(grandExpenses)}
+          <div>
+            <div className="text-base sm:text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tight font-mono tabular-nums truncate">
+              {formatIQD(grandExpenses)}
+            </div>
+            <p className="text-[9px] sm:text-xs text-slate-400 dark:text-slate-500 mt-0.5 sm:mt-1 truncate">
+              {t.expensesLogged}
+            </p>
           </div>
-          <p className="text-[10px] sm:text-xs text-slate-400 dark:text-slate-500 mt-1">
-            {t.expensesLogged}
-          </p>
         </div>
 
         {/* Net Profit */}
-        <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+        <div className="p-3 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between">
+          <div className="flex items-center justify-between mb-1.5 sm:mb-2">
+            <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 truncate">
               {t.netProfit}
             </span>
-            <div className="p-2 rounded-xl bg-sky-50 dark:bg-sky-950/50 text-sky-600 dark:text-sky-400">
-              <Sparkles className="w-4 h-4" />
+            <div className="p-1.5 sm:p-2 rounded-xl bg-sky-50 dark:bg-sky-950/50 text-sky-600 dark:text-sky-400 flex-shrink-0">
+              <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </div>
           </div>
-          <div
-            className={`text-xl sm:text-2xl font-black tracking-tight font-mono ${
-              grandNetProfit >= 0
-                ? "text-emerald-600 dark:text-emerald-400"
-                : "text-rose-600 dark:text-rose-400"
-            }`}
-          >
-            {formatIQD(grandNetProfit)}
+          <div>
+            <div
+              className={`text-base sm:text-2xl font-black tracking-tight font-mono tabular-nums truncate ${
+                grandNetProfit >= 0
+                  ? "text-emerald-600 dark:text-emerald-400"
+                  : "text-rose-600 dark:text-rose-400"
+              }`}
+            >
+              {formatIQD(grandNetProfit)}
+            </div>
+            <p className="text-[9px] sm:text-xs text-slate-400 dark:text-slate-500 mt-0.5 sm:mt-1 truncate">
+              {t.incomeMinusExpenses}
+            </p>
           </div>
-          <p className="text-[10px] sm:text-xs text-slate-400 dark:text-slate-500 mt-1">
-            {t.incomeMinusExpenses}
-          </p>
         </div>
 
         {/* Unpaid Debts */}
-        <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+        <div className="p-3 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between">
+          <div className="flex items-center justify-between mb-1.5 sm:mb-2">
+            <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 truncate">
               {t.unpaidDebts}
             </span>
-            <div className="p-2 rounded-xl bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400">
-              <AlertCircle className="w-4 h-4" />
+            <div className="p-1.5 sm:p-2 rounded-xl bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 flex-shrink-0">
+              <AlertCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </div>
           </div>
-          <div className="text-xl sm:text-2xl font-black text-rose-600 dark:text-rose-400 tracking-tight font-mono">
-            {formatIQD(grandDebt)}
+          <div>
+            <div className="text-base sm:text-2xl font-black text-rose-600 dark:text-rose-400 tracking-tight font-mono tabular-nums truncate">
+              {formatIQD(grandDebt)}
+            </div>
+            <p className="text-[9px] sm:text-xs text-slate-400 dark:text-slate-500 mt-0.5 sm:mt-1 truncate">
+              {t.patientOwes}
+            </p>
           </div>
-          <p className="text-[10px] sm:text-xs text-slate-400 dark:text-slate-500 mt-1">
-            {t.patientOwes}
-          </p>
         </div>
       </div>
 

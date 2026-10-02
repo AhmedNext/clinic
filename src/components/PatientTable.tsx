@@ -16,6 +16,7 @@ import {
   Stethoscope,
   MoreHorizontal,
   MessageCircle,
+  Banknote,
 } from "lucide-react";
 import { formatStaticDate } from "@/utils/date";
 import { useLanguage } from "@/context/LanguageContext";
@@ -235,7 +236,7 @@ export const PatientTable = React.memo(function PatientTable({
 
                 <div>
                   {debt > 0 ? (
-                    <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-xs font-semibold bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-900/60">
+                    <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-semibold bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border border-rose-200/90 dark:border-rose-900/60 shadow-2xs">
                       <span className="text-[11px] font-bold">
                         {t.owesLabel}: {formatIQD(debt)}
                       </span>
@@ -243,10 +244,11 @@ export const PatientTable = React.memo(function PatientTable({
                         <button
                           type="button"
                           onClick={() => onSettleDebt(patient)}
-                          className="p-0.5 rounded bg-emerald-600 hover:bg-emerald-500 text-white cursor-pointer active:scale-90 transition-all"
+                          className="px-1.5 py-0.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white cursor-pointer active:scale-90 transition-all text-[10px] font-bold inline-flex items-center gap-1"
                           title={t.markDebtPaid}
                         >
-                          <Check className="w-3 h-3" />
+                          <Banknote className="w-3 h-3" />
+                          <span>{t.markDebtPaid}</span>
                         </button>
                       )}
                     </div>
