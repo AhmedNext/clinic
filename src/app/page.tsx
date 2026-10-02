@@ -752,8 +752,20 @@ export default function DashboardPage() {
     return patients
       .filter((patient) => {
         if (rawQuery) {
-          // Strictly match patient name or phone number only
-          const matchName = patient.name.toLowerCase().includes(q);
+          // Strictly match patient name (by word prefix / whole word) or phone number
+          const patientNameLower = patient.name.toLowerCase();
+          const nameWords = patientNameLower.split(/\s+/).filter(Boolean);
+          const queryWords = q.split(/\s+/).filter(Boolean);
+
+          // Every typed word in the search query must match the beginning of at least one word in the patient's name
+          // or patient full name begins with or contains the exact phrase
+          const matchName =
+            patientNameLower.startsWith(q) ||
+            (queryWords.length > 0 &&
+              queryWords.every((qWord) =>
+                nameWords.some((nWord) => nWord.startsWith(qWord))
+              ));
+
           const patientPhoneClean = (patient.phone || "").replace(/\D/g, "");
           const matchPhone = Boolean(
             (patient.phone && patient.phone.toLowerCase().includes(q)) ||
