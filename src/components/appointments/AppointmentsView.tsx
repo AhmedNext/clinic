@@ -190,9 +190,9 @@ export function AppointmentsView({
   };
 
   const statusBadgeStyles: Record<AppointmentStatus, string> = {
-    scheduled: "bg-sky-50 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300 ring-1 ring-sky-200 dark:ring-sky-800",
-    completed: "bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 ring-1 ring-emerald-200 dark:ring-emerald-800",
-    cancelled: "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 ring-1 ring-slate-200 dark:ring-slate-700 line-through",
+    scheduled: "bg-sky-50/70 dark:bg-sky-950/40 text-sky-700 dark:text-sky-300 border border-sky-200/60 dark:border-sky-800/50",
+    completed: "bg-emerald-50/70 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/50",
+    cancelled: "bg-slate-100 dark:bg-slate-800/80 text-slate-400 dark:text-slate-500 border border-slate-200/60 dark:border-slate-700/50 line-through",
   };
 
   const statusLabels: Record<AppointmentStatus, string> = {
@@ -278,30 +278,51 @@ export function AppointmentsView({
           </div>
 
           {/* RIGHT: Status & Actions */}
-          <div className="flex items-start sm:items-center gap-2 flex-wrap sm:flex-nowrap justify-between sm:justify-end">
-            <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-[11px] font-bold whitespace-nowrap ${statusBadgeStyles[apt.status]}`}>
-              {apt.status === "completed" && <CheckCircle2 className="w-3 h-3" />}
-              {apt.status === "scheduled" && <Clock className="w-3 h-3" />}
-              {statusLabels[apt.status]}
+          <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap justify-between sm:justify-end">
+            {/* Status Pill */}
+            <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap shadow-2xs ${statusBadgeStyles[apt.status]}`}>
+              {apt.status === "completed" && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />}
+              {apt.status === "scheduled" && <Clock className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400" />}
+              <span>{statusLabels[apt.status]}</span>
             </span>
 
+            {/* Action Group */}
             <div className="flex items-center gap-1.5">
+              {/* Start Visit Button */}
               {onStartVisit && isScheduled && (
-                <button type="button" onClick={() => onStartVisit(apt)} className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium bg-sky-600 hover:bg-sky-700 text-white shadow-sm active:scale-95 transition-all cursor-pointer min-h-[36px]" title={labels.startVisit}>
-                  <span>🩺</span>
-                  <span className="hidden sm:inline">{labels.startVisit}</span>
+                <button
+                  type="button"
+                  onClick={() => onStartVisit(apt)}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-gradient-to-b from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white shadow-xs hover:shadow-sm shadow-sky-600/20 active:scale-95 transition-all cursor-pointer min-h-[34px]"
+                  title={labels.startVisit}
+                >
+                  <Stethoscope className="w-3.5 h-3.5" />
+                  <span>{labels.startVisit}</span>
                 </button>
               )}
+
+              {/* WhatsApp Reminder Button */}
               {apt.phone && isScheduled && (
-                <a href={whatsAppUrl} target="_blank" rel="noopener noreferrer" title={labels.whatsappReminder} className="inline-flex items-center gap-1 px-2.5 py-2 rounded-xl text-xs font-medium bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 active:scale-95 transition-all cursor-pointer min-h-[36px]">
-                  <MessageCircle className="w-3.5 h-3.5 fill-current" />
-                  <span className="hidden sm:inline text-[11px]">{labels.whatsappReminder}</span>
+                <a
+                  href={whatsAppUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title={labels.whatsappReminder}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 hover:text-emerald-700 dark:hover:text-emerald-300 border border-slate-200 dark:border-slate-700 hover:border-emerald-300 dark:hover:border-emerald-700/60 shadow-2xs hover:shadow-xs active:scale-95 transition-all cursor-pointer min-h-[34px]"
+                >
+                  <MessageCircle className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                  <span>{labels.whatsappReminder}</span>
                 </a>
               )}
 
               {/* ••• Menu */}
               <div className="relative">
-                <button type="button" onClick={() => setOpenMenuId(isMenuOpen ? null : apt.id)} className="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer" aria-label="More actions">
+                <button
+                  type="button"
+                  onClick={() => setOpenMenuId(isMenuOpen ? null : apt.id)}
+                  className="w-8 h-8 rounded-xl flex items-center justify-center text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer border border-transparent hover:border-slate-200 dark:hover:border-slate-700"
+                  aria-label="More actions"
+                >
                   <MoreHorizontal className="w-4 h-4" />
                 </button>
                 {isMenuOpen && (
@@ -673,32 +694,63 @@ export function AppointmentsView({
               {/* Modal Actions */}
               <div className="p-4 border-t border-slate-100 dark:border-slate-800 flex flex-wrap gap-2">
                 {onStartVisit && isScheduled && (
-                  <button type="button" onClick={() => { onStartVisit(apt); setDetailsAppointment(null); }} className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-medium bg-sky-600 hover:bg-sky-700 text-white shadow-sm active:scale-95 transition-all cursor-pointer">
-                    <span>🩺</span><span>{labels.startVisit}</span>
+                  <button
+                    type="button"
+                    onClick={() => { onStartVisit(apt); setDetailsAppointment(null); }}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold bg-gradient-to-b from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white shadow-xs hover:shadow-sm shadow-sky-600/20 active:scale-95 transition-all cursor-pointer min-h-[36px]"
+                  >
+                    <Stethoscope className="w-3.5 h-3.5" />
+                    <span>{labels.startVisit}</span>
                   </button>
                 )}
                 {apt.phone && isScheduled && (
-                  <a href={whatsAppUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-medium bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 active:scale-95 transition-all cursor-pointer">
-                    <MessageCircle className="w-3.5 h-3.5 fill-current" /><span>{labels.whatsappReminder}</span>
+                  <a
+                    href={whatsAppUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 hover:text-emerald-700 dark:hover:text-emerald-300 border border-slate-200 dark:border-slate-700 hover:border-emerald-300 dark:hover:border-emerald-700/60 shadow-2xs hover:shadow-xs active:scale-95 transition-all cursor-pointer min-h-[36px]"
+                  >
+                    <MessageCircle className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                    <span>{labels.whatsappReminder}</span>
                   </a>
                 )}
                 {isScheduled && (
-                  <button type="button" onClick={() => { onToggleStatus(apt.id, "cancelled"); setDetailsAppointment(null); }} className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-medium text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800 hover:bg-amber-50 active:scale-95 transition-all cursor-pointer">
-                    <X className="w-3.5 h-3.5" /><span>{labels.cancel}</span>
+                  <button
+                    type="button"
+                    onClick={() => { onToggleStatus(apt.id, "cancelled"); setDetailsAppointment(null); }}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold text-amber-700 dark:text-amber-400 bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200/70 dark:border-amber-800/60 hover:bg-amber-100/80 active:scale-95 transition-all cursor-pointer min-h-[36px]"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                    <span>{labels.cancel}</span>
                   </button>
                 )}
                 {isDone && (
-                  <button type="button" onClick={() => { onToggleStatus(apt.id, "scheduled"); setDetailsAppointment(null); }} className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-medium text-sky-700 border border-sky-200 hover:bg-sky-50 active:scale-95 transition-all cursor-pointer">
-                    <Clock className="w-3.5 h-3.5" /><span>{labels.markScheduled}</span>
+                  <button
+                    type="button"
+                    onClick={() => { onToggleStatus(apt.id, "scheduled"); setDetailsAppointment(null); }}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold text-sky-700 dark:text-sky-300 bg-sky-50/70 dark:bg-sky-950/30 border border-sky-200/70 dark:border-sky-800/60 hover:bg-sky-100/80 active:scale-95 transition-all cursor-pointer min-h-[36px]"
+                  >
+                    <Clock className="w-3.5 h-3.5" />
+                    <span>{labels.markScheduled}</span>
                   </button>
                 )}
                 {isCancelled && (
-                  <button type="button" onClick={() => { onToggleStatus(apt.id, "scheduled"); setDetailsAppointment(null); }} className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-medium text-sky-700 border border-sky-200 hover:bg-sky-50 active:scale-95 transition-all cursor-pointer">
-                    <CalendarIcon className="w-3.5 h-3.5" /><span>{labels.markScheduled}</span>
+                  <button
+                    type="button"
+                    onClick={() => { onToggleStatus(apt.id, "scheduled"); setDetailsAppointment(null); }}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold text-sky-700 dark:text-sky-300 bg-sky-50/70 dark:bg-sky-950/30 border border-sky-200/70 dark:border-sky-800/60 hover:bg-sky-100/80 active:scale-95 transition-all cursor-pointer min-h-[36px]"
+                  >
+                    <CalendarIcon className="w-3.5 h-3.5" />
+                    <span>{labels.markScheduled}</span>
                   </button>
                 )}
-                <button type="button" onClick={() => { onDeleteAppointment(apt.id); setDetailsAppointment(null); }} className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-medium text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800 hover:bg-rose-50 active:scale-95 transition-all cursor-pointer ms-auto">
-                  <Trash2 className="w-3.5 h-3.5" /><span>{labels.deleteAppt}</span>
+                <button
+                  type="button"
+                  onClick={() => { onDeleteAppointment(apt.id); setDetailsAppointment(null); }}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold text-rose-600 dark:text-rose-400 bg-rose-50/70 dark:bg-rose-950/30 border border-rose-200/70 dark:border-rose-800/60 hover:bg-rose-100/80 active:scale-95 transition-all cursor-pointer min-h-[36px] ms-auto"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>{labels.deleteAppt}</span>
                 </button>
               </div>
             </div>
