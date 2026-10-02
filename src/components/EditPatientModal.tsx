@@ -9,6 +9,7 @@ import { PatientAvatar } from "./PatientAvatar";
 import { CircleClockPickerModal } from "./ui/CircleClockPickerModal";
 import { BetterDatePickerModal } from "./ui/BetterDatePickerModal";
 import { TimeKeeperPicker } from "./ui/TimeKeeperPicker";
+import { DatePickerPopover } from "./ui/DatePickerPopover";
 import { useLanguage } from "@/context/LanguageContext";
 
 interface EditPatientModalProps {
@@ -299,34 +300,17 @@ export function EditPatientModal({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {/* Consultation Date */}
             <div>
-              <div className="flex items-center justify-between mb-1">
-                <label
-                  htmlFor="edit-patient-date"
-                  className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400"
-                >
-                  {t.date} *
-                </label>
-                <button
-                  type="button"
-                  onClick={() => setIsDatePickerOpen(true)}
-                  className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer"
-                >
-                  {t.betterCalendar}
-                </button>
-              </div>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 rtl:left-auto rtl:right-0 pl-3.5 rtl:pl-0 rtl:pr-3.5 flex items-center pointer-events-none text-slate-400">
-                  <Calendar className="w-4 h-4" />
-                </div>
-                <input
-                  id="edit-patient-date"
-                  type="date"
-                  required
-                  value={date}
-                  onChange={(e) => setDate(e.target.value)}
-                  className="w-full pl-10 rtl:pl-4 rtl:pr-10 pr-4 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 dark:focus:border-indigo-400 text-sm transition-all"
-                />
-              </div>
+              <label
+                htmlFor="edit-patient-date"
+                className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1"
+              >
+                {t.date} *
+              </label>
+              <DatePickerPopover
+                id="edit-patient-date"
+                value={date}
+                onChange={(newDate) => setDate(newDate)}
+              />
             </div>
 
             {/* Visit Time (Analog Clock) */}

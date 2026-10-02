@@ -26,6 +26,7 @@ import { useLanguage } from "@/context/LanguageContext";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { TimeKeeperPicker } from "@/components/ui/TimeKeeperPicker";
+import { DatePickerPopover } from "@/components/ui/DatePickerPopover";
 
 interface AddPatientModalProps {
   isOpen: boolean;
@@ -352,19 +353,11 @@ export function AddPatientModal({
                     >
                       {t.date} <span className="text-rose-500">*</span>
                     </label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 start-0 ps-2.5 flex items-center pointer-events-none text-slate-400">
-                        <Calendar className="w-3.5 h-3.5" />
-                      </div>
-                      <input
-                        id="patient-date-input"
-                        type="date"
-                        required
-                        value={date}
-                        onChange={(e) => setDate(e.target.value)}
-                        className="w-full ps-8 pe-2 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-950 text-slate-900 dark:text-slate-100 text-xs font-medium focus:outline-hidden focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all cursor-pointer"
-                      />
-                    </div>
+                    <DatePickerPopover
+                      id="patient-date-input"
+                      value={date}
+                      onChange={(newDate) => setDate(newDate)}
+                    />
                   </div>
 
                   <div>
