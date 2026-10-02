@@ -1154,8 +1154,8 @@ export function DentalChart({
             </div>
           </div>
 
-          {/* Controls Grid (Compact 3-Column on desktop, 1-col on phone) */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          {/* Controls Grid */}
+          <div className="grid grid-cols-1 gap-2.5">
             {/* 1. Condition Selector */}
             <div>
               <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
@@ -1171,46 +1171,6 @@ export function DentalChart({
                 ))}
               </select>
             </div>
-
-            {/* 2. Clinic Material Dropdown / Input */}
-            <div>
-              <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
-                {t.material}
-              </label>
-              {clinicMaterials.length > 0 ? (
-                <select
-                  value={treatmentMaterial}
-                  onChange={(e) => {
-                    const found = clinicMaterials.find((m) => m.name === e.target.value);
-                    if (found) {
-                      handleSelectClinicMaterial(found);
-                    } else {
-                      handleActiveToothMaterialChange(e.target.value);
-                    }
-                  }}
-                  className="w-full px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-semibold text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
-                >
-                  <option value="">{t.chooseMaterial}...</option>
-                  {clinicMaterials.map((m) => (
-                    <option key={m.id} value={m.name}>
-                      {m.name}
-                    </option>
-                  ))}
-                  {treatmentMaterial && !clinicMaterials.some((m) => m.name === treatmentMaterial) && (
-                    <option value={treatmentMaterial}>{treatmentMaterial} (Custom)</option>
-                  )}
-                </select>
-              ) : (
-                <input
-                  type="text"
-                  placeholder={t.customMaterialPlaceholder}
-                  value={treatmentMaterial}
-                  onChange={(e) => handleActiveToothMaterialChange(e.target.value)}
-                  className="w-full px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-semibold text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                />
-              )}
-            </div>
-
           </div>
 
           {/* Clinical Note Row (Clean single-line with presets & actions) */}
