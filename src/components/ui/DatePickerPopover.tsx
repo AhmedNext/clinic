@@ -181,88 +181,96 @@ export function DatePickerPopover({
         </span>
       </button>
 
-      {/* Popover Dropdown Calendar */}
+      {/* Centered Modal Dialog for Calendar */}
       {isOpen && (
-        <div className="absolute z-50 mt-1 start-0 sm:start-auto sm:end-0 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 p-3 w-[280px] sm:w-[300px] animate-in fade-in zoom-in-95 duration-150 ring-1 ring-black/5">
-          {/* Calendar Header with Navigation */}
-          <div className="flex items-center justify-between mb-2 pb-2 border-b border-slate-100 dark:border-slate-800">
-            <span className="text-xs font-bold text-slate-900 dark:text-slate-100">
-              {monthLabel}
-            </span>
-            <div className="flex items-center gap-1">
+        <div
+          className="fixed inset-0 z-[70] flex items-center justify-center bg-black/40 backdrop-blur-xs p-4 animate-in fade-in duration-150"
+          onClick={() => setIsOpen(false)}
+        >
+          <div
+            className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 p-4 w-full max-w-[320px] scale-100 animate-in zoom-in-95 duration-150 flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Calendar Header with Navigation */}
+            <div className="flex items-center justify-between mb-3 pb-2.5 border-b border-slate-100 dark:border-slate-800">
+              <span className="text-sm font-bold text-slate-900 dark:text-slate-100">
+                {monthLabel}
+              </span>
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={handlePrevMonth}
+                  className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                  aria-label="Previous month"
+                >
+                  <ChevronLeft className="w-4 h-4 rtl:rotate-180" />
+                </button>
+                <button
+                  type="button"
+                  onClick={handleNextMonth}
+                  className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                  aria-label="Next month"
+                >
+                  <ChevronRight className="w-4 h-4 rtl:rotate-180" />
+                </button>
+              </div>
+            </div>
+
+            {/* Weekday headers */}
+            <div className="grid grid-cols-7 gap-1 text-center mb-1.5">
+              {WEEKDAYS.map((wd) => (
+                <span
+                  key={wd}
+                  className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase"
+                >
+                  {wd}
+                </span>
+              ))}
+            </div>
+
+            {/* Day Grid */}
+            <div className="grid grid-cols-7 gap-1 text-center">
+              {calendarDays.map((d) => (
+                <button
+                  key={d.dateString}
+                  type="button"
+                  onClick={() => {
+                    onChange(d.dateString);
+                    setIsOpen(false);
+                  }}
+                  className={`h-8 w-8 mx-auto rounded-xl text-xs font-semibold flex items-center justify-center transition-all cursor-pointer ${
+                    d.isSelected
+                      ? "bg-sky-600 text-white shadow-xs font-bold scale-105"
+                      : d.isToday
+                      ? "bg-sky-50 dark:bg-sky-950/80 text-sky-600 dark:text-sky-400 font-bold border border-sky-300 dark:border-sky-800"
+                      : d.isCurrentMonth
+                      ? "text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
+                      : "text-slate-300 dark:text-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800/50"
+                  }`}
+                >
+                  {d.dayNumber}
+                </button>
+              ))}
+            </div>
+
+            {/* Bottom Controls */}
+            <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
               <button
                 type="button"
-                onClick={handlePrevMonth}
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-                aria-label="Previous month"
+                onClick={handleGoToday}
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-sky-600 dark:text-sky-400 hover:underline cursor-pointer"
               >
-                <ChevronLeft className="w-4 h-4" />
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span>Today</span>
               </button>
               <button
                 type="button"
-                onClick={handleNextMonth}
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-                aria-label="Next month"
+                onClick={() => setIsOpen(false)}
+                className="text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 px-3 py-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
               >
-                <ChevronRight className="w-4 h-4" />
+                Close
               </button>
             </div>
-          </div>
-
-          {/* Weekday headers */}
-          <div className="grid grid-cols-7 gap-1 text-center mb-1">
-            {WEEKDAYS.map((wd) => (
-              <span
-                key={wd}
-                className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase"
-              >
-                {wd}
-              </span>
-            ))}
-          </div>
-
-          {/* Day Grid */}
-          <div className="grid grid-cols-7 gap-1 text-center">
-            {calendarDays.map((d) => (
-              <button
-                key={d.dateString}
-                type="button"
-                onClick={() => {
-                  onChange(d.dateString);
-                  setIsOpen(false);
-                }}
-                className={`h-7 w-7 mx-auto rounded-lg text-xs font-semibold flex items-center justify-center transition-all cursor-pointer ${
-                  d.isSelected
-                    ? "bg-sky-600 text-white shadow-xs font-bold scale-105"
-                    : d.isToday
-                    ? "bg-sky-50 dark:bg-sky-950/80 text-sky-600 dark:text-sky-400 font-bold border border-sky-300 dark:border-sky-800"
-                    : d.isCurrentMonth
-                    ? "text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
-                    : "text-slate-300 dark:text-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800/50"
-                }`}
-              >
-                {d.dayNumber}
-              </button>
-            ))}
-          </div>
-
-          {/* Bottom Quick-Jump to Today */}
-          <div className="mt-2 pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
-            <button
-              type="button"
-              onClick={handleGoToday}
-              className="inline-flex items-center gap-1 text-[11px] font-bold text-sky-600 dark:text-sky-400 hover:underline cursor-pointer"
-            >
-              <RotateCcw className="w-3 h-3" />
-              <span>Today</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setIsOpen(false)}
-              className="text-[11px] font-semibold text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
-            >
-              Close
-            </button>
           </div>
         </div>
       )}
