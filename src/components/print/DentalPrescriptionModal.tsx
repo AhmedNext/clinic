@@ -147,7 +147,8 @@ export function DentalPrescriptionModal({
   if (!isOpen || !patient) return null;
 
   const formattedDate = formatStaticDate(date, language);
-  const rxNumber = `RX-${patient.id.replace(/\D/g, "").slice(-4) || "101"}-${new Date().getFullYear()}`;
+  const rxSeq = Math.abs((patient.createdAt ? Number(patient.createdAt) : 101) % 900) + 100;
+  const rxNumber = `RX-${rxSeq}-${new Date().getFullYear()}`;
 
   const handleAddMedication = () => {
     const newMed: MedicationItem = {

@@ -144,7 +144,7 @@ export default function DashboardPage() {
   const [genderFilter, setGenderFilter] = useState<"all" | Gender>("all");
   const [paymentFilter, setPaymentFilter] = useState<"all" | "paid" | "debt">("all");
   const [monthFilter, setMonthFilter] = useState<string>("all"); // 'all' or 'YYYY-MM'
-  const [viewMode, setViewMode] = useState<"table" | "grid">("grid");
+  const [viewMode, setViewMode] = useState<"table" | "grid">("table");
   const [sortOrder, setSortOrder] = useState<"desc" | "asc">("desc"); // 'desc' = newest first
   const [notification, setNotification] = useState<string | null>(null);
   const [addPatientInitialDate, setAddPatientInitialDate] = useState<string | null>(null);

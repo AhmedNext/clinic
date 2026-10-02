@@ -25,7 +25,8 @@ export function PrintReceiptModal({ isOpen, patient, onClose }: PrintReceiptModa
   const totalFee = totalPaid + totalDebt;
   const isPaidInFull = totalDebt === 0 && totalFee > 0;
 
-  const receiptNumber = `REC-${patient.id.replace(/\D/g, "").slice(-4) || "1001"}-${new Date().getFullYear()}`;
+  const receiptSeq = Math.abs((patient.createdAt ? Number(patient.createdAt) : 1001) % 9000) + 1000;
+  const receiptNumber = `REC-${receiptSeq}-${new Date().getFullYear()}`;
   const formattedDate = formatStaticDate(patient.date || new Date().toISOString().slice(0, 10), language);
 
   const handlePrint = () => {
